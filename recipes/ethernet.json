@@ -1,0 +1,21 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST", "type": "0x0800"}}
+  ],
+  "anchor": {"header": "ether", "base": 0},
+  "headerLength": 14,
+  "fieldMap": {"ether_type": "type"},
+  "probe": {
+    "ether_type": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "ether_type": "0x5a5a"
+  },
+  "fixtures": {
+    "ether_type": ["0x0800", "0x0806"]
+  },
+  "vectors": [
+    {"name": "ethernet-ethertype-ipv4", "select": [{"field": "ether_type", "value": 2048}]},
+    {"name": "ethernet-ethertype-arp", "select": [{"field": "ether_type", "value": 2054}]}
+  ]
+}

@@ -6,7 +6,7 @@
 
 ## Invariants
 
-- `registry/*.json` are hand-maintained. `registry/manifest.json`, `fixtures/**` and `vectors/golden.json` are generated; never edit them by hand.
+- `registry/*.json` and `recipes/*.json` are hand-maintained. `registry/manifest.json`, `fixtures/**` and `vectors/golden.json` are generated; never edit them by hand.
 - The reference compiler is `tools/bpf_compile.py`. Its output format is the cross-language contract recorded in `vectors/golden.json`.
 - Every field has a `ref` to an RFC or another normative standard.
 - `size` is 1, 2 or 4. Wider logical fields use a mask and shift.
@@ -42,7 +42,8 @@ Compile one expression:
 ## Verification rules
 
 - `crosscheck.py` builds each field with a sentinel value and asserts the serialized bytes at the documented offset. It deliberately does not read scapy `fields_desc`: the VXLAN class is a union and reports the wrong VNI offset.
-- `auto_draft.py` re-derives every registered field's `offset`/`size`/`mask`/`shift` from serialized bytes (differential probes with pinned computed fields) and compares against the registry; `--check` fails on drift, missing recipe coverage or disagreement with crosscheck's sentinel table. `--draft --entry <id>` emits candidate skeletons into `drafts/` (gitignored); drafts get no governance exemption.
+- `auto_draft.py` re-derives every registered field's `offset`/`size`/`mask`/`shift` from serialized bytes (differential probes with pinned computed fields) and compares against the registry; `--check` fails on drift or missing recipe coverage. `--draft --entry <id>` emits candidate skeletons into `drafts/` (gitignored); drafts get no governance exemption.
+- Per-protocol knowledge lives in `recipes/<id>.json` (packet stack, anchor, probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `pktspec.py` is the shared interpreter: the tools contain no per-protocol code. `$PIN` marks probe-pinned checksums; fixture builds drop them so pcaps keep real checksums. The probed layer must be last in the stack, so the layer window is `len(packet) - headerLength`.
 - `verify.py` validates the schema, structural invariants, `tcpdump -d` syntax, golden vectors and fixture replay. Replay counts packets with scapy: positive fixtures must match exactly one packet and negative fixtures zero. Do not rely on tcpdump's exit code.
 - All generators support `--check`; CI fails if a generated artifact is stale.
 

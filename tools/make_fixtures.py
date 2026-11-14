@@ -16,10 +16,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-from scapy.all import ARP, Dot1Q, Ether, ICMP, IP, Raw, TCP, UDP, wrpcap
+from scapy.all import Dot1Q, Ether, IP, Raw, UDP, wrpcap
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, load_registry
+from pktspec import build_packet as build_recipe_packet, load_specs
 
 FIXTURES_DIR = ROOT / "fixtures"
 
@@ -30,22 +31,8 @@ IP_DST = "192.0.2.2"
 UDP_SPORT = 12345
 VXLAN_VNI = 100
 
-# Canonical (positive, negative) values per field.
-CANONICAL_VALUES = {
-    ("arp", "opcode"): (1, 2),
-    ("ethernet", "ether_type"): (0x0800, 0x0806),
-    ("icmp", "type"): (8, 0),
-    ("icmp", "code"): (0, 1),
-    ("vlan", "vlan_id"): (100, 101),
-    ("ipv4", "tos"): (0x10, 0x11),
-    ("ipv4", "total_length"): (40, 41),
-    ("ipv4", "ttl"): (64, 65),
-    ("ipv4", "protocol"): (6, 17),
-    ("tcp", "flags"): (0x02, 0x10),
-    ("tcp", "window"): (100, 101),
-    ("vxlan", "flags"): (0x08, 0x00),
-    ("vxlan", "vni"): (100, 101),
-}
+# Canonical (positive, negative) values live in the recipes.
+SPECS = load_specs()
 
 
 def _ether() -> Ether:
@@ -54,66 +41,21 @@ def _ether() -> Ether:
 
 def build_packet(entry_id: str, field_id: str, value: int):
     """Build a packet with one field set to ``value``."""
-    if entry_id == "ethernet":
-        return Ether(src=ETH_SRC, dst=ETH_DST, type=value) / Raw(b"\x00" * 20)
-
-    if entry_id == "arp":
-        # Addresses must be pinned: scapy otherwise fills hwsrc/psrc from
-        # the host's interface, making fixtures machine-dependent.
-        key = {"opcode": "op"}.get(field_id, field_id)
-        kwargs = {
-            "hwtype": 1,
-            "ptype": 0x0800,
-            "hwlen": 6,
-            "plen": 4,
-            "hwsrc": ETH_SRC,
-            "hwdst": ETH_DST,
-            "psrc": IP_SRC,
-            "pdst": IP_DST,
-        }
-        kwargs[key] = value
-        return _ether() / ARP(**kwargs)
-
-    if entry_id == "icmp":
-        # id/seq stay at 0: scapy zeroes them for some type values
-        kwargs = {"type": 8, "code": 0, "id": 0, "seq": 0}
-        kwargs[field_id] = value
-        return _ether() / IP(src=IP_SRC, dst=IP_DST, proto=1) / ICMP(**kwargs)
-
-    if entry_id == "vlan":
-        return _ether() / Dot1Q(vlan=value) / IP(src=IP_SRC, dst=IP_DST) / Raw(b"")
-
-    if entry_id == "ipv4":
-        key = {"total_length": "len", "protocol": "proto"}.get(field_id, field_id)
-        return _ether() / IP(src=IP_SRC, dst=IP_DST, **{key: value}) / Raw(b"")
-
-    if entry_id == "tcp":
-        return (
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST)
-            / TCP(sport=12345, dport=80, **{field_id: value})
-            / Raw(b"")
-        )
-
-    if entry_id == "vxlan":
-        kwargs = {"flags": 0x08, "vni": VXLAN_VNI}
-        kwargs[field_id] = value
-        return (
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST)
-            / UDP(sport=UDP_SPORT, dport=4789)
-            / VXLAN(**kwargs)
-        )
-
-    raise CompileError(f"no fixture builder for entry {entry_id}")
+    if entry_id not in SPECS:
+        raise CompileError(f"no recipe for entry {entry_id}")
+    # Fixtures are real packets: let scapy compute checksums instead of
+    # using the probe's pinned values.
+    return build_recipe_packet(
+        SPECS[entry_id], field_id, value, pin_checksums=False
+    )
 
 
 def _canonical(entry_id: str, field_id: str) -> tuple[int, int]:
     try:
-        return CANONICAL_VALUES[(entry_id, field_id)]
+        return SPECS[entry_id].fixtures[field_id]
     except KeyError as exc:
         raise CompileError(
-            f"{entry_id}.{field_id}: add canonical fixture values to make_fixtures.py"
+            f"{entry_id}.{field_id}: add canonical fixture values to recipes/{entry_id}.json"
         ) from exc
 
 
@@ -132,13 +74,12 @@ def _build_locator_packet(
     entry_id: str, field_id: str, value: int, port: int
 ):
     if entry_id == "vxlan":
-        kwargs = {"flags": 0x08, "vni": VXLAN_VNI}
-        kwargs[field_id] = value
-        return (
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST)
-            / UDP(sport=UDP_SPORT, dport=port)
-            / VXLAN(**kwargs)
+        return build_recipe_packet(
+            SPECS[entry_id],
+            field_id,
+            value,
+            {"UDP": {"dport": port}},
+            pin_checksums=False,
         )
     raise CompileError(f"no locator fixture builder for entry {entry_id}")
 

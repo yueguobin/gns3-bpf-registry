@@ -10,67 +10,28 @@ import sys
 from pathlib import Path
 
 from bpf_compile import CompileError, compile_selection, load_registry, ROOT
+from pktspec import load_specs
 
 VECTORS_PATH = ROOT / "vectors/golden.json"
-
-# (name, entry ID, VLAN slot, selection)
-VECTOR_SPECS = [
-    ("ethernet-ethertype-ipv4", "ethernet", None, [{"field": "ether_type", "value": 0x0800}]),
-    ("ethernet-ethertype-arp", "ethernet", None, [{"field": "ether_type", "value": 0x0806}]),
-    ("arp-opcode-request", "arp", None, [{"field": "opcode", "value": 1}]),
-    ("arp-opcode-reply", "arp", None, [{"field": "opcode", "value": 2}]),
-    ("icmp-type-echo-request", "icmp", None, [{"field": "type", "value": 8}]),
-    ("icmp-type-echo-reply", "icmp", None, [{"field": "type", "value": 0}]),
-    ("icmp-code-0", "icmp", None, [{"field": "code", "value": 0}]),
-    (
-        "icmp-type-and-code",
-        "icmp",
-        None,
-        [{"field": "type", "value": 8}, {"field": "code", "value": 0}],
-    ),
-    ("vlan-id-100", "vlan", None, [{"field": "vlan_id", "value": 100}]),
-    ("vlan-id-4094", "vlan", None, [{"field": "vlan_id", "value": 4094}]),
-    ("ipv4-tos-16", "ipv4", None, [{"field": "tos", "value": 0x10}]),
-    ("ipv4-total-length-1500", "ipv4", None, [{"field": "total_length", "value": 1500}]),
-    ("ipv4-ttl-64", "ipv4", None, [{"field": "ttl", "value": 64}]),
-    ("ipv4-protocol-tcp", "ipv4", None, [{"field": "protocol", "value": 6}]),
-    (
-        "ipv4-ttl-and-protocol",
-        "ipv4",
-        None,
-        [{"field": "protocol", "value": 6}, {"field": "ttl", "value": 64}],
-    ),
-    ("tcp-flags-syn", "tcp", None, [{"field": "flags", "flags": ["SYN"]}]),
-    ("tcp-flags-syn-ack", "tcp", None, [{"field": "flags", "flags": ["SYN", "ACK"]}]),
-    ("tcp-flags-value-0x12", "tcp", None, [{"field": "flags", "value": 0x12}]),
-    ("tcp-window-65535", "tcp", None, [{"field": "window", "value": 65535}]),
-    ("vxlan-flags-i", "vxlan", None, [{"field": "flags", "value": 0x08}]),
-    ("vxlan-vni-100", "vxlan", None, [{"field": "vni", "value": 100}]),
-    ("vxlan-vni-max", "vxlan", None, [{"field": "vni", "value": 16777215}]),
-    (
-        "vxlan-flags-and-vni",
-        "vxlan",
-        None,
-        [{"field": "vni", "value": 100}, {"field": "flags", "value": 0x08}],
-    ),
-    ("vxlan-vni-100-vlan-100", "vxlan", 100, [{"field": "vni", "value": 100}]),
-    ("ipv4-ttl-64-vlan-100", "ipv4", 100, [{"field": "ttl", "value": 64}]),
-]
 
 
 def build_vectors() -> dict:
     registry = load_registry()
     vectors = []
-    for name, entry_id, vlan, selection in VECTOR_SPECS:
+    for entry_id, spec in load_specs().items():
         if entry_id not in registry:
-            raise CompileError(f"vector {name}: unknown entry {entry_id}")
-        expression = compile_selection(registry[entry_id], selection, vlan=vlan)
-        vector: dict = {"name": name, "entry": entry_id}
-        if vlan is not None:
-            vector["vlan"] = vlan
-        vector["select"] = selection
-        vector["expect"] = expression
-        vectors.append(vector)
+            raise CompileError(f"recipe for unknown entry {entry_id}")
+        for item in spec.vectors:
+            name = item["name"]
+            selection = item["select"]
+            vlan = item.get("vlan")
+            expression = compile_selection(registry[entry_id], selection, vlan=vlan)
+            vector: dict = {"name": name, "entry": entry_id}
+            if vlan is not None:
+                vector["vlan"] = vlan
+            vector["select"] = selection
+            vector["expect"] = expression
+            vectors.append(vector)
     return {"vectorVersion": 1, "vectors": vectors}
 
 

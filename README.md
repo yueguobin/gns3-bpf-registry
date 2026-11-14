@@ -13,6 +13,7 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 - `schema/registry.schema.json`: JSON Schema v1 for entries and the manifest.
 - `fixtures/`: generated positive/negative pcap pairs, one pair per field.
 - `vectors/golden.json`: generated input-to-expression vectors. The TypeScript compiler in `gns3-web-ui` must match these strings byte for byte.
+- `recipes/*.json`: hand-maintained per-protocol packet stacks and per-tool tables (probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `tools/pktspec.py` builds packets from them.
 - `tools/`: the Python reference compiler and the verification toolchain.
 
 ## Consumer flow
@@ -104,6 +105,7 @@ Canonical clause order: VLAN slot, locator group, then fields in registry order.
 python3 -m venv .venv
 .venv/bin/pip install -r tools/requirements.txt
 .venv/bin/python tools/crosscheck.py
+.venv/bin/python tools/auto_draft.py --check
 .venv/bin/python tools/verify.py
 .venv/bin/python tools/make_fixtures.py --check
 .venv/bin/python tools/make_manifest.py --check

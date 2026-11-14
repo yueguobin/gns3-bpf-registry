@@ -2,28 +2,6 @@
   "vectorVersion": 1,
   "vectors": [
     {
-      "name": "ethernet-ethertype-ipv4",
-      "entry": "ethernet",
-      "select": [
-        {
-          "field": "ether_type",
-          "value": 2048
-        }
-      ],
-      "expect": "ether[12:2] == 0x800"
-    },
-    {
-      "name": "ethernet-ethertype-arp",
-      "entry": "ethernet",
-      "select": [
-        {
-          "field": "ether_type",
-          "value": 2054
-        }
-      ],
-      "expect": "ether[12:2] == 0x806"
-    },
-    {
       "name": "arp-opcode-request",
       "entry": "arp",
       "select": [
@@ -44,6 +22,28 @@
         }
       ],
       "expect": "arp[6:2] == 0x2"
+    },
+    {
+      "name": "ethernet-ethertype-ipv4",
+      "entry": "ethernet",
+      "select": [
+        {
+          "field": "ether_type",
+          "value": 2048
+        }
+      ],
+      "expect": "ether[12:2] == 0x800"
+    },
+    {
+      "name": "ethernet-ethertype-arp",
+      "entry": "ethernet",
+      "select": [
+        {
+          "field": "ether_type",
+          "value": 2054
+        }
+      ],
+      "expect": "ether[12:2] == 0x806"
     },
     {
       "name": "icmp-type-echo-request",
@@ -92,28 +92,6 @@
         }
       ],
       "expect": "icmp[0:1] == 0x8 and icmp[1:1] == 0"
-    },
-    {
-      "name": "vlan-id-100",
-      "entry": "vlan",
-      "select": [
-        {
-          "field": "vlan_id",
-          "value": 100
-        }
-      ],
-      "expect": "vlan 100"
-    },
-    {
-      "name": "vlan-id-4094",
-      "entry": "vlan",
-      "select": [
-        {
-          "field": "vlan_id",
-          "value": 4094
-        }
-      ],
-      "expect": "vlan 4094"
     },
     {
       "name": "ipv4-tos-16",
@@ -175,6 +153,18 @@
       "expect": "ip[8:1] == 64 and ip[9:1] == 0x6"
     },
     {
+      "name": "ipv4-ttl-64-vlan-100",
+      "entry": "ipv4",
+      "vlan": 100,
+      "select": [
+        {
+          "field": "ttl",
+          "value": 64
+        }
+      ],
+      "expect": "vlan 100 and ip[8:1] == 64"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
@@ -222,6 +212,28 @@
         }
       ],
       "expect": "tcp[14:2] == 65535"
+    },
+    {
+      "name": "vlan-id-100",
+      "entry": "vlan",
+      "select": [
+        {
+          "field": "vlan_id",
+          "value": 100
+        }
+      ],
+      "expect": "vlan 100"
+    },
+    {
+      "name": "vlan-id-4094",
+      "entry": "vlan",
+      "select": [
+        {
+          "field": "vlan_id",
+          "value": 4094
+        }
+      ],
+      "expect": "vlan 4094"
     },
     {
       "name": "vxlan-flags-i",
@@ -282,18 +294,6 @@
         }
       ],
       "expect": "vlan 100 and (udp port 4789 or udp port 8472) and (udp[12:4] & 0xffffff00) == 0x6400"
-    },
-    {
-      "name": "ipv4-ttl-64-vlan-100",
-      "entry": "ipv4",
-      "vlan": 100,
-      "select": [
-        {
-          "field": "ttl",
-          "value": 64
-        }
-      ],
-      "expect": "vlan 100 and ip[8:1] == 64"
     }
   ]
 }
