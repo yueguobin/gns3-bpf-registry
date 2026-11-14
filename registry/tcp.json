@@ -1,0 +1,66 @@
+{
+  "id": "tcp",
+  "label": "TCP",
+  "rfc": ["9293"],
+  "notes": "TCP header. Source and destination ports are matched with port primitives by the filter builder and are intentionally not fields. The flags and window offsets are fixed within the 20-byte base header; TCP options follow the base header and do not shift them.",
+  "anchor": {
+    "header": "tcp",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 20,
+  "fields": [
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 13,
+      "size": 1,
+      "kind": "bitset",
+      "ref": "RFC 9293 §3.1",
+      "bits": [
+        {
+          "mask": 1,
+          "label": "FIN"
+        },
+        {
+          "mask": 2,
+          "label": "SYN"
+        },
+        {
+          "mask": 4,
+          "label": "RST"
+        },
+        {
+          "mask": 8,
+          "label": "PSH"
+        },
+        {
+          "mask": 16,
+          "label": "ACK"
+        },
+        {
+          "mask": 32,
+          "label": "URG"
+        },
+        {
+          "mask": 64,
+          "label": "ECE"
+        },
+        {
+          "mask": 128,
+          "label": "CWR"
+        }
+      ]
+    },
+    {
+      "id": "window",
+      "label": "Window",
+      "offset": 14,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 65535
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "id": "ipv4",
+  "label": "IPv4",
+  "rfc": ["791"],
+  "notes": "IPv4 header. Source and destination addresses are matched with host primitives by the filter builder and are intentionally not fields. Offsets assume the canonical 20-byte header; IPv4 options shift later fields and are not modelled in v1.",
+  "anchor": {
+    "header": "ip",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 20,
+  "fields": [
+    {
+      "id": "tos",
+      "label": "Type of Service",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "total_length",
+      "label": "Total Length",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "ttl",
+      "label": "Time to Live",
+      "offset": 8,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "protocol",
+      "label": "Protocol",
+      "offset": 9,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 791 §3.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "ICMP"
+        },
+        {
+          "value": 6,
+          "label": "TCP"
+        },
+        {
+          "value": 17,
+          "label": "UDP"
+        },
+        {
+          "value": 47,
+          "label": "GRE"
+        },
+        {
+          "value": 50,
+          "label": "ESP"
+        },
+        {
+          "value": 51,
+          "label": "AH"
+        },
+        {
+          "value": 89,
+          "label": "OSPF"
+        },
+        {
+          "value": 132,
+          "label": "SCTP"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "vxlan",
+  "label": "VXLAN",
+  "rfc": ["7348"],
+  "notes": "Classic VXLAN on UDP port 4789 (legacy 8472). VXLAN-GPE is out of scope. The VNI is 24 bits stored at header bytes 4-6; the field reads a 4-byte window and masks off the reserved byte 7. VTEP addresses and UDP ports are matched with host/port primitives.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 4789", "udp port 8472"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 7348 §5",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "vni",
+      "label": "VXLAN Network Identifier",
+      "offset": 4,
+      "size": 4,
+      "mask": "0xffffff00",
+      "shift": 8,
+      "kind": "number",
+      "ref": "RFC 7348 §5",
+      "min": 0,
+      "max": 16777215
+    }
+  ]
+}
