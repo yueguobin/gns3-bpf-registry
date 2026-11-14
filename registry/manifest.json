@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.1",
+  "registryVersion": "2026.11.2",
   "files": {
+    "arp.json": "sha256:4fd35ed9f47b781fc071517d6b2518f568274650410e1268705af14ba5986091",
     "ethernet.json": "sha256:096c2651fbe06030eda33a8cb752c4adc8a0e8f5762d0d109bab9a289d6f782c",
+    "icmp.json": "sha256:61f76b22351d3e6091bbb0bf227378d9e16b1c5160f5e6c4eba4d05d14b71adb",
     "ipv4.json": "sha256:5d98ae56d79b35e1ae489d6b4cb7697592780c607823b773c2fe24731f020b01",
     "tcp.json": "sha256:ca4ea9aa68485b1f26c33787ba5befed037c05e765038d6ccb31d0f82d49bb91",
     "vlan.json": "sha256:7587194677d749b394af3a4b3bf622ef6af3ab0bea74f6a4bf7813d14d0317ae",

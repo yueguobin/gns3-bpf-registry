@@ -1,0 +1,32 @@
+{
+  "id": "arp",
+  "label": "ARP",
+  "rfc": ["826"],
+  "notes": "Ethernet/IPv4 ARP with the canonical 28-byte header (hardware length 6, protocol length 4). Only opcode is modelled: hardware/protocol type and the length fields are effectively constants with no filtering value, and the sender/target address fields fall under the registry's addresses invariant. Other link/network combinations and RARP (RFC 903) are out of scope.",
+  "anchor": {
+    "header": "arp",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 28,
+  "fields": [
+    {
+      "id": "opcode",
+      "label": "Opcode",
+      "offset": 6,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 826 §Packet Format",
+      "values": [
+        {
+          "value": 1,
+          "label": "Request"
+        },
+        {
+          "value": 2,
+          "label": "Reply"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "icmp",
+  "label": "ICMP",
+  "rfc": ["792"],
+  "notes": "ICMP over IPv4 (protocol 1). The offsets assume the 8-byte common header: Type, Code, Checksum and four type-dependent bytes. The checksum is a computed field and is not offered as a filter; the rest-of-header bytes (identifier/sequence for echo, and so on) are type-dependent and are not modelled in v1. ICMPv6 (RFC 4443) is a different protocol and is not covered by this entry. The Code field is kept as a number because its meaning depends on Type.",
+  "anchor": {
+    "header": "icmp",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 792 (Message Formats)",
+      "values": [
+        {
+          "value": 0,
+          "label": "Echo Reply"
+        },
+        {
+          "value": 3,
+          "label": "Destination Unreachable"
+        },
+        {
+          "value": 4,
+          "label": "Source Quench"
+        },
+        {
+          "value": 5,
+          "label": "Redirect"
+        },
+        {
+          "value": 8,
+          "label": "Echo Request"
+        },
+        {
+          "value": 11,
+          "label": "Time Exceeded"
+        },
+        {
+          "value": 12,
+          "label": "Parameter Problem"
+        },
+        {
+          "value": 13,
+          "label": "Timestamp Request"
+        },
+        {
+          "value": 14,
+          "label": "Timestamp Reply"
+        },
+        {
+          "value": 15,
+          "label": "Information Request"
+        },
+        {
+          "value": 16,
+          "label": "Information Reply"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "label": "Code",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 792 (Message Formats)",
+      "min": 0,
+      "max": 255
+    }
+  ]
+}

@@ -17,6 +17,17 @@ VECTORS_PATH = ROOT / "vectors/golden.json"
 VECTOR_SPECS = [
     ("ethernet-ethertype-ipv4", "ethernet", None, [{"field": "ether_type", "value": 0x0800}]),
     ("ethernet-ethertype-arp", "ethernet", None, [{"field": "ether_type", "value": 0x0806}]),
+    ("arp-opcode-request", "arp", None, [{"field": "opcode", "value": 1}]),
+    ("arp-opcode-reply", "arp", None, [{"field": "opcode", "value": 2}]),
+    ("icmp-type-echo-request", "icmp", None, [{"field": "type", "value": 8}]),
+    ("icmp-type-echo-reply", "icmp", None, [{"field": "type", "value": 0}]),
+    ("icmp-code-0", "icmp", None, [{"field": "code", "value": 0}]),
+    (
+        "icmp-type-and-code",
+        "icmp",
+        None,
+        [{"field": "type", "value": 8}, {"field": "code", "value": 0}],
+    ),
     ("vlan-id-100", "vlan", None, [{"field": "vlan_id", "value": 100}]),
     ("vlan-id-4094", "vlan", None, [{"field": "vlan_id", "value": 4094}]),
     ("ipv4-tos-16", "ipv4", None, [{"field": "tos", "value": 0x10}]),
