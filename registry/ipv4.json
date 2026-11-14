@@ -2,7 +2,7 @@
   "id": "ipv4",
   "label": "IPv4",
   "rfc": ["791"],
-  "notes": "IPv4 header. Source and destination addresses are matched with host primitives by the filter builder and are intentionally not fields. Offsets assume the canonical 20-byte header; IPv4 options shift later fields and are not modelled in v1.",
+  "notes": "IPv4 header. Source and destination addresses are matched with host primitives by the filter builder and are intentionally not fields. All other fields of the 20-byte header are modelled. Version and IHL are two masked views of byte 0; Flags and Fragment Offset are two masked views of the word at offset 6. IPv4 options shift later fields and are not modelled in v1.",
   "anchor": {
     "header": "ip",
     "base": 0
@@ -10,6 +10,30 @@
   "locator": [],
   "headerLength": 20,
   "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 15
+    },
+    {
+      "id": "ihl",
+      "label": "Internet Header Length",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x0f",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 15
+    },
     {
       "id": "tos",
       "label": "Type of Service",
@@ -29,6 +53,40 @@
       "ref": "RFC 791 §3.1",
       "min": 0,
       "max": 65535
+    },
+    {
+      "id": "id",
+      "label": "Identification",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 6,
+      "size": 1,
+      "mask": "0xe0",
+      "shift": 5,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 7
+    },
+    {
+      "id": "frag_offset",
+      "label": "Fragment Offset",
+      "offset": 6,
+      "size": 2,
+      "mask": "0x1fff",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 8191
     },
     {
       "id": "ttl",
@@ -81,6 +139,16 @@
           "label": "SCTP"
         }
       ]
+    },
+    {
+      "id": "checksum",
+      "label": "Header Checksum",
+      "offset": 10,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 791 §3.1",
+      "min": 0,
+      "max": 65535
     }
   ]
 }

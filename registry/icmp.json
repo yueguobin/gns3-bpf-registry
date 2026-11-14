@@ -2,7 +2,7 @@
   "id": "icmp",
   "label": "ICMP",
   "rfc": ["792"],
-  "notes": "ICMP over IPv4 (protocol 1). The offsets assume the 8-byte common header: Type, Code, Checksum and four type-dependent bytes. The checksum is a computed field and is not offered as a filter; the rest-of-header bytes (identifier/sequence for echo, and so on) are type-dependent and are not modelled in v1. ICMPv6 (RFC 4443) is a different protocol and is not covered by this entry. The Code field is kept as a number because its meaning depends on Type.",
+  "notes": "ICMP over IPv4 (protocol 1). All fields of the 8-byte common header are modelled. The four bytes after the checksum are modelled at their fixed offsets as Identifier and Sequence Number; for other message types those bytes carry type-specific data (gateway, pointer, and so on) that is not modelled. ICMPv6 (RFC 4443) is a different protocol and is not covered by this entry. The Code field is kept as a number because its meaning depends on Type.",
   "anchor": {
     "header": "icmp",
     "base": 0
@@ -73,6 +73,36 @@
       "ref": "RFC 792 (Message Formats)",
       "min": 0,
       "max": 255
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 792 (Message Formats)",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "identifier",
+      "label": "Identifier",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 792 (Echo or Echo Reply Message)",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "sequence",
+      "label": "Sequence Number",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 792 (Echo or Echo Reply Message)",
+      "min": 0,
+      "max": 65535
     }
   ]
 }

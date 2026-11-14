@@ -2,26 +2,53 @@
   "stack": [
     {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
     {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
-    {"layer": "TCP", "fields": {"sport": 12345, "dport": 80, "chksum": "$PIN", "flags": 2, "window": 8192}}
+    {"layer": "TCP", "fields": {"sport": 12345, "dport": 80, "seq": 0, "ack": 0, "dataofs": 5, "reserved": 0, "flags": 2, "window": 8192, "chksum": "$PIN", "urgptr": 0}}
   ],
   "anchor": {"header": "tcp", "base": 0},
   "headerLength": 20,
+  "fieldMap": {"checksum": "TCP.chksum", "data_offset": "dataofs"},
   "probe": {
     "flags": ["0x55", "0xaa"],
-    "window": ["0x0f0f", "0xf0f0"]
+    "window": ["0x0f0f", "0xf0f0"],
+    "seq": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "ack": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "urgptr": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "data_offset": "the high nibble of byte 12 controls the header length, so the probe cannot isolate it",
+    "reserved": "the low nibble of byte 12; sub-byte field the leading-aligned probe model cannot map"
   },
   "crosscheck": {
     "flags": "0x5a",
-    "window": "0x5a5a"
+    "window": "0x5a5a",
+    "seq": "0x5a5a5a5a",
+    "ack": "0x5a5a5a5a",
+    "data_offset": 9,
+    "reserved": [3, 6],
+    "checksum": "0x5a5a",
+    "urgptr": "0x5a5a"
   },
   "fixtures": {
     "flags": [2, 16],
-    "window": [100, 101]
+    "window": [100, 101],
+    "seq": ["0x12345678", "0x12345679"],
+    "ack": ["0x11111111", "0x22222222"],
+    "data_offset": [5, 6],
+    "reserved": [0, 1],
+    "checksum": ["0x1234", "0x1235"],
+    "urgptr": [0, 1]
   },
   "vectors": [
     {"name": "tcp-flags-syn", "select": [{"field": "flags", "flags": ["SYN"]}]},
     {"name": "tcp-flags-syn-ack", "select": [{"field": "flags", "flags": ["SYN", "ACK"]}]},
     {"name": "tcp-flags-value-0x12", "select": [{"field": "flags", "value": 18}]},
-    {"name": "tcp-window-65535", "select": [{"field": "window", "value": 65535}]}
+    {"name": "tcp-window-65535", "select": [{"field": "window", "value": 65535}]},
+    {"name": "tcp-seq-305419896", "select": [{"field": "seq", "value": 305419896}]},
+    {"name": "tcp-ack-286331153", "select": [{"field": "ack", "value": 286331153}]},
+    {"name": "tcp-data-offset-5", "select": [{"field": "data_offset", "value": 5}]},
+    {"name": "tcp-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "tcp-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "tcp-urgptr-1", "select": [{"field": "urgptr", "value": 1}]}
   ]
 }

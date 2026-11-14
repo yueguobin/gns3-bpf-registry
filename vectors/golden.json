@@ -167,6 +167,39 @@
       "expect": "icmp[1:1] == 0"
     },
     {
+      "name": "icmp-checksum-0x1234",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "icmp[2:2] == 4660"
+    },
+    {
+      "name": "icmp-identifier-1",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "identifier",
+          "value": 1
+        }
+      ],
+      "expect": "icmp[4:2] == 1"
+    },
+    {
+      "name": "icmp-sequence-1",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "sequence",
+          "value": 1
+        }
+      ],
+      "expect": "icmp[6:2] == 1"
+    },
+    {
       "name": "icmp-type-and-code",
       "entry": "icmp",
       "select": [
@@ -180,6 +213,28 @@
         }
       ],
       "expect": "icmp[0:1] == 0x8 and icmp[1:1] == 0"
+    },
+    {
+      "name": "ipv4-version-4",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "version",
+          "value": 4
+        }
+      ],
+      "expect": "(ip[0:1] & 0xf0) == 0x40"
+    },
+    {
+      "name": "ipv4-ihl-5",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "ihl",
+          "value": 5
+        }
+      ],
+      "expect": "(ip[0:1] & 0xf) == 0x5"
     },
     {
       "name": "ipv4-tos-16",
@@ -204,6 +259,39 @@
       "expect": "ip[2:2] == 1500"
     },
     {
+      "name": "ipv4-id-4660",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "id",
+          "value": 4660
+        }
+      ],
+      "expect": "ip[4:2] == 4660"
+    },
+    {
+      "name": "ipv4-flags-df",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "flags",
+          "value": 2
+        }
+      ],
+      "expect": "(ip[6:1] & 0xe0) == 0x40"
+    },
+    {
+      "name": "ipv4-frag-offset-1",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "frag_offset",
+          "value": 1
+        }
+      ],
+      "expect": "(ip[6:2] & 0x1fff) == 0x1"
+    },
+    {
       "name": "ipv4-ttl-64",
       "entry": "ipv4",
       "select": [
@@ -224,6 +312,17 @@
         }
       ],
       "expect": "ip[9:1] == 0x6"
+    },
+    {
+      "name": "ipv4-checksum-0x1234",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip[10:2] == 4660"
     },
     {
       "name": "ipv4-ttl-and-protocol",
@@ -366,6 +465,72 @@
         }
       ],
       "expect": "tcp[14:2] == 65535"
+    },
+    {
+      "name": "tcp-seq-305419896",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "seq",
+          "value": 305419896
+        }
+      ],
+      "expect": "tcp[4:4] == 305419896"
+    },
+    {
+      "name": "tcp-ack-286331153",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "ack",
+          "value": 286331153
+        }
+      ],
+      "expect": "tcp[8:4] == 286331153"
+    },
+    {
+      "name": "tcp-data-offset-5",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "data_offset",
+          "value": 5
+        }
+      ],
+      "expect": "(tcp[12:1] & 0xf0) == 0x50"
+    },
+    {
+      "name": "tcp-reserved-0",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "(tcp[12:1] & 0xf) == 0x0"
+    },
+    {
+      "name": "tcp-checksum-0x1234",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "tcp[16:2] == 4660"
+    },
+    {
+      "name": "tcp-urgptr-1",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "urgptr",
+          "value": 1
+        }
+      ],
+      "expect": "tcp[18:2] == 1"
     },
     {
       "name": "udp-length-8",

@@ -18,7 +18,10 @@ knowledge; the tools contain only generic logic:
     manual       fields the probe cannot derive (bit-packed or
                  length-changing), with the reason; crosscheck still
                  verifies them byte for byte
-    crosscheck   point-read sentinels for crosscheck.py
+    crosscheck   point-read sentinels for crosscheck.py; a value is
+                 either the sentinel or a ``[build_value, expected]``
+                 pair when the kwarg encoding differs from the wire
+                 bits (e.g. scapy's 3-bit TCP "reserved" beside NS)
     fixtures     canonical (positive, negative) values per field
     vectors      golden vector specs for make_vectors.py
 
@@ -116,7 +119,7 @@ class RecipeSpec:
     field_map: dict[str, str]
     probe: dict[str, tuple[int, int]]
     manual: dict[str, str]
-    crosscheck: dict[str, int]
+    crosscheck: dict[str, tuple[int, int]]
     fixtures: dict[str, tuple[int, int]]
     vectors: list[dict]
 
@@ -149,6 +152,13 @@ def _int_pair(entry_id: str, field_id: str, pair) -> tuple[int, int]:
     return parse_int(pair[0]), parse_int(pair[1])
 
 
+def _crosscheck_pair(entry_id: str, field_id: str, value) -> tuple[int, int]:
+    if isinstance(value, list):
+        return _int_pair(entry_id, field_id, value)
+    sentinel = parse_int(value)
+    return sentinel, sentinel
+
+
 def load_spec(path: Path) -> RecipeSpec:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -174,7 +184,7 @@ def load_spec(path: Path) -> RecipeSpec:
             fid: str(reason) for fid, reason in data.get("manual", {}).items()
         },
         crosscheck={
-            fid: parse_int(value)
+            fid: _crosscheck_pair(entry_id, fid, value)
             for fid, value in data.get("crosscheck", {}).items()
         },
         fixtures={

@@ -1,34 +1,60 @@
 {
   "stack": [
     {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
-    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "tos": 0, "len": 20, "ttl": 64, "proto": 0}}
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "version": 4, "ihl": 5, "tos": 0, "len": 20, "id": 1, "flags": 0, "frag": 0, "ttl": 64, "proto": 0}}
   ],
   "anchor": {"header": "ip", "base": 0},
   "headerLength": 20,
-  "fieldMap": {"total_length": "len", "protocol": "proto"},
+  "fieldMap": {"total_length": "len", "protocol": "proto", "frag_offset": "frag", "checksum": "chksum"},
   "probe": {
     "tos": ["0x0f", "0xf0"],
     "total_length": ["0x0f0f", "0xf0f0"],
     "ttl": ["0x0f", "0xf0"],
-    "protocol": ["0x0f", "0xf0"]
+    "protocol": ["0x0f", "0xf0"],
+    "id": ["0x0f0f", "0xf0f0"],
+    "checksum": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "version": "the high nibble of byte 0; sub-byte field the leading-aligned probe model cannot map",
+    "ihl": "the low nibble of byte 0 controls the header length, so the probe cannot isolate it",
+    "flags": "the high 3 bits of the word at offset 6; mid-aligned masked view",
+    "frag_offset": "the low 13 bits of the word at offset 6; the probe cannot derive a partial-word mask"
   },
   "crosscheck": {
+    "version": 6,
+    "ihl": 5,
     "tos": "0x5a",
     "total_length": "0x1234",
+    "id": "0x5a5a",
+    "flags": 3,
+    "frag_offset": "0x1234",
     "ttl": "0x5a",
-    "protocol": "0x5a"
+    "protocol": "0x5a",
+    "checksum": "0x5a5a"
   },
   "fixtures": {
+    "version": [4, 5],
+    "ihl": [5, 6],
     "tos": [16, 17],
     "total_length": [40, 41],
+    "id": ["0x1234", "0x1235"],
+    "flags": [2, 0],
+    "frag_offset": [0, 1],
     "ttl": [64, 65],
-    "protocol": [6, 17]
+    "protocol": [6, 17],
+    "checksum": ["0x1234", "0x1235"]
   },
   "vectors": [
+    {"name": "ipv4-version-4", "select": [{"field": "version", "value": 4}]},
+    {"name": "ipv4-ihl-5", "select": [{"field": "ihl", "value": 5}]},
     {"name": "ipv4-tos-16", "select": [{"field": "tos", "value": 16}]},
     {"name": "ipv4-total-length-1500", "select": [{"field": "total_length", "value": 1500}]},
+    {"name": "ipv4-id-4660", "select": [{"field": "id", "value": 4660}]},
+    {"name": "ipv4-flags-df", "select": [{"field": "flags", "value": 2}]},
+    {"name": "ipv4-frag-offset-1", "select": [{"field": "frag_offset", "value": 1}]},
     {"name": "ipv4-ttl-64", "select": [{"field": "ttl", "value": 64}]},
     {"name": "ipv4-protocol-tcp", "select": [{"field": "protocol", "value": 6}]},
+    {"name": "ipv4-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
     {"name": "ipv4-ttl-and-protocol", "select": [{"field": "protocol", "value": 6}, {"field": "ttl", "value": 64}]},
     {"name": "ipv4-ttl-64-vlan-100", "vlan": 100, "select": [{"field": "ttl", "value": 64}]}
   ]
