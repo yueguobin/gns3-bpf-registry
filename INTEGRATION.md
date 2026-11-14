@@ -16,7 +16,7 @@ https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/registry-v<version
 2. Validate it against the schema.
 3. For each `files` entry, fetch `registry/<name>`, compute its SHA-256 digest and compare it with the manifest value.
 4. Validate every entry against the schema.
-5. Compile at least one expression per entry with the consumer's compiler and run `tcpdump -d` on the result.
+5. Validate every `locator` primitive and every `emit` template probe with `tcpdump -d`. The server has no field-selection compiler; compiler consistency is enforced separately by the web UI's golden-vector test suite.
 6. Activate the version.
 
 The manifest contains `schemaVersion`, `registryVersion` and `files` (one SHA-256 per file). Compare `registryVersion` to detect changes; do not depend on HTTP ETag behaviour.
