@@ -31,6 +31,8 @@ jobs:
         run: pip install -r tools/requirements.txt
       - name: Crosscheck registry offsets against scapy
         run: python tools/crosscheck.py
+      - name: Check auto-draft probes for registry drift
+        run: python tools/auto_draft.py --check
       - name: Verify schema, expressions and fixture replay
         run: python tools/verify.py
       - name: Check generated fixtures
