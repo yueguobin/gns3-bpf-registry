@@ -1,0 +1,120 @@
+{
+  "id": "ipv6",
+  "label": "IPv6",
+  "rfc": ["8200"],
+  "notes": "IPv6 fixed 40-byte header. Source and destination addresses are matched with host primitives and are intentionally not fields. Version, Traffic Class and Flow Label are three overlapping masked views of the first 32-bit word. Extension headers do not shift the fields modelled here. Payload Length excludes the fixed header and any extension headers (RFC 8200 §3).",
+  "anchor": {
+    "header": "ip6",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 40,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 8200 §3",
+      "min": 0,
+      "max": 15
+    },
+    {
+      "id": "traffic_class",
+      "label": "Traffic Class",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x0ff0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 8200 §3",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "flow_label",
+      "label": "Flow Label",
+      "offset": 0,
+      "size": 4,
+      "mask": "0x000fffff",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 8200 §3",
+      "min": 0,
+      "max": 1048575
+    },
+    {
+      "id": "payload_length",
+      "label": "Payload Length",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 8200 §3",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "next_header",
+      "label": "Next Header",
+      "offset": 6,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8200 §3",
+      "values": [
+        {
+          "value": 0,
+          "label": "Hop-by-Hop Options"
+        },
+        {
+          "value": 6,
+          "label": "TCP"
+        },
+        {
+          "value": 17,
+          "label": "UDP"
+        },
+        {
+          "value": 43,
+          "label": "Routing"
+        },
+        {
+          "value": 44,
+          "label": "Fragment"
+        },
+        {
+          "value": 47,
+          "label": "GRE"
+        },
+        {
+          "value": 50,
+          "label": "ESP"
+        },
+        {
+          "value": 58,
+          "label": "ICMPv6"
+        },
+        {
+          "value": 59,
+          "label": "No Next Header"
+        },
+        {
+          "value": 60,
+          "label": "Destination Options"
+        }
+      ]
+    },
+    {
+      "id": "hop_limit",
+      "label": "Hop Limit",
+      "offset": 7,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8200 §3",
+      "min": 0,
+      "max": 255
+    }
+  ]
+}

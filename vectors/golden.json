@@ -24,6 +24,28 @@
       "expect": "arp[6:2] == 0x2"
     },
     {
+      "name": "esp-spi-0x12345678",
+      "entry": "esp",
+      "select": [
+        {
+          "field": "spi",
+          "value": 305419896
+        }
+      ],
+      "expect": "ip proto 50 and ip[20:4] == 305419896"
+    },
+    {
+      "name": "esp-seq-1",
+      "entry": "esp",
+      "select": [
+        {
+          "field": "seq",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 50 and ip[24:4] == 1"
+    },
+    {
       "name": "ethernet-ethertype-ipv4",
       "entry": "ethernet",
       "select": [
@@ -44,6 +66,72 @@
         }
       ],
       "expect": "ether[12:2] == 0x806"
+    },
+    {
+      "name": "gre-protocol-ipv4",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 2048
+        }
+      ],
+      "expect": "ip proto 47 and ip[22:2] == 0x800"
+    },
+    {
+      "name": "gre-protocol-transparent-ethernet",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 25944
+        }
+      ],
+      "expect": "ip proto 47 and ip[22:2] == 0x6558"
+    },
+    {
+      "name": "gre-checksum-present",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "c_bit",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 47 and (ip[20:2] & 0x8000) == 0x8000"
+    },
+    {
+      "name": "gre-key-present",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "k_bit",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 47 and (ip[20:2] & 0x2000) == 0x2000"
+    },
+    {
+      "name": "gre-sequence-present",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "s_bit",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 47 and (ip[20:2] & 0x1000) == 0x1000"
+    },
+    {
+      "name": "gre-version-1",
+      "entry": "gre",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 47 and (ip[20:2] & 0x7) == 0x1"
     },
     {
       "name": "icmp-type-echo-request",
@@ -165,6 +253,72 @@
       "expect": "vlan 100 and ip[8:1] == 64"
     },
     {
+      "name": "ipv6-version-6",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "version",
+          "value": 6
+        }
+      ],
+      "expect": "(ip6[0:1] & 0xf0) == 0x60"
+    },
+    {
+      "name": "ipv6-traffic-class-42",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "traffic_class",
+          "value": 42
+        }
+      ],
+      "expect": "(ip6[0:2] & 0xff0) == 0x2a0"
+    },
+    {
+      "name": "ipv6-flow-label-74565",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "flow_label",
+          "value": 74565
+        }
+      ],
+      "expect": "(ip6[0:4] & 0xfffff) == 0x12345"
+    },
+    {
+      "name": "ipv6-payload-length-1280",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "payload_length",
+          "value": 1280
+        }
+      ],
+      "expect": "ip6[4:2] == 1280"
+    },
+    {
+      "name": "ipv6-next-header-tcp",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "next_header",
+          "value": 6
+        }
+      ],
+      "expect": "ip6[6:1] == 0x6"
+    },
+    {
+      "name": "ipv6-hop-limit-64",
+      "entry": "ipv6",
+      "select": [
+        {
+          "field": "hop_limit",
+          "value": 64
+        }
+      ],
+      "expect": "ip6[7:1] == 64"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
@@ -212,6 +366,39 @@
         }
       ],
       "expect": "tcp[14:2] == 65535"
+    },
+    {
+      "name": "udp-length-8",
+      "entry": "udp",
+      "select": [
+        {
+          "field": "length",
+          "value": 8
+        }
+      ],
+      "expect": "udp[4:2] == 8"
+    },
+    {
+      "name": "udp-length-1500",
+      "entry": "udp",
+      "select": [
+        {
+          "field": "length",
+          "value": 1500
+        }
+      ],
+      "expect": "udp[4:2] == 1500"
+    },
+    {
+      "name": "udp-checksum-0x1234",
+      "entry": "udp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "udp[6:2] == 4660"
     },
     {
       "name": "vlan-id-100",

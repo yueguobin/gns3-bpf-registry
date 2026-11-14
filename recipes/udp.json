@@ -1,0 +1,27 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 53, "len": 8, "chksum": "$PIN"}}
+  ],
+  "anchor": {"header": "udp", "base": 0},
+  "headerLength": 8,
+  "fieldMap": {"length": "len", "checksum": "UDP.chksum"},
+  "probe": {
+    "length": ["0x0f0f", "0xf0f0"],
+    "checksum": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "length": "0x5a5a",
+    "checksum": "0x5a5a"
+  },
+  "fixtures": {
+    "length": [8, 9],
+    "checksum": ["0x1234", "0x1235"]
+  },
+  "vectors": [
+    {"name": "udp-length-8", "select": [{"field": "length", "value": 8}]},
+    {"name": "udp-length-1500", "select": [{"field": "length", "value": 1500}]},
+    {"name": "udp-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]}
+  ]
+}

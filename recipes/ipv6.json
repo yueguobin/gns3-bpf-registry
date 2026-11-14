@@ -1,0 +1,43 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IPv6", "fields": {"src": "2001:db8::1", "dst": "2001:db8::2", "version": 6, "tc": 0, "fl": 0, "plen": 0, "nh": 6, "hlim": 64}}
+  ],
+  "anchor": {"header": "ip6", "base": 0},
+  "headerLength": 40,
+  "fieldMap": {"next_header": "nh", "hop_limit": "hlim", "payload_length": "plen", "traffic_class": "tc", "flow_label": "fl"},
+  "probe": {
+    "payload_length": ["0x0f0f", "0xf0f0"],
+    "next_header": ["0x0f", "0xf0"],
+    "hop_limit": ["0x0f", "0xf0"]
+  },
+  "manual": {
+    "version": "high nibble of the first word; sub-byte field the leading-aligned probe model cannot map",
+    "traffic_class": "8 bits straddling the first two bytes; the probe cannot derive a mid-aligned mask",
+    "flow_label": "low 20 bits of the first word; the probe cannot derive a mid-aligned mask"
+  },
+  "crosscheck": {
+    "version": 6,
+    "traffic_class": "0x2a",
+    "flow_label": "0x12345",
+    "payload_length": "0x5a5a",
+    "next_header": "0x5a",
+    "hop_limit": "0x5a"
+  },
+  "fixtures": {
+    "version": [6, 7],
+    "traffic_class": ["0x2a", "0x2b"],
+    "flow_label": ["0x12345", "0x12346"],
+    "payload_length": [1280, 1281],
+    "next_header": [6, 17],
+    "hop_limit": [64, 65]
+  },
+  "vectors": [
+    {"name": "ipv6-version-6", "select": [{"field": "version", "value": 6}]},
+    {"name": "ipv6-traffic-class-42", "select": [{"field": "traffic_class", "value": 42}]},
+    {"name": "ipv6-flow-label-74565", "select": [{"field": "flow_label", "value": 74565}]},
+    {"name": "ipv6-payload-length-1280", "select": [{"field": "payload_length", "value": 1280}]},
+    {"name": "ipv6-next-header-tcp", "select": [{"field": "next_header", "value": 6}]},
+    {"name": "ipv6-hop-limit-64", "select": [{"field": "hop_limit", "value": 64}]}
+  ]
+}

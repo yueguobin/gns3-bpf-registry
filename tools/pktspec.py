@@ -12,8 +12,12 @@ knowledge; the tools contain only generic logic:
                  cross-checked by ``auto_draft --check``
     headerLength fixed header size = the probe layer window
     fieldMap     registry field id -> scapy kwarg; identity mappings
-                 may be omitted
+                 may be omitted. Targets may be layer-qualified
+                 (``UDP.chksum``) when two layers share a kwarg name.
     probe        max-contrast sentinel pairs for the differential probe
+    manual       fields the probe cannot derive (bit-packed or
+                 length-changing), with the reason; crosscheck still
+                 verifies them byte for byte
     crosscheck   point-read sentinels for crosscheck.py
     fixtures     canonical (positive, negative) values per field
     vectors      golden vector specs for make_vectors.py
@@ -30,7 +34,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from scapy.all import ARP, Dot1Q, Ether, ICMP, IP, Raw, TCP, UDP
+from scapy.all import ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, parse_int
@@ -42,7 +46,7 @@ RECIPES_DIR = ROOT / "recipes"
 # listed here means adding one import and one entry.
 LAYERS = {
     cls.__name__: cls
-    for cls in (ARP, Dot1Q, Ether, ICMP, IP, Raw, TCP, UDP, VXLAN)
+    for cls in (ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP, VXLAN)
 }
 
 ETH_SRC = "02:00:00:00:00:01"
@@ -111,12 +115,21 @@ class RecipeSpec:
     header_length: int | None
     field_map: dict[str, str]
     probe: dict[str, tuple[int, int]]
+    manual: dict[str, str]
     crosscheck: dict[str, int]
     fixtures: dict[str, tuple[int, int]]
     vectors: list[dict]
 
     def scapy_name(self, field_id: str) -> str:
         return self.field_map.get(field_id, field_id)
+
+
+def _split_target(target: str) -> tuple[str | None, str]:
+    """Split an optionally layer-qualified target (``UDP.chksum``)."""
+    if "." in target:
+        layer, kwarg = target.split(".", 1)
+        return layer, kwarg
+    return None, target
 
 
 def _layer(entry_id: str, obj) -> LayerSpec:
@@ -157,6 +170,9 @@ def load_spec(path: Path) -> RecipeSpec:
             fid: _int_pair(entry_id, fid, pair)
             for fid, pair in data.get("probe", {}).items()
         },
+        manual={
+            fid: str(reason) for fid, reason in data.get("manual", {}).items()
+        },
         crosscheck={
             fid: parse_int(value)
             for fid, value in data.get("crosscheck", {}).items()
@@ -172,24 +188,49 @@ def load_spec(path: Path) -> RecipeSpec:
 
 
 def _validate(spec: RecipeSpec) -> None:
-    """Every referenced field must resolve to exactly one stack kwarg."""
+    """Every referenced field must resolve to one stack kwarg."""
     entry_id = spec.entry_id
     field_ids = (
-        set(spec.field_map) | set(spec.probe) | set(spec.crosscheck) | set(spec.fixtures)
+        set(spec.field_map)
+        | set(spec.probe)
+        | set(spec.manual)
+        | set(spec.crosscheck)
+        | set(spec.fixtures)
     )
+    both = set(spec.probe) & set(spec.manual)
+    if both:
+        raise RecipeError(
+            f"{entry_id}: fields cannot be both probeable and manual: {sorted(both)}"
+        )
+    layer_names = {layer.layer for layer in spec.stack}
     for field_id in sorted(field_ids):
         target = spec.scapy_name(field_id)
-        owners = [
-            layer.layer for layer in spec.stack if target in layer.fields
-        ]
+        layer_name, kwarg = _split_target(target)
+        if layer_name is not None:
+            if layer_name not in layer_names:
+                raise RecipeError(
+                    f"{entry_id}.{field_id}: unknown layer {layer_name!r} "
+                    f"in target {target!r}"
+                )
+            if not any(
+                layer.layer == layer_name and kwarg in layer.fields
+                for layer in spec.stack
+            ):
+                raise RecipeError(
+                    f"{entry_id}.{field_id}: layer {layer_name} does not "
+                    f"declare {kwarg!r}; add it to that layer's base fields"
+                )
+            continue
+        owners = [layer.layer for layer in spec.stack if kwarg in layer.fields]
         if not owners:
             raise RecipeError(
-                f"{entry_id}.{field_id}: no stack layer declares {target!r}; "
+                f"{entry_id}.{field_id}: no stack layer declares {kwarg!r}; "
                 "add it to the layer's base fields"
             )
         if len(owners) > 1:
             raise RecipeError(
-                f"{entry_id}.{field_id}: {target!r} declared in layers {owners}"
+                f"{entry_id}.{field_id}: {kwarg!r} declared in layers {owners}; "
+                "qualify the target as 'Layer.name'"
             )
     targets = [spec.scapy_name(field_id) for field_id in sorted(field_ids)]
     duplicates = {t for t in targets if targets.count(t) > 1}
@@ -231,24 +272,42 @@ def build_packet(
     """Build the recipe's packet as a scapy packet.
 
     ``field_id``/``value`` override one registry field (mapped through
-    ``fieldMap``); ``layer_overrides`` overrides arbitrary kwargs on a
-    layer by scapy class name (e.g. ``{"UDP": {"dport": 8472}}``).
-    ``pin_checksums=False`` drops ``$PIN`` values so scapy computes real
-    checksums (used by the fixtures, which should be valid packets).
+    ``fieldMap``; targets may be layer-qualified as ``UDP.chksum`` when
+    two layers share a kwarg name); ``layer_overrides`` overrides
+    arbitrary kwargs on a layer by scapy class name (e.g.
+    ``{"UDP": {"dport": 8472}}``). ``pin_checksums=False`` drops ``$PIN``
+    values so scapy computes real checksums (used by the fixtures, which
+    should be valid packets).
     """
     extra = {name: dict(fields) for name, fields in (layer_overrides or {}).items()}
-    target = spec.scapy_name(field_id) if field_id is not None else None
-    if target is not None:
-        if not any(target in layer.fields for layer in spec.stack):
-            raise RecipeError(
-                f"{spec.entry_id}.{field_id}: no stack layer declares {target!r}"
-            )
+    target_layer: str | None = None
+    target_kwarg: str | None = None
+    if field_id is not None:
+        target = spec.scapy_name(field_id)
+        layer_name, kwarg = _split_target(target)
+        if layer_name is not None:
+            target_layer, target_kwarg = layer_name, kwarg
+        else:
+            owners = [
+                layer for layer in spec.stack if kwarg in layer.fields
+            ]
+            if not owners:
+                raise RecipeError(
+                    f"{spec.entry_id}.{field_id}: no stack layer declares {target!r}"
+                )
+            if len(owners) > 1:
+                raise RecipeError(
+                    f"{spec.entry_id}.{field_id}: {target!r} declared in "
+                    f"layers {[layer.layer for layer in owners]}; qualify "
+                    "the target as 'Layer.name'"
+                )
+            target_layer, target_kwarg = owners[0].layer, kwarg
 
     packet = None
     for layer in spec.stack:
         overrides = extra.pop(layer.layer, {})
-        if target is not None and target in layer.fields:
-            overrides[target] = resolve(value)
+        if target_layer == layer.layer:
+            overrides[target_kwarg] = resolve(value)
         built = layer.instantiate(overrides, pin_checksums=pin_checksums)
         packet = built if packet is None else packet / built
     if extra:

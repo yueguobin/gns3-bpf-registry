@@ -1,0 +1,88 @@
+{
+  "id": "gre",
+  "label": "GRE",
+  "rfc": ["2784", "2890"],
+  "notes": "GRE base header over IPv4 transport. The first 16-bit word is modelled as four masked views: the C, K and S presence bits and the Version field. The optional Checksum, Key and Sequence Number payload fields are not modelled: their offsets depend on which presence bits are set (RFC 2784 §2.1, RFC 2890 §2.1), so they are not fixed layouts. PPTP's extended GRE header and GRE over IPv6 are out of scope.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 47"],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "c_bit",
+      "label": "Checksum Present (C)",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x8000",
+      "shift": 15,
+      "kind": "number",
+      "ref": "RFC 2784 §2.1",
+      "min": 0,
+      "max": 1
+    },
+    {
+      "id": "k_bit",
+      "label": "Key Present (K)",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x2000",
+      "shift": 13,
+      "kind": "number",
+      "ref": "RFC 2890 §2.1",
+      "min": 0,
+      "max": 1
+    },
+    {
+      "id": "s_bit",
+      "label": "Sequence Present (S)",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x1000",
+      "shift": 12,
+      "kind": "number",
+      "ref": "RFC 2890 §2.1",
+      "min": 0,
+      "max": 1
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x0007",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 2784 §2.1",
+      "min": 0,
+      "max": 7
+    },
+    {
+      "id": "protocol",
+      "label": "Protocol Type",
+      "offset": 2,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 2784 §2.1",
+      "values": [
+        {
+          "value": 2048,
+          "label": "IPv4"
+        },
+        {
+          "value": 25944,
+          "label": "Transparent Ethernet Bridging"
+        },
+        {
+          "value": 34887,
+          "label": "MPLS Unicast"
+        },
+        {
+          "value": 34525,
+          "label": "IPv6"
+        }
+      ]
+    }
+  ]
+}

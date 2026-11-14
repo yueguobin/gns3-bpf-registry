@@ -11,7 +11,7 @@
 
 ## Adding a protocol
 
-1. Add `recipes/<id>.json`: the packet stack bottom-up with every computed field pinned (`"chksum": "$PIN"`), the fixed header length, any registry-id-to-scapy-kwarg renames in `fieldMap`, and per-field probe sentinels (max-contrast, e.g. `["0x0f0f", "0xf0f0"]`). Also fill in the `crosscheck`, `fixtures` and `vectors` tables — they are the ones every tool consumes. The probed layer must be last in the stack.
+1. Add `recipes/<id>.json`: the packet stack bottom-up with every computed field pinned (`"chksum": "$PIN"`), the fixed header length, any registry-id-to-scapy-kwarg renames in `fieldMap` (qualify as `Layer.name` when two layers share a kwarg), and per-field probe sentinels (max-contrast, e.g. `["0x0f0f", "0xf0f0"]`). Fields the probe cannot derive (bit-packed, mid-aligned or length-changing) go under `manual` with a reason; crosscheck still verifies them byte for byte. Also fill in the `crosscheck`, `fixtures` and `vectors` tables — they are the ones every tool consumes. The probed layer must be last in the stack.
 2. Run `.venv/bin/python tools/auto_draft.py --draft --entry <id>` and confirm the probed offsets against the RFC header diagram before writing anything by hand. Variable-length and conditional fields come back as `needs_human`; classify them yourself.
 3. Add `registry/<id>.json` following `schema/registry.schema.json`. The draft skeleton is a starting point, not a drop-in: complete every `TODO` (label, `ref`, `kind` and its payload, `locator`) — drafts get no governance exemption.
 4. Run:
