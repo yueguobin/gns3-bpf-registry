@@ -11,20 +11,22 @@
 
 ## Adding a protocol
 
-1. Add `registry/<id>.json` following `schema/registry.schema.json`.
-2. Add the protocol's fixture construction to `tools/make_fixtures.py`: a packet builder and canonical positive/negative values for every field. Add sentinel values to `tools/crosscheck.py` as well.
-3. Add golden vectors for every new field to `tools/make_vectors.py`.
-4. Run:
+1. Add a probe recipe for the protocol to `tools/auto_draft.py`: a packet builder with every computed field pinned (`chksum=0x1234`), the fixed header length, and max-contrast sentinels per field (`0x0F0F0F` vs `0xF0F0F0`). Run `.venv/bin/python tools/auto_draft.py --draft --entry <id>` and confirm the probed offsets against the RFC header diagram before writing anything by hand. Variable-length and conditional fields come back as `needs_human`; classify them yourself.
+2. Add `registry/<id>.json` following `schema/registry.schema.json`. The draft skeleton is a starting point, not a drop-in: complete every `TODO` (label, `ref`, `kind` and its payload, `locator`) — drafts get no governance exemption.
+3. Add the protocol's fixture construction to `tools/make_fixtures.py`: a packet builder and canonical positive/negative values for every field. Add sentinel values to `tools/crosscheck.py` as well.
+4. Add golden vectors for every new field to `tools/make_vectors.py`.
+5. Run:
 
    ```sh
    .venv/bin/python tools/make_fixtures.py
    .venv/bin/python tools/make_manifest.py
    .venv/bin/python tools/make_vectors.py
    .venv/bin/python tools/crosscheck.py
+   .venv/bin/python tools/auto_draft.py --check
    .venv/bin/python tools/verify.py
    ```
 
-5. Commit the entry and the regenerated manifest, fixtures and vectors.
+6. Commit the entry and the regenerated manifest, fixtures and vectors.
 
 ## Changing an existing field
 
@@ -41,7 +43,7 @@ Follow rule 2. In addition, update the field's fixture values, the sentinel in `
 
 - [ ] Every field has a `ref`.
 - [ ] The positive fixture matches and the negative fixture does not.
-- [ ] `crosscheck.py`, `verify.py` and all three `--check` commands pass.
+- [ ] `crosscheck.py`, `auto_draft.py --check`, `verify.py` and all three `--check` commands pass.
 - [ ] Byte-boundary changes have an issue, evidence, two approvals and a version bump.
 - [ ] No generated file was hand-edited.
 

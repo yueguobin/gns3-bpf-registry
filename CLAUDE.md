@@ -22,6 +22,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r tools/requirements.txt
 
 .venv/bin/python tools/crosscheck.py
+.venv/bin/python tools/auto_draft.py --check
 .venv/bin/python tools/verify.py
 .venv/bin/python tools/make_fixtures.py --check
 .venv/bin/python tools/make_manifest.py --check
@@ -41,6 +42,7 @@ Compile one expression:
 ## Verification rules
 
 - `crosscheck.py` builds each field with a sentinel value and asserts the serialized bytes at the documented offset. It deliberately does not read scapy `fields_desc`: the VXLAN class is a union and reports the wrong VNI offset.
+- `auto_draft.py` re-derives every registered field's `offset`/`size`/`mask`/`shift` from serialized bytes (differential probes with pinned computed fields) and compares against the registry; `--check` fails on drift, missing recipe coverage or disagreement with crosscheck's sentinel table. `--draft --entry <id>` emits candidate skeletons into `drafts/` (gitignored); drafts get no governance exemption.
 - `verify.py` validates the schema, structural invariants, `tcpdump -d` syntax, golden vectors and fixture replay. Replay counts packets with scapy: positive fixtures must match exactly one packet and negative fixtures zero. Do not rely on tcpdump's exit code.
 - All generators support `--check`; CI fails if a generated artifact is stale.
 
