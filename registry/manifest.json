@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.0",
+  "registryVersion": "2026.11.1",
   "files": {
     "ethernet.json": "sha256:096c2651fbe06030eda33a8cb752c4adc8a0e8f5762d0d109bab9a289d6f782c",
     "ipv4.json": "sha256:5d98ae56d79b35e1ae489d6b4cb7697592780c607823b773c2fe24731f020b01",
