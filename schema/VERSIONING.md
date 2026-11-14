@@ -49,7 +49,7 @@ JSON Schema cannot express these; the verifier enforces them:
 
 - Clause order: VLAN slot, locator group, then fields in registry order.
 - Masked: `(<anchor>[<base+offset>:<size>] & 0x<mask>) == 0x<value << shift>`; parentheses are mandatory.
-- Bit set: `(<anchor>[<offset>:<size>] & 0x<OR of selected bits>) == 0x<same>`.
+- Bit set: `(<anchor>[<base+offset>:<size>] & 0x<OR of selected bits>) == 0x<same>`.
 - Plain number: decimal. Enum: hexadecimal. Masks and masked expected values: lowercase hexadecimal, no padding.
 - One locator is emitted as-is; several become `(a or b)`; an empty locator is omitted.
 - A selection must contain at least one field.

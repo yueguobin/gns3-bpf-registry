@@ -90,6 +90,21 @@
       "expect": "ip[9:1] == 0x6"
     },
     {
+      "name": "ipv4-ttl-and-protocol",
+      "entry": "ipv4",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 6
+        },
+        {
+          "field": "ttl",
+          "value": 64
+        }
+      ],
+      "expect": "ip[8:1] == 64 and ip[9:1] == 0x6"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
@@ -112,6 +127,17 @@
             "SYN",
             "ACK"
           ]
+        }
+      ],
+      "expect": "(tcp[13:1] & 0x12) == 0x12"
+    },
+    {
+      "name": "tcp-flags-value-0x12",
+      "entry": "tcp",
+      "select": [
+        {
+          "field": "flags",
+          "value": 18
         }
       ],
       "expect": "(tcp[13:1] & 0x12) == 0x12"
@@ -159,6 +185,21 @@
         }
       ],
       "expect": "(udp port 4789 or udp port 8472) and (udp[12:4] & 0xffffff00) == 0xffffff00"
+    },
+    {
+      "name": "vxlan-flags-and-vni",
+      "entry": "vxlan",
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        },
+        {
+          "field": "flags",
+          "value": 8
+        }
+      ],
+      "expect": "(udp port 4789 or udp port 8472) and udp[8:1] == 8 and (udp[12:4] & 0xffffff00) == 0x6400"
     },
     {
       "name": "vxlan-vni-100-vlan-100",
