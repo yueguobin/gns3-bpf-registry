@@ -24,6 +24,76 @@
       "expect": "ether[12:2] == 0x806"
     },
     {
+      "name": "arp-opcode-request",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 1
+        }
+      ],
+      "expect": "arp[6:2] == 0x1"
+    },
+    {
+      "name": "arp-opcode-reply",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 2
+        }
+      ],
+      "expect": "arp[6:2] == 0x2"
+    },
+    {
+      "name": "icmp-type-echo-request",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 8
+        }
+      ],
+      "expect": "icmp[0:1] == 0x8"
+    },
+    {
+      "name": "icmp-type-echo-reply",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 0
+        }
+      ],
+      "expect": "icmp[0:1] == 0x0"
+    },
+    {
+      "name": "icmp-code-0",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "code",
+          "value": 0
+        }
+      ],
+      "expect": "icmp[1:1] == 0"
+    },
+    {
+      "name": "icmp-type-and-code",
+      "entry": "icmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 8
+        },
+        {
+          "field": "code",
+          "value": 0
+        }
+      ],
+      "expect": "icmp[0:1] == 0x8 and icmp[1:1] == 0"
+    },
+    {
       "name": "vlan-id-100",
       "entry": "vlan",
       "select": [

@@ -16,7 +16,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from scapy.all import Dot1Q, Ether, IP, Raw, TCP, UDP, wrpcap
+from scapy.all import ARP, Dot1Q, Ether, ICMP, IP, Raw, TCP, UDP, wrpcap
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, load_registry
@@ -32,7 +32,10 @@ VXLAN_VNI = 100
 
 # Canonical (positive, negative) values per field.
 CANONICAL_VALUES = {
+    ("arp", "opcode"): (1, 2),
     ("ethernet", "ether_type"): (0x0800, 0x0806),
+    ("icmp", "type"): (8, 0),
+    ("icmp", "code"): (0, 1),
     ("vlan", "vlan_id"): (100, 101),
     ("ipv4", "tos"): (0x10, 0x11),
     ("ipv4", "total_length"): (40, 41),
@@ -53,6 +56,29 @@ def build_packet(entry_id: str, field_id: str, value: int):
     """Build a packet with one field set to ``value``."""
     if entry_id == "ethernet":
         return Ether(src=ETH_SRC, dst=ETH_DST, type=value) / Raw(b"\x00" * 20)
+
+    if entry_id == "arp":
+        # Addresses must be pinned: scapy otherwise fills hwsrc/psrc from
+        # the host's interface, making fixtures machine-dependent.
+        key = {"opcode": "op"}.get(field_id, field_id)
+        kwargs = {
+            "hwtype": 1,
+            "ptype": 0x0800,
+            "hwlen": 6,
+            "plen": 4,
+            "hwsrc": ETH_SRC,
+            "hwdst": ETH_DST,
+            "psrc": IP_SRC,
+            "pdst": IP_DST,
+        }
+        kwargs[key] = value
+        return _ether() / ARP(**kwargs)
+
+    if entry_id == "icmp":
+        # id/seq stay at 0: scapy zeroes them for some type values
+        kwargs = {"type": 8, "code": 0, "id": 0, "seq": 0}
+        kwargs[field_id] = value
+        return _ether() / IP(src=IP_SRC, dst=IP_DST, proto=1) / ICMP(**kwargs)
 
     if entry_id == "vlan":
         return _ether() / Dot1Q(vlan=value) / IP(src=IP_SRC, dst=IP_DST) / Raw(b"")

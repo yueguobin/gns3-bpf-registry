@@ -36,7 +36,7 @@ from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 from typing import Callable
 
-from scapy.all import Ether, GRE, IP, Raw, TCP, UDP
+from scapy.all import ARP, Ether, GRE, ICMP, IP, Raw, TCP, UDP
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import CompileError, load_registry, parse_int
@@ -100,6 +100,38 @@ def build_vxlan(**kw) -> bytes:
     )
 
 
+def build_icmp(**kw) -> bytes:
+    # chksum is pinned (it sits inside the window); id/seq are pinned to 0
+    # because scapy silently zeroes them for some type values, which would
+    # couple the type probe to the rest-of-header bytes.
+    base = {"type": 8, "code": 0, "chksum": FIXED_CHKSUM, "id": 0, "seq": 0}
+    base.update(kw)
+    return bytes(
+        _ether()
+        / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM, proto=1)
+        / ICMP(**base)
+    )
+
+
+def build_arp(**kw) -> bytes:
+    # Canonical Ethernet/IPv4 encoding: hwlen 6, plen 4. Addresses are
+    # pinned because scapy otherwise fills hwsrc/psrc from the host's
+    # interface, which makes builds machine-dependent.
+    base = {
+        "hwtype": 1,
+        "ptype": 0x0800,
+        "hwlen": 6,
+        "plen": 4,
+        "op": 1,
+        "hwsrc": ETH_SRC,
+        "hwdst": ETH_DST,
+        "psrc": IP_SRC,
+        "pdst": IP_DST,
+    }
+    base.update(kw)
+    return bytes(_ether() / ARP(**base))
+
+
 @dataclass(frozen=True)
 class FieldRecipe:
     """One probed field: registry id, scapy kwarg, max-contrast sentinels.
@@ -134,12 +166,29 @@ class Recipe:
 
 
 RECIPES: dict[str, Recipe] = {
+    "arp": Recipe(
+        build=build_arp,
+        layer_len=28,
+        anchor={"header": "arp", "base": 0},
+        fields=(
+            FieldRecipe("opcode", "op", 0x0F0F, 0xF0F0),
+        ),
+    ),
     "ethernet": Recipe(
         build=build_ethernet,
         layer_len=14,
         anchor={"header": "ether", "base": 0},
         fields=(
             FieldRecipe("ether_type", "type", 0x0F0F, 0xF0F0),
+        ),
+    ),
+    "icmp": Recipe(
+        build=build_icmp,
+        layer_len=8,
+        anchor={"header": "icmp", "base": 0},
+        fields=(
+            FieldRecipe("type", "type", 0x0F, 0xF0),
+            FieldRecipe("code", "code", 0x0F, 0xF0),
         ),
     ),
     "ipv4": Recipe(
