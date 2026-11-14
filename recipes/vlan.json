@@ -1,0 +1,16 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "Dot1Q", "fields": {"vlan": 100}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST"}},
+    {"layer": "Raw", "fields": {"load": ""}}
+  ],
+  "fieldMap": {"vlan_id": "vlan"},
+  "fixtures": {
+    "vlan_id": [100, 101]
+  },
+  "vectors": [
+    {"name": "vlan-id-100", "select": [{"field": "vlan_id", "value": 100}]},
+    {"name": "vlan-id-4094", "select": [{"field": "vlan_id", "value": 4094}]}
+  ]
+}
