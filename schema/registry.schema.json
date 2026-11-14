@@ -1,0 +1,353 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gns3:bpf-registry:schema:v1",
+  "title": "GNS3 BPF registry schema v1",
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "registryVersion", "files"],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "registryVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+\\.json$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["header", "base"],
+      "properties": {
+        "header": {
+          "enum": ["ether", "ip", "ip6", "tcp", "udp", "icmp", "icmp6", "arp"]
+        },
+        "base": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "enumValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "label"],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "bitValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mask", "label"],
+      "properties": {
+        "mask": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "headerField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "kind", "offset", "size", "ref"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": ["number", "enum", "bitset"]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "enum": [1, 2, 4]
+        },
+        "mask": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{1,8}$"
+        },
+        "shift": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/enumValue"
+          }
+        },
+        "bits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/bitValue"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "number"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["min", "max"],
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["values"]
+                },
+                {
+                  "required": ["bits"]
+                }
+              ]
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["min"]
+                },
+                {
+                  "required": ["max"]
+                },
+                {
+                  "required": ["mask"]
+                },
+                {
+                  "required": ["shift"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "enum"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["values"]
+          },
+          "else": {
+            "not": {
+              "required": ["values"]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "bitset"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["bits"]
+          },
+          "else": {
+            "not": {
+              "required": ["bits"]
+            }
+          }
+        }
+      ]
+    },
+    "emitField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "kind", "ref", "emit", "min", "max"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "number"
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "emit": {
+          "type": "string",
+          "pattern": "\\{value\\}"
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "headerEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "rfc", "anchor", "locator", "headerLength", "fields"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rfc": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string"
+        },
+        "anchor": {
+          "$ref": "#/$defs/anchor"
+        },
+        "locator": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "headerLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/headerField"
+          }
+        }
+      }
+    },
+    "primitiveEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "rfc", "fields"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rfc": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/emitField"
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/manifest"
+    },
+    {
+      "$ref": "#/$defs/headerEntry"
+    },
+    {
+      "$ref": "#/$defs/primitiveEntry"
+    }
+  ]
+}
