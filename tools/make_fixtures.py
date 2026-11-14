@@ -58,8 +58,19 @@ def build_packet(entry_id: str, field_id: str, value: int):
         return Ether(src=ETH_SRC, dst=ETH_DST, type=value) / Raw(b"\x00" * 20)
 
     if entry_id == "arp":
+        # Addresses must be pinned: scapy otherwise fills hwsrc/psrc from
+        # the host's interface, making fixtures machine-dependent.
         key = {"opcode": "op"}.get(field_id, field_id)
-        kwargs = {"hwtype": 1, "ptype": 0x0800, "hwlen": 6, "plen": 4}
+        kwargs = {
+            "hwtype": 1,
+            "ptype": 0x0800,
+            "hwlen": 6,
+            "plen": 4,
+            "hwsrc": ETH_SRC,
+            "hwdst": ETH_DST,
+            "psrc": IP_SRC,
+            "pdst": IP_DST,
+        }
         kwargs[key] = value
         return _ether() / ARP(**kwargs)
 

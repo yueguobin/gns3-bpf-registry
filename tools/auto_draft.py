@@ -114,10 +114,20 @@ def build_icmp(**kw) -> bytes:
 
 
 def build_arp(**kw) -> bytes:
-    # Canonical Ethernet/IPv4 encoding: hwlen 6, plen 4 (the other header
-    # fields are constants with no filtering value; scapy derives the
-    # address encodings from hwtype/ptype, so they stay in the base).
-    base = {"hwtype": 1, "ptype": 0x0800, "hwlen": 6, "plen": 4, "op": 1}
+    # Canonical Ethernet/IPv4 encoding: hwlen 6, plen 4. Addresses are
+    # pinned because scapy otherwise fills hwsrc/psrc from the host's
+    # interface, which makes builds machine-dependent.
+    base = {
+        "hwtype": 1,
+        "ptype": 0x0800,
+        "hwlen": 6,
+        "plen": 4,
+        "op": 1,
+        "hwsrc": ETH_SRC,
+        "hwdst": ETH_DST,
+        "psrc": IP_SRC,
+        "pdst": IP_DST,
+    }
     base.update(kw)
     return bytes(_ether() / ARP(**base))
 

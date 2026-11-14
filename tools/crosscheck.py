@@ -61,7 +61,16 @@ def build_packet(entry_id: str, field_id: str, value: int):
     if entry_id == "arp":
         # canonical Ethernet/IPv4 encoding; only opcode varies
         key = {"opcode": "op"}.get(field_id, field_id)
-        kwargs = {"hwtype": 1, "ptype": 0x0800, "hwlen": 6, "plen": 4}
+        kwargs = {
+            "hwtype": 1,
+            "ptype": 0x0800,
+            "hwlen": 6,
+            "plen": 4,
+            "hwsrc": ETH_SRC,
+            "hwdst": ETH_DST,
+            "psrc": IP_SRC,
+            "pdst": IP_DST,
+        }
         kwargs[key] = value
         return _ether() / ARP(**kwargs)
 
