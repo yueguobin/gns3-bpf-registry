@@ -38,6 +38,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scapy.all import ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP
+from scapy.contrib.lldp import (
+    LLDPDUChassisID,
+    LLDPDUEndOfLLDPDU,
+    LLDPDUPortID,
+    LLDPDUTimeToLive,
+)
 from scapy.contrib.ospf import OSPF_Hdr
 from scapy.layers.dhcp import BOOTP
 from scapy.layers.vxlan import VXLAN
@@ -61,6 +67,10 @@ LAYERS = {
         ICMP,
         IP,
         IPv6,
+        LLDPDUChassisID,
+        LLDPDUEndOfLLDPDU,
+        LLDPDUPortID,
+        LLDPDUTimeToLive,
         OSPF_Hdr,
         Raw,
         TCP,

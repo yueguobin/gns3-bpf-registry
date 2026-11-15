@@ -1,0 +1,32 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "LLDPDUChassisID", "fields": {"_type": 1, "_length": 7, "subtype": 4, "id": "$ETH_SRC"}},
+    {"layer": "LLDPDUPortID", "fields": {"_type": 2, "_length": 5, "subtype": 5, "id": "eth0"}},
+    {"layer": "LLDPDUTimeToLive", "fields": {"_type": 3, "_length": 2, "ttl": 120}},
+    {"layer": "LLDPDUEndOfLLDPDU", "fields": {"_type": 0, "_length": 0}}
+  ],
+  "anchor": {"header": "ether", "base": 14},
+  "headerLength": 22,
+  "fieldMap": {
+    "chassis_length": "LLDPDUChassisID._length",
+    "chassis_subtype": "LLDPDUChassisID.subtype"
+  },
+  "manual": {
+    "chassis_length": "9 bits share the word at offset 0 with the 7-bit TLV type; the probe pins the footprint (layer bytes 0-1) but logical bit 9 is clamped by scapy's 9-bit field, so the mask/shift view is hand-declared and crosscheck-verified",
+    "chassis_subtype": "the probe pins the footprint at layer byte 2, but the chassis id encoding is subtype-dependent (scapy MultipleTypeField: MAC address at 4, network address at 5); the subtype=4 bit probe re-encodes the chassis id and changes derived bytes"
+  },
+  "crosscheck": {
+    "chassis_length": "0x15a",
+    "chassis_subtype": "0x5a"
+  },
+  "fixtures": {
+    "chassis_length": [7, 8],
+    "chassis_subtype": [4, 7]
+  },
+  "vectors": [
+    {"name": "lldp-chassis-subtype-mac", "select": [{"field": "chassis_subtype", "value": 4}]},
+    {"name": "lldp-chassis-length-7", "select": [{"field": "chassis_length", "value": 7}]},
+    {"name": "lldp-chassis-mac-id", "select": [{"field": "chassis_subtype", "value": 4}, {"field": "chassis_length", "value": 7}]}
+  ]
+}

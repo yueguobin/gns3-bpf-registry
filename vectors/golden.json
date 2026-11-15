@@ -537,6 +537,43 @@
       "expect": "ip6[7:1] == 64"
     },
     {
+      "name": "lldp-chassis-subtype-mac",
+      "entry": "lldp",
+      "select": [
+        {
+          "field": "chassis_subtype",
+          "value": 4
+        }
+      ],
+      "expect": "ether proto 35020 and ether[16:1] == 0x4"
+    },
+    {
+      "name": "lldp-chassis-length-7",
+      "entry": "lldp",
+      "select": [
+        {
+          "field": "chassis_length",
+          "value": 7
+        }
+      ],
+      "expect": "ether proto 35020 and (ether[14:2] & 0x1ff) == 0x7"
+    },
+    {
+      "name": "lldp-chassis-mac-id",
+      "entry": "lldp",
+      "select": [
+        {
+          "field": "chassis_subtype",
+          "value": 4
+        },
+        {
+          "field": "chassis_length",
+          "value": 7
+        }
+      ],
+      "expect": "ether proto 35020 and (ether[14:2] & 0x1ff) == 0x7 and ether[16:1] == 0x4"
+    },
+    {
       "name": "ospf-version-2",
       "entry": "ospf",
       "select": [
