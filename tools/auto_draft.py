@@ -22,9 +22,10 @@ Three pitfalls, each with a mechanical guard:
    sits inside the IP header, the UDP checksum covers VXLAN), so every
    recipe pins computed fields explicitly; scapy keeps assigned values.
 
-Check mode re-probes every registered field and fails on drift, on a
-missing recipe (coverage gaps rot the drift check), or on disagreement
-with crosscheck's sentinel table.
+Check mode re-probes every registered field and fails on drift or on a
+missing recipe (coverage gaps rot the drift check). Recipes live in
+``recipes/*.json`` and are built by ``pktspec``; the selftest builders
+below are deliberately hand-written adversarial cases.
 """
 
 from __future__ import annotations
@@ -36,20 +37,14 @@ from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 from typing import Callable
 
-from scapy.all import ARP, Ether, GRE, ICMP, IP, Raw, TCP, UDP
+from scapy.all import Ether, GRE, IP, Raw, UDP
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import CompileError, load_registry, parse_int
-from crosscheck import SENTINELS as CROSSCHECK_SENTINELS
+from pktspec import ETH_SRC, ETH_DST, IP_SRC, IP_DST, PIN, build_packet, load_specs
 
 ROOT = Path(__file__).resolve().parent.parent
 DRAFTS_DIR = ROOT / "drafts"
-
-ETH_SRC = "02:00:00:00:00:01"
-ETH_DST = "02:00:00:00:00:02"
-IP_SRC = "192.0.2.1"
-IP_DST = "192.0.2.2"
-FIXED_CHKSUM = 0x1234  # pitfall 3: scapy never recomputes assigned values
 
 # Wire width -> encoded read size. A width-3 field is read as a 4-byte
 # word with the trailing byte masked off (the VNI precedent).
@@ -58,78 +53,6 @@ SIZE_FOR_WIDTH = {1: 1, 2: 2, 3: 4, 4: 4}
 
 class ProbeError(AssertionError):
     """Raised when a recipe itself is broken (not protocol weirdness)."""
-
-
-def _ether() -> Ether:
-    return Ether(src=ETH_SRC, dst=ETH_DST)
-
-
-def build_ethernet(**kw) -> bytes:
-    """Ethernet II frame; the 14-byte header is the whole packet."""
-    base = {"type": 0x0800}
-    base.update(kw)
-    return bytes(Ether(src=ETH_SRC, dst=ETH_DST, **base))
-
-
-def build_ipv4(**kw) -> bytes:
-    base = {"tos": 0, "ttl": 64, "proto": 6}
-    base.update(kw)
-    return bytes(
-        _ether() / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM, **base) / Raw(b"")
-    )
-
-
-def build_tcp(**kw) -> bytes:
-    base = {"flags": 0, "window": 0xAAAA}
-    base.update(kw)
-    return bytes(
-        _ether()
-        / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM)
-        / TCP(sport=1, dport=2, chksum=FIXED_CHKSUM, **base)
-    )
-
-
-def build_vxlan(**kw) -> bytes:
-    base = {"flags": 0x08, "vni": 0x123456}
-    base.update(kw)
-    return bytes(
-        _ether()
-        / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM)
-        / UDP(sport=1, dport=4789, chksum=FIXED_CHKSUM)
-        / VXLAN(**base)
-    )
-
-
-def build_icmp(**kw) -> bytes:
-    # chksum is pinned (it sits inside the window); id/seq are pinned to 0
-    # because scapy silently zeroes them for some type values, which would
-    # couple the type probe to the rest-of-header bytes.
-    base = {"type": 8, "code": 0, "chksum": FIXED_CHKSUM, "id": 0, "seq": 0}
-    base.update(kw)
-    return bytes(
-        _ether()
-        / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM, proto=1)
-        / ICMP(**base)
-    )
-
-
-def build_arp(**kw) -> bytes:
-    # Canonical Ethernet/IPv4 encoding: hwlen 6, plen 4. Addresses are
-    # pinned because scapy otherwise fills hwsrc/psrc from the host's
-    # interface, which makes builds machine-dependent.
-    base = {
-        "hwtype": 1,
-        "ptype": 0x0800,
-        "hwlen": 6,
-        "plen": 4,
-        "op": 1,
-        "hwsrc": ETH_SRC,
-        "hwdst": ETH_DST,
-        "psrc": IP_SRC,
-        "pdst": IP_DST,
-    }
-    base.update(kw)
-    return bytes(_ether() / ARP(**base))
 
 
 @dataclass(frozen=True)
@@ -165,62 +88,32 @@ class Recipe:
     fields: tuple[FieldRecipe, ...]
 
 
-RECIPES: dict[str, Recipe] = {
-    "arp": Recipe(
-        build=build_arp,
-        layer_len=28,
-        anchor={"header": "arp", "base": 0},
-        fields=(
-            FieldRecipe("opcode", "op", 0x0F0F, 0xF0F0),
-        ),
-    ),
-    "ethernet": Recipe(
-        build=build_ethernet,
-        layer_len=14,
-        anchor={"header": "ether", "base": 0},
-        fields=(
-            FieldRecipe("ether_type", "type", 0x0F0F, 0xF0F0),
-        ),
-    ),
-    "icmp": Recipe(
-        build=build_icmp,
-        layer_len=8,
-        anchor={"header": "icmp", "base": 0},
-        fields=(
-            FieldRecipe("type", "type", 0x0F, 0xF0),
-            FieldRecipe("code", "code", 0x0F, 0xF0),
-        ),
-    ),
-    "ipv4": Recipe(
-        build=build_ipv4,
-        layer_len=20,
-        anchor={"header": "ip", "base": 0},
-        fields=(
-            FieldRecipe("tos", "tos", 0x0F, 0xF0),
-            FieldRecipe("total_length", "len", 0x0F0F, 0xF0F0),
-            FieldRecipe("ttl", "ttl", 0x0F, 0xF0),
-            FieldRecipe("protocol", "proto", 0x0F, 0xF0),
-        ),
-    ),
-    "tcp": Recipe(
-        build=build_tcp,
-        layer_len=20,
-        anchor={"header": "tcp", "base": 0},
-        fields=(
-            FieldRecipe("flags", "flags", 0b01010101, 0b10101010),
-            FieldRecipe("window", "window", 0x0F0F, 0xF0F0),
-        ),
-    ),
-    "vxlan": Recipe(
-        build=build_vxlan,
-        layer_len=8,
-        anchor={"header": "udp", "base": 8},
-        fields=(
-            FieldRecipe("flags", "flags", 0x0F, 0xF0),
-            FieldRecipe("vni", "vni", 0x0F0F0F, 0xF0F0F0),
-        ),
-    ),
-}
+def _recipes_from_specs() -> dict[str, Recipe]:
+    """Adapt declarative recipes to probe recipes (fixture-only ones skip)."""
+    recipes: dict[str, Recipe] = {}
+    for entry_id, spec in load_specs().items():
+        if not spec.probe:
+            continue  # fixture-only recipes (primitive entries) are not probed
+        reverse = {v: k for k, v in spec.field_map.items()}
+
+        def build(_spec=spec, _reverse=reverse, **kw):
+            ((scapy_name, value),) = kw.items()
+            field_id = _reverse.get(scapy_name, scapy_name)
+            return bytes(build_packet(_spec, field_id, value))
+
+        recipes[entry_id] = Recipe(
+            build=build,
+            layer_len=spec.header_length,
+            anchor=spec.anchor,
+            fields=tuple(
+                FieldRecipe(fid, spec.scapy_name(fid), a, b)
+                for fid, (a, b) in sorted(spec.probe.items())
+            ),
+        )
+    return recipes
+
+
+RECIPES: dict[str, Recipe] = _recipes_from_specs()
 
 
 @dataclass
@@ -532,22 +425,6 @@ def audit_registry(registry: dict, strict: bool) -> int:
             else:
                 print(f"  {fid}: {detail} — matches registry")
 
-    expected_keys = {
-        (entry_id, f["id"])
-        for entry_id, entry in registry.items()
-        if "anchor" in entry
-        for f in entry["fields"]
-    }
-    actual_keys = set(CROSSCHECK_SENTINELS)
-    for entry_id, fid in sorted(expected_keys - actual_keys):
-        problems.append(
-            f"crosscheck.py SENTINELS is missing {entry_id}.{fid} (tables disagree)"
-        )
-    for entry_id, fid in sorted(actual_keys - expected_keys):
-        problems.append(
-            f"crosscheck.py SENTINELS has stale entry {entry_id}.{fid} (tables disagree)"
-        )
-
     header = len([e for e in registry.values() if "anchor" in e])
     if problems:
         stream = sys.stderr if strict else sys.stdout
@@ -607,8 +484,8 @@ def run_selftest() -> int:
 
     def build_gre(**kw) -> bytes:
         return bytes(
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM)
+            Ether(src=ETH_SRC, dst=ETH_DST)
+            / IP(src=IP_SRC, dst=IP_DST, chksum=PIN)
             / GRE(**kw)
             / Raw(b"")
         )
@@ -618,8 +495,8 @@ def run_selftest() -> int:
         base = {"flags": 0x08, "vni": 0x123456}
         base.update(kw)
         return bytes(
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST, chksum=FIXED_CHKSUM)
+            Ether(src=ETH_SRC, dst=ETH_DST)
+            / IP(src=IP_SRC, dst=IP_DST, chksum=PIN)
             / UDP(sport=1, dport=4789)
             / VXLAN(**base)
         )
@@ -628,7 +505,11 @@ def run_selftest() -> int:
         # IP checksum left to scapy: it follows tos inside the window (pitfall 3).
         base = {"tos": 0, "ttl": 64, "proto": 6}
         base.update(kw)
-        return bytes(_ether() / IP(src=IP_SRC, dst=IP_DST, **base) / Raw(b""))
+        return bytes(
+            Ether(src=ETH_SRC, dst=ETH_DST)
+            / IP(src=IP_SRC, dst=IP_DST, **base)
+            / Raw(b"")
+        )
 
     def build_spread(**kw) -> bytes:
         # One logical bit drives two bytes.

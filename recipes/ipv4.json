@@ -1,0 +1,35 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "tos": 0, "len": 20, "ttl": 64, "proto": 0}}
+  ],
+  "anchor": {"header": "ip", "base": 0},
+  "headerLength": 20,
+  "fieldMap": {"total_length": "len", "protocol": "proto"},
+  "probe": {
+    "tos": ["0x0f", "0xf0"],
+    "total_length": ["0x0f0f", "0xf0f0"],
+    "ttl": ["0x0f", "0xf0"],
+    "protocol": ["0x0f", "0xf0"]
+  },
+  "crosscheck": {
+    "tos": "0x5a",
+    "total_length": "0x1234",
+    "ttl": "0x5a",
+    "protocol": "0x5a"
+  },
+  "fixtures": {
+    "tos": [16, 17],
+    "total_length": [40, 41],
+    "ttl": [64, 65],
+    "protocol": [6, 17]
+  },
+  "vectors": [
+    {"name": "ipv4-tos-16", "select": [{"field": "tos", "value": 16}]},
+    {"name": "ipv4-total-length-1500", "select": [{"field": "total_length", "value": 1500}]},
+    {"name": "ipv4-ttl-64", "select": [{"field": "ttl", "value": 64}]},
+    {"name": "ipv4-protocol-tcp", "select": [{"field": "protocol", "value": 6}]},
+    {"name": "ipv4-ttl-and-protocol", "select": [{"field": "protocol", "value": 6}, {"field": "ttl", "value": 64}]},
+    {"name": "ipv4-ttl-64-vlan-100", "vlan": 100, "select": [{"field": "ttl", "value": 64}]}
+  ]
+}

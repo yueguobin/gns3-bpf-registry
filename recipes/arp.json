@@ -1,0 +1,22 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "ARP", "fields": {"hwtype": 1, "ptype": "0x0800", "hwlen": 6, "plen": 4, "op": 1, "hwsrc": "$ETH_SRC", "hwdst": "$ETH_DST", "psrc": "$IP_SRC", "pdst": "$IP_DST"}}
+  ],
+  "anchor": {"header": "arp", "base": 0},
+  "headerLength": 28,
+  "fieldMap": {"opcode": "op"},
+  "probe": {
+    "opcode": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "opcode": "0x5a5a"
+  },
+  "fixtures": {
+    "opcode": [1, 2]
+  },
+  "vectors": [
+    {"name": "arp-opcode-request", "select": [{"field": "opcode", "value": 1}]},
+    {"name": "arp-opcode-reply", "select": [{"field": "opcode", "value": 2}]}
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "TCP", "fields": {"sport": 12345, "dport": 80, "chksum": "$PIN", "flags": 2, "window": 8192}}
+  ],
+  "anchor": {"header": "tcp", "base": 0},
+  "headerLength": 20,
+  "probe": {
+    "flags": ["0x55", "0xaa"],
+    "window": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "flags": "0x5a",
+    "window": "0x5a5a"
+  },
+  "fixtures": {
+    "flags": [2, 16],
+    "window": [100, 101]
+  },
+  "vectors": [
+    {"name": "tcp-flags-syn", "select": [{"field": "flags", "flags": ["SYN"]}]},
+    {"name": "tcp-flags-syn-ack", "select": [{"field": "flags", "flags": ["SYN", "ACK"]}]},
+    {"name": "tcp-flags-value-0x12", "select": [{"field": "flags", "value": 18}]},
+    {"name": "tcp-window-65535", "select": [{"field": "window", "value": 65535}]}
+  ]
+}

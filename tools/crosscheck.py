@@ -12,31 +12,28 @@ from __future__ import annotations
 
 import sys
 
-from scapy.all import ARP, Dot1Q, Ether, ICMP, IP, Raw, TCP, UDP
+from scapy.all import Dot1Q, Ether, IP, Raw, UDP
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import load_registry, parse_int
-
-ETH_SRC = "02:00:00:00:00:01"
-ETH_DST = "02:00:00:00:00:02"
-IP_SRC = "192.0.2.1"
-IP_DST = "192.0.2.2"
+from pktspec import (
+    ETH_SRC,
+    ETH_DST,
+    IP_SRC,
+    IP_DST,
+    build_packet as build_recipe_packet,
+    load_specs,
+)
 
 ANCHOR_START = {"arp": 14, "ether": 0, "icmp": 34, "ip": 14, "tcp": 34, "udp": 34}
 
+# Point-read sentinels come from the declarative recipes; this module has
+# no per-protocol tables of its own.
+SPECS = load_specs()
 SENTINELS = {
-    ("arp", "opcode"): 0x5A5A,
-    ("ethernet", "ether_type"): 0x5A5A,
-    ("ipv4", "tos"): 0x5A,
-    ("ipv4", "total_length"): 0x1234,
-    ("ipv4", "ttl"): 0x5A,
-    ("ipv4", "protocol"): 0x5A,
-    ("icmp", "type"): 0x5A,
-    ("icmp", "code"): 0x5A,
-    ("tcp", "flags"): 0x5A,
-    ("tcp", "window"): 0x5A5A,
-    ("vxlan", "flags"): 0x5A,
-    ("vxlan", "vni"): 0x123456,
+    (entry_id, field_id): sentinel
+    for entry_id, spec in SPECS.items()
+    for field_id, sentinel in spec.crosscheck.items()
 }
 
 
@@ -55,58 +52,9 @@ def _ether() -> Ether:
 
 def build_packet(entry_id: str, field_id: str, value: int):
     """Build a packet with a sentinel value in one registry field."""
-    if entry_id == "ethernet":
-        return Ether(src=ETH_SRC, dst=ETH_DST, type=value) / Raw(b"\x00" * 20)
-
-    if entry_id == "arp":
-        # canonical Ethernet/IPv4 encoding; only opcode varies
-        key = {"opcode": "op"}.get(field_id, field_id)
-        kwargs = {
-            "hwtype": 1,
-            "ptype": 0x0800,
-            "hwlen": 6,
-            "plen": 4,
-            "hwsrc": ETH_SRC,
-            "hwdst": ETH_DST,
-            "psrc": IP_SRC,
-            "pdst": IP_DST,
-        }
-        kwargs[key] = value
-        return _ether() / ARP(**kwargs)
-
-    if entry_id == "icmp":
-        # id/seq stay at 0: scapy zeroes them for some type values
-        kwargs = {"type": 8, "code": 0, "id": 0, "seq": 0}
-        kwargs[field_id] = value
-        return _ether() / IP(src=IP_SRC, dst=IP_DST, proto=1) / ICMP(**kwargs)
-
-    if entry_id == "ipv4":
-        kwargs = {"src": IP_SRC, "dst": IP_DST, "tos": 0, "ttl": 64, "proto": 6}
-        if field_id == "total_length":
-            kwargs["len"] = value
-        else:
-            kwargs[{"protocol": "proto"}.get(field_id, field_id)] = value
-        return _ether() / IP(**kwargs) / Raw(b"")
-
-    if entry_id == "tcp":
-        return (
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST)
-            / TCP(sport=12345, dport=80, **{field_id: value})
-            / Raw(b"")
-        )
-
-    if entry_id == "vxlan":
-        kwargs = {"flags": 0x08, "vni": 100}
-        kwargs[field_id] = value
-        return (
-            _ether()
-            / IP(src=IP_SRC, dst=IP_DST)
-            / UDP(sport=12345, dport=4789)
-            / VXLAN(**kwargs)
-        )
-
-    raise CrosscheckError(f"no packet builder for entry {entry_id}")
+    if entry_id not in SPECS:
+        raise CrosscheckError(f"no recipe for entry {entry_id}")
+    return build_recipe_packet(SPECS[entry_id], field_id, value)
 
 
 def check_field(entry: dict, field: dict) -> None:

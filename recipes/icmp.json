@@ -1,0 +1,27 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "proto": 1}},
+    {"layer": "ICMP", "fields": {"type": 8, "code": 0, "chksum": "$PIN", "id": 0, "seq": 0}}
+  ],
+  "anchor": {"header": "icmp", "base": 0},
+  "headerLength": 8,
+  "probe": {
+    "type": ["0x0f", "0xf0"],
+    "code": ["0x0f", "0xf0"]
+  },
+  "crosscheck": {
+    "type": "0x5a",
+    "code": "0x5a"
+  },
+  "fixtures": {
+    "type": [8, 0],
+    "code": [0, 1]
+  },
+  "vectors": [
+    {"name": "icmp-type-echo-request", "select": [{"field": "type", "value": 8}]},
+    {"name": "icmp-type-echo-reply", "select": [{"field": "type", "value": 0}]},
+    {"name": "icmp-code-0", "select": [{"field": "code", "value": 0}]},
+    {"name": "icmp-type-and-code", "select": [{"field": "type", "value": 8}, {"field": "code", "value": 0}]}
+  ]
+}
