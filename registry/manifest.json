@@ -1,8 +1,9 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.5",
+  "registryVersion": "2026.11.6",
   "files": {
     "arp.json": "sha256:4fd35ed9f47b781fc071517d6b2518f568274650410e1268705af14ba5986091",
+    "dhcp.json": "sha256:9ee97799189c2e704e5cdaffc57cf1706b6d48405d1b427f2b73e133142b052e",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
     "ethernet.json": "sha256:096c2651fbe06030eda33a8cb752c4adc8a0e8f5762d0d109bab9a289d6f782c",
     "gre.json": "sha256:324d661a5907138670e75bd520ec4819933a0de2ef4e9d3954101fa907ddc7e9",

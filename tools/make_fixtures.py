@@ -73,15 +73,20 @@ def _locator_ports(entry: dict) -> list[int]:
 def _build_locator_packet(
     entry_id: str, field_id: str, value: int, port: int
 ):
-    if entry_id == "vxlan":
-        return build_recipe_packet(
-            SPECS[entry_id],
-            field_id,
-            value,
-            {"UDP": {"dport": port}},
-            pin_checksums=False,
-        )
-    raise CompileError(f"no locator fixture builder for entry {entry_id}")
+    """Build a fixture packet with one field set and the UDP dst port
+    overridden to ``port``.
+
+    Only reached for entries whose locators are all ``udp port N``
+    (guaranteed by ``_locator_ports``), whose stacks therefore contain a
+    UDP layer; any other shape fails loudly inside ``build_packet``.
+    """
+    return build_recipe_packet(
+        SPECS[entry_id],
+        field_id,
+        value,
+        {"UDP": {"dport": port}},
+        pin_checksums=False,
+    )
 
 
 def _vlan_vxlan(vlan: int):
