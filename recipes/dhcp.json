@@ -1,0 +1,66 @@
+{
+  "id": "dhcp",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 67, "chksum": "$PIN"}},
+    {"layer": "BOOTP", "fields": {
+      "op": 1,
+      "htype": 1,
+      "hlen": 6,
+      "hops": 0,
+      "xid": 0,
+      "secs": 0,
+      "flags": 0,
+      "ciaddr": "0.0.0.0",
+      "yiaddr": "0.0.0.0",
+      "siaddr": "0.0.0.0",
+      "giaddr": "0.0.0.0",
+      "chaddr": "",
+      "sname": "",
+      "file": "",
+      "options": ""
+    }}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 236,
+  "probe": {
+    "op": ["0x0f", "0xf0"],
+    "htype": ["0x0f", "0xf0"],
+    "hlen": ["0x0f", "0xf0"],
+    "hops": ["0x0f", "0xf0"],
+    "xid": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "secs": ["0x0f0f", "0xf0f0"],
+    "flags": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "op": "0x5a",
+    "htype": "0x5a",
+    "hlen": "0x5a",
+    "hops": "0x5a",
+    "xid": "0x5a5a5a5a",
+    "secs": "0x5a5a",
+    "flags": "0x5a5a"
+  },
+  "fixtures": {
+    "op": [1, 2],
+    "htype": [1, 6],
+    "hlen": [6, 4],
+    "hops": [0, 10],
+    "xid": ["0x3903f326", "0x3903f327"],
+    "secs": [0, 100],
+    "flags": ["0x8000", 0]
+  },
+  "vectors": [
+    {"name": "dhcp-op-bootrequest", "select": [{"field": "op", "value": 1}]},
+    {"name": "dhcp-op-bootreply", "select": [{"field": "op", "value": 2}]},
+    {"name": "dhcp-htype-ethernet", "select": [{"field": "htype", "value": 1}]},
+    {"name": "dhcp-hlen-6", "select": [{"field": "hlen", "value": 6}]},
+    {"name": "dhcp-hops-10", "select": [{"field": "hops", "value": 10}]},
+    {"name": "dhcp-xid-956560166", "select": [{"field": "xid", "value": 956560166}]},
+    {"name": "dhcp-secs-100", "select": [{"field": "secs", "value": 100}]},
+    {"name": "dhcp-flags-broadcast", "select": [{"field": "flags", "flags": ["Broadcast"]}]},
+    {"name": "dhcp-broadcast-discover", "select": [{"field": "op", "value": 1}, {"field": "flags", "flags": ["Broadcast"]}]},
+    {"name": "dhcp-op-bootrequest-vlan-100", "vlan": 100, "select": [{"field": "op", "value": 1}]}
+  ]
+}

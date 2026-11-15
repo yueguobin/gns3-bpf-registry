@@ -24,6 +24,125 @@
       "expect": "arp[6:2] == 0x2"
     },
     {
+      "name": "dhcp-op-bootrequest",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "op",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[8:1] == 0x1"
+    },
+    {
+      "name": "dhcp-op-bootreply",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "op",
+          "value": 2
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[8:1] == 0x2"
+    },
+    {
+      "name": "dhcp-htype-ethernet",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "htype",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[9:1] == 1"
+    },
+    {
+      "name": "dhcp-hlen-6",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "hlen",
+          "value": 6
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[10:1] == 6"
+    },
+    {
+      "name": "dhcp-hops-10",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "hops",
+          "value": 10
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[11:1] == 10"
+    },
+    {
+      "name": "dhcp-xid-956560166",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "xid",
+          "value": 956560166
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[12:4] == 956560166"
+    },
+    {
+      "name": "dhcp-secs-100",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "secs",
+          "value": 100
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[16:2] == 100"
+    },
+    {
+      "name": "dhcp-flags-broadcast",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Broadcast"
+          ]
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and (udp[18:2] & 0x8000) == 0x8000"
+    },
+    {
+      "name": "dhcp-broadcast-discover",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "op",
+          "value": 1
+        },
+        {
+          "field": "flags",
+          "flags": [
+            "Broadcast"
+          ]
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[8:1] == 0x1 and (udp[18:2] & 0x8000) == 0x8000"
+    },
+    {
+      "name": "dhcp-op-bootrequest-vlan-100",
+      "entry": "dhcp",
+      "vlan": 100,
+      "select": [
+        {
+          "field": "op",
+          "value": 1
+        }
+      ],
+      "expect": "vlan 100 and (udp port 67 or udp port 68) and udp[8:1] == 0x1"
+    },
+    {
       "name": "esp-spi-0x12345678",
       "entry": "esp",
       "select": [

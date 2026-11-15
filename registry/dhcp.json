@@ -1,0 +1,96 @@
+{
+  "id": "dhcp",
+  "label": "DHCP",
+  "rfc": ["2131", "2132"],
+  "notes": "DHCP over UDP ports 67 and 68. The modelled fields are the fixed 236-byte BOOTP header (op through file, RFC 2131 §2). The four IP address fields (ciaddr, yiaddr, siaddr, giaddr) are matched with host primitives; chaddr (16-byte hardware address), sname (64 bytes) and file (128 bytes) exceed the 4-byte load window. The variable options region follows at offset 236: the magic cookie (0x63825363, RFC 2132 §2) and the DHCP options, including the message type (option 53), which has no fixed offset and is therefore not modelled. htype is kept as a number: its values come from the IANA ARP parameters (1 = 10Mb Ethernet) and RFC 2131 defines no closed set.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 67", "udp port 68"],
+  "headerLength": 236,
+  "fields": [
+    {
+      "id": "op",
+      "label": "Op Code",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2131 §2",
+      "values": [
+        {
+          "value": 1,
+          "label": "BOOTREQUEST"
+        },
+        {
+          "value": 2,
+          "label": "BOOTREPLY"
+        }
+      ]
+    },
+    {
+      "id": "htype",
+      "label": "Hardware Address Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2131 §2",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "hlen",
+      "label": "Hardware Address Length",
+      "offset": 2,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2131 §2",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "hops",
+      "label": "Hops",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2131 §2",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "xid",
+      "label": "Transaction ID",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2131 §2",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "secs",
+      "label": "Seconds Elapsed",
+      "offset": 8,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2131 §4.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 10,
+      "size": 2,
+      "kind": "bitset",
+      "ref": "RFC 2131 §4.1",
+      "bits": [
+        {
+          "mask": 32768,
+          "label": "Broadcast"
+        }
+      ]
+    }
+  ]
+}

@@ -39,6 +39,7 @@ from pathlib import Path
 
 from scapy.all import ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP
 from scapy.contrib.ospf import OSPF_Hdr
+from scapy.layers.dhcp import BOOTP
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, parse_int
@@ -50,7 +51,22 @@ RECIPES_DIR = ROOT / "recipes"
 # listed here means adding one import and one entry.
 LAYERS = {
     cls.__name__: cls
-    for cls in (ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, OSPF_Hdr, Raw, TCP, UDP, VXLAN)
+    for cls in (
+        ARP,
+        BOOTP,
+        Dot1Q,
+        ESP,
+        Ether,
+        GRE,
+        ICMP,
+        IP,
+        IPv6,
+        OSPF_Hdr,
+        Raw,
+        TCP,
+        UDP,
+        VXLAN,
+    )
 }
 
 ETH_SRC = "02:00:00:00:00:01"
