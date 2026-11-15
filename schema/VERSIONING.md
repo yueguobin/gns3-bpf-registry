@@ -3,8 +3,9 @@
 ## Versions
 
 - `schemaVersion` (integer, currently `1`): the shape of entry and manifest files. It changes only for a breaking schema change. Consumers must reject unknown schema versions.
-- `registryVersion` (`YYYY.MM.PATCH`, for example `2026.11.0`): the content version stored in `registry/VERSION` and in `registry/manifest.json`. Every content change, including a new protocol, bumps it. Release tags are `registry-v<registryVersion>`.
-- Published tags are immutable. Corrections go into a new version; never force-push or delete a tag.
+- `registryVersion` (`YYYY.MM.PATCH`, for example `2026.11.0`): the content version stored in `registry/VERSION` and in `registry/manifest.json`. Every content change, including a new protocol, bumps it. It counts content changes and does not need to match a tag date.
+- Release tags are `gns3-bpf-registry-v<YYYY.MM.DD>` (for example `gns3-bpf-registry-v2026.11.15`), named after the actual calendar day the tag is cut. Releases are batched daily or weekly; at most one tag is cut per day.
+- Published tags are immutable. Corrections go into a new version; never force-push or delete a tag. Tags up to `registry-v2026.11.6` use the legacy `registry-v<registryVersion>` name.
 
 ## Compatibility rules
 

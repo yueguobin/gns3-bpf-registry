@@ -56,6 +56,13 @@ Follow rule 2. In addition, update the field's `fixtures`, `crosscheck` and `vec
 - `vectors/golden.json` is produced by `tools/make_vectors.py`.
 - All three commands accept `--check`, which CI runs on every pull request and push.
 
+## Releases and tags
+
+- Releases are batched daily or weekly; at most one tag is cut per day. Do not tag every merge.
+- A tag is named `gns3-bpf-registry-v<YYYY.MM.DD>` after the actual calendar day the tag is created (for example `gns3-bpf-registry-v2026.11.15`), not the `registryVersion` and not the merge date.
+- `registry/VERSION` keeps counting content changes (one bump per change pull request) and does not need to match the tag date.
+- Tags published under the legacy `registry-v<registryVersion>` name (up to `registry-v2026.11.6`) are immutable history; everything newer uses the dated name.
+
 ## Review checklist
 
 - [ ] Every field has a `ref`.
