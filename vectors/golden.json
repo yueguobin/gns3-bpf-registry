@@ -651,6 +651,177 @@
       "expect": "ip proto 89 and ip[34:2] == 0x0"
     },
     {
+      "name": "stp-protocol-id-0",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "protocol_id",
+          "value": 0
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[17:2] == 0"
+    },
+    {
+      "name": "stp-version-rstp",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[19:1] == 0x2"
+    },
+    {
+      "name": "stp-bpdu-type-tcn",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "bpdu_type",
+          "value": 128
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[20:1] == 0x80"
+    },
+    {
+      "name": "stp-flags-topology-change",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "TC"
+          ]
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and (ether[21:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "stp-flags-tc-tca",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "TC",
+            "TCA"
+          ]
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and (ether[21:1] & 0x81) == 0x81"
+    },
+    {
+      "name": "stp-root-priority-32768",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "root_priority",
+          "value": 32768
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[22:2] == 32768"
+    },
+    {
+      "name": "stp-root-path-cost-19",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "root_path_cost",
+          "value": 19
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[30:4] == 19"
+    },
+    {
+      "name": "stp-bridge-priority-4096",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "bridge_priority",
+          "value": 4096
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[34:2] == 4096"
+    },
+    {
+      "name": "stp-port-id-0x8001",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "port_id",
+          "value": 32769
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[42:2] == 32769"
+    },
+    {
+      "name": "stp-message-age-1s",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "message_age",
+          "value": 256
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[44:2] == 256"
+    },
+    {
+      "name": "stp-max-age-20s",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "max_age",
+          "value": 5120
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[46:2] == 5120"
+    },
+    {
+      "name": "stp-hello-time-2s",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "hello_time",
+          "value": 512
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[48:2] == 512"
+    },
+    {
+      "name": "stp-forward-delay-15s",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "forward_delay",
+          "value": 3840
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[50:2] == 3840"
+    },
+    {
+      "name": "stp-root-bridge-bpdu",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "bpdu_type",
+          "value": 0
+        },
+        {
+          "field": "root_priority",
+          "value": 32768
+        },
+        {
+          "field": "root_path_cost",
+          "value": 0
+        },
+        {
+          "field": "message_age",
+          "value": 0
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and ether[20:1] == 0x0 and ether[22:2] == 32768 and ether[30:4] == 0 and ether[44:2] == 0"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
