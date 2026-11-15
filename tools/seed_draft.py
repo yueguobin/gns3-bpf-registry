@@ -30,7 +30,8 @@ import json
 import sys
 from pathlib import Path
 
-from scapy.fields import ConditionalField, EnumField, FlagsField
+from scapy.fields import ConditionalField, EnumField, FlagsField, IP6Field
+from scapy.volatile import VolatileValue
 
 import auto_draft
 import pktspec
@@ -120,10 +121,19 @@ def _walk_fields(cls) -> tuple[list[dict], list[dict]]:
     """Propose a layout per non-conditional field; collect exclusions."""
     fields, excluded, acc_bits = [], [], 0
     for f in cls.fields_desc:
-        bits = round(float(f.sz) * 8)
         if isinstance(f, ConditionalField):
             excluded.append(
                 {"id": f.fld.name, "reason": "conditional field; presence or offset depends on other header bits"}
+            )
+            continue
+        sz = getattr(f, "sz", None)
+        try:
+            bits = round(float(sz) * 8) if sz is not None else None
+        except (TypeError, ValueError):
+            bits = None
+        if bits is None:
+            excluded.append(
+                {"id": f.name, "reason": "no fixed wire size (ASN.1/TLV or computed field); out of scope for fixed-offset filters"}
             )
             continue
         if bits <= 0 or bits > 32:
@@ -163,8 +173,42 @@ def _walk_fields(cls) -> tuple[list[dict], list[dict]]:
     return fields, excluded
 
 
+def _plain_default(f):
+    """JSON-safe default: FlagValue coerced to int, bytes to str.
+
+    An empty bytes default builds identically as ``""`` (scapy pads
+    fixed-length fields); a non-empty one has no faithful JSON
+    representation and must be written by hand in the recipe.
+    """
+    if isinstance(f, FlagsField):
+        return int(f.default)
+    if isinstance(f.default, bytes):
+        if not f.default:
+            return ""
+        raise SeedError(
+            f"{f.name}: non-empty bytes default {f.default!r} cannot be "
+            "seeded; set it by hand in recipes/<id>.json"
+        )
+    return f.default
+
+
+def _json_ok(value) -> bool:
+    try:
+        json.dumps(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 def _stack_fields(cls, registered: set[str]) -> dict:
-    """Base kwargs for the target layer: defaults, checksums pinned."""
+    """Base kwargs for the target layer: defaults, checksums pinned.
+
+    Every value must be JSON-serializable (recipes are data) and
+    deterministic (probes diff serialized bytes): random defaults
+    (``VolatileValue``) become 0, non-JSON defaults of unregistered
+    fields (Packet/UUID sub-structures) are left to scapy's own
+    deterministic default instead of crashing the seed.
+    """
     base = {}
     for f in cls.fields_desc:
         if isinstance(f, ConditionalField):
@@ -175,14 +219,21 @@ def _stack_fields(cls, registered: set[str]) -> dict:
             # zeros so the stack declares every registered field.
             if any(hint in name.lower() for hint in CHKSUM_HINTS):
                 base[name] = "$PIN"
+            elif isinstance(f.default, VolatileValue) or f.default is None:
+                base[name] = 0
             else:
-                base[name] = 0 if f.default is None else f.default
-        elif f.default is None and round(float(f.sz) * 8) == 128:
+                value = _plain_default(f)
+                base[name] = value if _json_ok(value) else 0
+        elif isinstance(f.default, VolatileValue):
+            base[name] = 0  # random defaults would poison every probe diff
+        elif f.default is None and isinstance(f, IP6Field):
             # unregistered address fields get deterministic literals so
             # builds never pick up host addresses (the ARP lesson)
             base[name] = "2001:db8::1" if name == "src" else "2001:db8::2"
         elif f.default is not None:
-            base[name] = f.default
+            value = _plain_default(f)
+            if _json_ok(value):
+                base[name] = value
     return base
 
 
@@ -267,22 +318,45 @@ def seed(cls, entry_id: str, under: str) -> tuple[dict, dict, list[dict]]:
     }
 
     # Measure the real header length from serialized bytes.
-    under_only = spec_from_data({"id": f"{entry_id}-under", "stack": under_layers})
-    with_target = spec_from_data(recipe | {"headerLength": 1})
-    header_length = len(bytes(pktspec.build_packet(with_target))) - len(
-        bytes(pktspec.build_packet(under_only))
-    )
+    try:
+        under_only = spec_from_data({"id": f"{entry_id}-under", "stack": under_layers})
+        with_target = spec_from_data(recipe | {"headerLength": 1})
+        header_length = len(bytes(pktspec.build_packet(with_target))) - len(
+            bytes(pktspec.build_packet(under_only))
+        )
+    except pktspec.RecipeError:
+        raise
+    except Exception as exc:
+        raise SeedError(
+            f"{cls.__name__}: cannot build a standalone header (under {name}): "
+            f"{type(exc).__name__}: {(str(exc) or repr(exc)).splitlines()[0]}"
+        ) from exc
     if header_length <= 0:
         raise SeedError(f"{cls.__name__}: measured header length {header_length}")
     recipe["headerLength"] = header_length
 
-    # Probe-first: the differential probe decides what survives.
+    # Probe-first: the differential probe decides what survives. A field
+    # whose sentinel the builder rejects (str/list/Packet-typed kwargs,
+    # range-checked values) is demoted to manual instead of crashing the
+    # seed; the curator then drops the field or verifies the guess.
     probe_recipe = _build_probe_recipe(recipe)
     entry_fields, manual, verified = [], {}, 0
     for fr in probe_recipe.fields:
         proposal = next(p for p in proposals if p["id"] == fr.registry_id)
-        probe = auto_draft.probe_field(probe_recipe, fr)
-        if probe.status == "ok":
+        try:
+            probe = auto_draft.probe_field(probe_recipe, fr)
+        except auto_draft.ProbeError as exc:
+            probe = None
+            build_reason = (
+                f"probe build rejected the sentinel: {str(exc).splitlines()[0]}"
+            )
+        except Exception as exc:  # scapy raises its own exception types
+            probe = None
+            build_reason = (
+                f"probe build rejected the sentinel: {type(exc).__name__}: "
+                f"{(str(exc) or repr(exc)).splitlines()[0]}"
+            )
+        if probe is not None and probe.status == "ok":
             verified += 1
             field = {
                 "id": fr.registry_id,
@@ -304,7 +378,7 @@ def seed(cls, entry_id: str, under: str) -> tuple[dict, dict, list[dict]]:
                     f"size {proposal['size']}; the probe wins"
                 )
         else:
-            reason = "; ".join(probe.reasons)
+            reason = build_reason if probe is None else "; ".join(probe.reasons)
             manual[fr.registry_id] = reason
             field = {
                 "id": fr.registry_id,
@@ -328,6 +402,19 @@ def seed(cls, entry_id: str, under: str) -> tuple[dict, dict, list[dict]]:
         fid: pair for fid, pair in recipe["probe"].items() if fid not in manual
     }
     recipe["manual"] = manual
+    # Probe-rejected fields are not byte-verifiable with int sentinels;
+    # never leave them where crosscheck/fixtures/vectors would build them.
+    recipe["crosscheck"] = {
+        fid: v for fid, v in recipe["crosscheck"].items() if fid not in manual
+    }
+    recipe["fixtures"] = {
+        fid: v for fid, v in recipe["fixtures"].items() if fid not in manual
+    }
+    recipe["vectors"] = [
+        v
+        for v in recipe["vectors"]
+        if all(s["field"] not in manual for s in v["select"])
+    ]
 
     notes = (
         f"Seeded from scapy {cls.__module__}.{cls.__name__} by tools/seed_draft.py; "
