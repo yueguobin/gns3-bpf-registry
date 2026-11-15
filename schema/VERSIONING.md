@@ -24,7 +24,7 @@
 
 ## The eight schema rules
 
-1. `size` is 1, 2 or 4. libpcap's `proto[offset:size]` window supports only those widths. Wider logical fields use a mask and shift (VNI: `offset: 4`, `mask: "0xffffff00"`, `shift: 8`).
+1. `size` is 1, 2 or 4. libpcap's `proto[offset:size]` window supports only those widths. Wider or sub-byte logical fields use a mask and shift (VNI: `offset: 4`, `mask: "0xffffff00"`, `shift: 8`; several fields may view the same bytes through different masks).
 2. `anchor.header` is one of `ether`, `ip`, `ip6`, `tcp`, `udp`, `icmp`, `icmp6`, `arp`; `anchor.base` is the protocol header's byte offset relative to the anchor (VXLAN: the UDP payload starts at 8).
 3. `locator` is an array of tcpdump primitives. The compiler ORs them inside parentheses, then ANDs the group with the field clauses. An empty array means no prefix. Do not rely on `A or B and C` precedence.
 4. Addresses and ports are not byte fields. Use `host` and `port` primitives; the registry only models header fields that primitives cannot express.
@@ -37,7 +37,7 @@
 
 JSON Schema cannot express these; the verifier enforces them:
 
-- `offset + size <= headerLength`; fields are sorted by offset and do not overlap.
+- `offset + size <= headerLength`; fields are sorted by offset. Overlapping windows are allowed: bit-packed words carry one masked view per field (IPv6 version, traffic class and flow label all read the first word).
 - `mask` fits within `size` bytes; `mask >> shift` is a contiguous low-bit mask; `min` and `max` fit inside `mask >> shift`.
 - When `mask` is present, `shift` defaults to 0 and must match the mask's trailing-zero count.
 - Enum values fit in `size` bytes and are unique. Bit masks are single bits, are unique and fit in `size` bytes.

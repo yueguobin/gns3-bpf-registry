@@ -9,7 +9,19 @@
 5. Every field needs a verifiable `ref` (an RFC section, or IEEE 802.3/802.1Q where no RFC applies).
 6. Review checks three things: the citation, the positive/negative fixtures and the CI output.
 
+## Field coverage standard
+
+A field is modelled if and only if all of these hold:
+
+1. **Fixed offset** — its position does not depend on other field values (GRE optional fields, IPv4/TCP options and LSA lists fail this).
+2. **Not an address or port** — host/port primitives express those; identifiers that only look like addresses (OSPF router/area IDs) are modelled because primitives cannot reach them.
+3. **Fits a 1/2/4-byte read window** — sub-byte or wider logical fields become masked views; several fields may view the same bytes.
+
+Everything else in the RFC header diagram is included: checksums, version fields and reserved bits included. Exclusions are documented in `notes` with a reason.
+
 ## Adding a protocol
+
+For Claude Code sessions, the `.claude/skills/seed-protocol` skill codifies this workflow.
 
 1. Seed drafts from scapy metadata (probe-first; the differential probe corrects whatever `fields_desc` gets wrong):
 

@@ -25,6 +25,19 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 
 The web UI uses the same entry files and the golden vectors as the cross-language contract.
 
+## Protocols
+
+| Entry | Standard | Fields | Entry | Standard | Fields |
+|---|---|---|---|---|---|
+| arp | RFC 826 | 1 | ipv6 | RFC 8200 | 6 |
+| esp | RFC 4303 | 2 | ospf | RFC 2328 | 7 |
+| ethernet | IEEE 802.3 | 1 | tcp | RFC 9293 | 8 |
+| gre | RFC 2784/2890 | 5 | udp | RFC 768 | 2 |
+| icmp | RFC 792 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
+| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 2 |
+
+Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Entry format
 
 A header entry describes fields reachable through a tcpdump anchor:
@@ -78,7 +91,7 @@ A primitive-only entry has no byte layout; its fields emit a tcpdump primitive:
 
 ## The eight registry rules
 
-1. `size` is 1, 2 or 4. libpcap's `proto[offset:size]` window supports only those widths. Wider logical fields are read through a mask: the 24-bit VNI uses `offset: 4`, `mask: "0xffffff00"`, `shift: 8`.
+1. `size` is 1, 2 or 4. libpcap's `proto[offset:size]` window supports only those widths. Wider or sub-byte logical fields are read through a mask: the 24-bit VNI uses `offset: 4`, `mask: "0xffffff00"`, `shift: 8`; bit-packed words can carry several masked views (IPv6 version, traffic class and flow label all read the first word).
 2. `anchor.header` is one of `ether`, `ip`, `ip6`, `tcp`, `udp`, `icmp`, `icmp6`, `arp`. `anchor.base` is the protocol header's byte offset relative to the anchor. VXLAN starts after the 8-byte UDP header, so its anchor is `{"header": "udp", "base": 8}`.
 3. `locator` is an array of tcpdump primitives. The compiler ORs them inside parentheses and ANDs the group with the field clauses. An empty array emits no prefix. Never hand-write `A or B and C`.
 4. IP addresses and ports are not byte fields. The filter builder emits `host` and `port` primitives; the registry only holds header fields that primitives cannot express.
@@ -110,6 +123,12 @@ python3 -m venv .venv
 .venv/bin/python tools/make_fixtures.py --check
 .venv/bin/python tools/make_manifest.py --check
 .venv/bin/python tools/make_vectors.py --check
+```
+
+Seed a new protocol from scapy metadata (drafts land in `drafts/`, gitignored; the differential probe verifies or rejects every proposed layout):
+
+```sh
+.venv/bin/python tools/seed_draft.py --class OSPF_Hdr --module scapy.contrib.ospf --id ospf --under ip:89 --write
 ```
 
 Regenerate artifacts after changing a registry entry:
