@@ -2,7 +2,7 @@
   "id": "tcp",
   "label": "TCP",
   "rfc": ["9293"],
-  "notes": "TCP header. Source and destination ports are matched with port primitives by the filter builder and are intentionally not fields. The flags and window offsets are fixed within the 20-byte base header; TCP options follow the base header and do not shift them.",
+  "notes": "TCP header. Source and destination ports are matched with port primitives by the filter builder and are intentionally not fields. All other fields of the 20-byte base header are modelled. TCP options follow the base header and do not shift them. Data Offset and Reserved are two masked views of byte 12.",
   "anchor": {
     "header": "tcp",
     "base": 0
@@ -10,6 +10,50 @@
   "locator": [],
   "headerLength": 20,
   "fields": [
+    {
+      "id": "seq",
+      "label": "Sequence Number",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "ack",
+      "label": "Acknowledgment Number",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "data_offset",
+      "label": "Data Offset",
+      "offset": 12,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 15
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 12,
+      "size": 1,
+      "mask": "0x0f",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 15
+    },
     {
       "id": "flags",
       "label": "Flags",
@@ -56,6 +100,26 @@
       "id": "window",
       "label": "Window",
       "offset": 14,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 16,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 9293 §3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "urgptr",
+      "label": "Urgent Pointer",
+      "offset": 18,
       "size": 2,
       "kind": "number",
       "ref": "RFC 9293 §3.1",

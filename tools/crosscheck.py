@@ -71,7 +71,7 @@ def check_field(entry: dict, field: dict) -> None:
     key = (entry_id, field_id)
     require(key in SENTINELS, f"{entry_id}.{field_id}: add a crosscheck sentinel")
 
-    sentinel = SENTINELS[key]
+    sentinel, expected = SENTINELS[key]
     packet = build_packet(entry_id, field_id, sentinel)
     raw = bytes(packet)
 
@@ -93,9 +93,9 @@ def check_field(entry: dict, field: dict) -> None:
         actual = word
 
     require(
-        actual == sentinel,
+        actual == expected,
         f"{entry_id}.{field_id}: serialized bytes give {actual:#x}, "
-        f"expected sentinel {sentinel:#x}",
+        f"expected {expected:#x} (built with {sentinel:#x})",
     )
     print(f"  {entry_id}.{field_id}: {start}+{size} -> {actual:#x}")
 

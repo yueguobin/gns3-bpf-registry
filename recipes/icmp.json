@@ -6,22 +6,35 @@
   ],
   "anchor": {"header": "icmp", "base": 0},
   "headerLength": 8,
+  "fieldMap": {"checksum": "ICMP.chksum", "identifier": "id", "sequence": "seq"},
   "probe": {
     "type": ["0x0f", "0xf0"],
-    "code": ["0x0f", "0xf0"]
+    "code": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "identifier": ["0x0f0f", "0xf0f0"],
+    "sequence": ["0x0f0f", "0xf0f0"]
   },
   "crosscheck": {
     "type": "0x5a",
-    "code": "0x5a"
+    "code": "0x5a",
+    "checksum": "0x5a5a",
+    "identifier": "0x5a5a",
+    "sequence": "0x5a5a"
   },
   "fixtures": {
     "type": [8, 0],
-    "code": [0, 1]
+    "code": [0, 1],
+    "checksum": ["0x1234", "0x1235"],
+    "identifier": [1, 2],
+    "sequence": [1, 2]
   },
   "vectors": [
     {"name": "icmp-type-echo-request", "select": [{"field": "type", "value": 8}]},
     {"name": "icmp-type-echo-reply", "select": [{"field": "type", "value": 0}]},
     {"name": "icmp-code-0", "select": [{"field": "code", "value": 0}]},
+    {"name": "icmp-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "icmp-identifier-1", "select": [{"field": "identifier", "value": 1}]},
+    {"name": "icmp-sequence-1", "select": [{"field": "sequence", "value": 1}]},
     {"name": "icmp-type-and-code", "select": [{"field": "type", "value": 8}, {"field": "code", "value": 0}]}
   ]
 }

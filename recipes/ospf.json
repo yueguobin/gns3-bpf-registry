@@ -1,0 +1,57 @@
+{
+  "id": "ospf",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "proto": 89}},
+    {"layer": "OSPF_Hdr", "fields": {"version": 2, "type": 1, "len": 64, "src": "1.1.1.1", "area": "0.0.0.0", "chksum": "$PIN", "authtype": 0}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 24,
+  "fieldMap": {
+    "version": "OSPF_Hdr.version",
+    "type": "OSPF_Hdr.type",
+    "packet_length": "OSPF_Hdr.len",
+    "router_id": "OSPF_Hdr.src",
+    "area_id": "OSPF_Hdr.area",
+    "checksum": "OSPF_Hdr.chksum",
+    "auth_type": "OSPF_Hdr.authtype"
+  },
+  "probe": {
+    "version": ["0x0f", "0xf0"],
+    "type": ["0x0f", "0xf0"],
+    "packet_length": ["0x0f0f", "0xf0f0"],
+    "router_id": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "area_id": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "checksum": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "auth_type": "bit-escapes-window: logical bit 1 (cryptographic auth) also changes the authentication-data bytes at layer offset 18; fixed offset confirmed against RFC 2328 §A.1"
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "type": "0x5a",
+    "packet_length": "0x5a5a",
+    "router_id": "0x5a5a5a5a",
+    "area_id": "0x5a5a5a5a",
+    "checksum": "0x5a5a",
+    "auth_type": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [2, 3],
+    "type": [1, 2],
+    "packet_length": [64, 65],
+    "router_id": ["0x01010101", "0x02020202"],
+    "area_id": [0, 1],
+    "checksum": ["0x1234", "0x1235"],
+    "auth_type": [0, 1]
+  },
+  "vectors": [
+    {"name": "ospf-version-2", "select": [{"field": "version", "value": 2}]},
+    {"name": "ospf-type-hello", "select": [{"field": "type", "value": 1}]},
+    {"name": "ospf-packet-length-64", "select": [{"field": "packet_length", "value": 64}]},
+    {"name": "ospf-router-id-16843009", "select": [{"field": "router_id", "value": 16843009}]},
+    {"name": "ospf-area-id-0", "select": [{"field": "area_id", "value": 0}]},
+    {"name": "ospf-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "ospf-auth-type-null", "select": [{"field": "auth_type", "value": 0}]}
+  ]
+}
