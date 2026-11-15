@@ -90,10 +90,16 @@ class Recipe:
 
 
 def _recipes_from_specs() -> dict[str, Recipe]:
-    """Adapt declarative recipes to probe recipes (fixture-only ones skip)."""
+    """Adapt declarative recipes to probe recipes (fixture-only ones skip).
+
+    A recipe with an anchor but no probeable fields (every field under
+    ``manual``, e.g. TLV protocols whose fixed-offset surface is
+    probe-opaque) still joins the audit: anchor, headerLength and manual
+    coverage are checked, only the per-field probing is skipped.
+    """
     recipes: dict[str, Recipe] = {}
     for entry_id, spec in load_specs().items():
-        if not spec.probe:
+        if spec.anchor is None:
             continue  # fixture-only recipes (primitive entries) are not probed
         reverse = {v: k for k, v in spec.field_map.items()}
 

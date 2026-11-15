@@ -1,0 +1,69 @@
+{
+  "id": "lldp",
+  "label": "LLDP",
+  "rfc": [],
+  "notes": "Link Layer Discovery Protocol (IEEE 802.1AB) over Ethernet, EtherType 0x88cc. LLDP is a TLV chain, so only the mandatory first TLV (Chassis ID) sits at a fixed offset: chassis_length is the 9-bit TLV length in the word at offset 0 and chassis_subtype is the first value byte. The 7-bit TLV type in the same word is always 1 (chassis id) and carries no filtering value, and the chassis id value itself is an address-like blob; both are left out. Port ID, Time To Live and every later TLV shift with the chassis id length, so they fail the fixed-offset rule and are not modelled. headerLength is the canonical minimal LLDPDU of the recipe (MAC-address chassis id, port name eth0, TTL 120, end TLV).",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": ["ether proto 35020"],
+  "headerLength": 22,
+  "fields": [
+    {
+      "id": "chassis_length",
+      "label": "Chassis ID TLV Length",
+      "offset": 0,
+      "size": 2,
+      "mask": "0x1ff",
+      "shift": 0,
+      "kind": "number",
+      "ref": "IEEE 802.1AB-2016 §8.5.2",
+      "min": 0,
+      "max": 511,
+      "description": "Length of the Chassis ID TLV value in bytes (the subtype byte plus the chassis id); 7 for a MAC-address chassis id."
+    },
+    {
+      "id": "chassis_subtype",
+      "label": "Chassis ID Subtype",
+      "offset": 2,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AB-2016 §8.5.2 (Table 8-3)",
+      "values": [
+        {
+          "value": 0,
+          "label": "Reserved"
+        },
+        {
+          "value": 1,
+          "label": "Chassis Component"
+        },
+        {
+          "value": 2,
+          "label": "Interface Alias"
+        },
+        {
+          "value": 3,
+          "label": "Port Component"
+        },
+        {
+          "value": 4,
+          "label": "MAC Address"
+        },
+        {
+          "value": 5,
+          "label": "Network Address"
+        },
+        {
+          "value": 6,
+          "label": "Interface Name"
+        },
+        {
+          "value": 7,
+          "label": "Locally Assigned"
+        }
+      ]
+    }
+  ]
+}
