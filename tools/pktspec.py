@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scapy.all import ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP
+from scapy.contrib.ospf import OSPF_Hdr
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, parse_int
@@ -49,7 +50,7 @@ RECIPES_DIR = ROOT / "recipes"
 # listed here means adding one import and one entry.
 LAYERS = {
     cls.__name__: cls
-    for cls in (ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP, VXLAN)
+    for cls in (ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, OSPF_Hdr, Raw, TCP, UDP, VXLAN)
 }
 
 ETH_SRC = "02:00:00:00:00:01"
@@ -164,8 +165,12 @@ def load_spec(path: Path) -> RecipeSpec:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise RecipeError(f"{path.name}: invalid JSON: {exc}") from exc
+    return spec_from_data(data, fallback_id=path.stem)
 
-    entry_id = data.get("id") or path.stem
+
+def spec_from_data(data: dict, fallback_id: str = "entry") -> RecipeSpec:
+    """Build a RecipeSpec from an already-parsed recipe dict."""
+    entry_id = data.get("id") or fallback_id
     stack = tuple(_layer(entry_id, item) for item in data.get("stack", []))
     if not stack:
         raise RecipeError(f"{entry_id}: recipe needs a non-empty stack")

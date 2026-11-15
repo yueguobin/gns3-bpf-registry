@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.4",
+  "registryVersion": "2026.11.5",
   "files": {
     "arp.json": "sha256:4fd35ed9f47b781fc071517d6b2518f568274650410e1268705af14ba5986091",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
@@ -9,6 +9,7 @@
     "icmp.json": "sha256:d5cafd6d4f0bbd86ef722c3504989aa99377f4c50e3fc030d9b9aca41d07b03a",
     "ipv4.json": "sha256:851f42c3dd412ca581fb55fabfdca09f89bea7d19bff216264764fa9805b4398",
     "ipv6.json": "sha256:2e4fc6c5df0de62050aeb53cdd04f0b79c7e2eec8e0defadc2b631ede78293e6",
+    "ospf.json": "sha256:23fe51f1f903f3a7766c1b1b8f18e43bfe77c038f0f326d6eb9b645e2b076c15",
     "tcp.json": "sha256:1de4bf8d9c5bfe7dbacc3e721a0190e0493449e12de951b501db7bd64b48f972",
     "udp.json": "sha256:5bb729881ed2511af50965dbbe591aa9e6356630159555fd2ecf6574600dfd40",
     "vlan.json": "sha256:7587194677d749b394af3a4b3bf622ef6af3ab0bea74f6a4bf7813d14d0317ae",

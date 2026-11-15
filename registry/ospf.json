@@ -1,0 +1,116 @@
+{
+  "id": "ospf",
+  "label": "OSPF",
+  "rfc": ["2328"],
+  "notes": "OSPFv2 common header (24 bytes) over IPv4 transport (protocol 89). Router ID and Area ID are dotted-quad identifiers, not packet addresses, so they are modelled as number fields — host primitives cannot reach them. The 8-byte Authentication field is not modelled: it exceeds the 4-byte BPF load window, and under cryptographic authentication (RFC 2328 Appendix D) its content is derived. OSPFv3 (RFC 5340, runs on IPv6) has a different header and is out of scope.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 89"],
+  "headerLength": 24,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2328 §A.1",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2328 §A.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "Hello"
+        },
+        {
+          "value": 2,
+          "label": "Database Description"
+        },
+        {
+          "value": 3,
+          "label": "Link State Request"
+        },
+        {
+          "value": 4,
+          "label": "Link State Update"
+        },
+        {
+          "value": 5,
+          "label": "Link State Acknowledgment"
+        }
+      ]
+    },
+    {
+      "id": "packet_length",
+      "label": "Packet Length",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2328 §A.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "router_id",
+      "label": "Router ID",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2328 §A.1",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "area_id",
+      "label": "Area ID",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2328 §A.1",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 12,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2328 §A.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "auth_type",
+      "label": "Authentication Type",
+      "offset": 14,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 2328 §A.1",
+      "values": [
+        {
+          "value": 0,
+          "label": "Null"
+        },
+        {
+          "value": 1,
+          "label": "Simple Password"
+        },
+        {
+          "value": 2,
+          "label": "Cryptographic"
+        }
+      ]
+    }
+  ]
+}

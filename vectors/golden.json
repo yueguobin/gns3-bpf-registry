@@ -418,6 +418,83 @@
       "expect": "ip6[7:1] == 64"
     },
     {
+      "name": "ospf-version-2",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 89 and ip[20:1] == 2"
+    },
+    {
+      "name": "ospf-type-hello",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 89 and ip[21:1] == 0x1"
+    },
+    {
+      "name": "ospf-packet-length-64",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "packet_length",
+          "value": 64
+        }
+      ],
+      "expect": "ip proto 89 and ip[22:2] == 64"
+    },
+    {
+      "name": "ospf-router-id-16843009",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "router_id",
+          "value": 16843009
+        }
+      ],
+      "expect": "ip proto 89 and ip[24:4] == 16843009"
+    },
+    {
+      "name": "ospf-area-id-0",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "area_id",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 89 and ip[28:4] == 0"
+    },
+    {
+      "name": "ospf-checksum-0x1234",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 89 and ip[32:2] == 4660"
+    },
+    {
+      "name": "ospf-auth-type-null",
+      "entry": "ospf",
+      "select": [
+        {
+          "field": "auth_type",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 89 and ip[34:2] == 0x0"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
