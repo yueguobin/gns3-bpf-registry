@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    tags: ["registry-v*"]
+    tags: ["gns3-bpf-registry-v*"]
 
 permissions:
   contents: read

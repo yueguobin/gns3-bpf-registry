@@ -19,7 +19,8 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 ## Consumer flow
 
 1. The server fetches `registry/manifest.json` from a release tag:
-   `https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/registry-v2026.11.0/registry/manifest.json`
+   `https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/gns3-bpf-registry-v2026.11.15/registry/manifest.json`
+   (tags up to `registry-v2026.11.6` use the legacy `registry-v` name)
 2. It validates the manifest, verifies every file hash, validates each entry against the schema and re-checks compiled expressions with `tcpdump -d`.
 3. It activates the new version in a version directory and switches atomically, keeping the previous version for rollback. See [INTEGRATION.md](INTEGRATION.md).
 
@@ -146,7 +147,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for governance and [schema/VERSIONING.md]
 1. Merge the change to `main` after CI passes.
 2. Update `registry/VERSION` in the same pull request.
 3. Run `make_manifest.py` and commit `registry/manifest.json`.
-4. Tag the merge commit `registry-v<registryVersion>` and push the tag. Never move or re-create a published tag.
+4. Cut a release tag `gns3-bpf-registry-v<YYYY.MM.DD>` named after the actual day the tag is created (for example `gns3-bpf-registry-v2026.11.15`) and push it. Batch merged pull requests into daily or weekly releases; at most one tag per day. Never move or re-create a published tag.
 
 ## License
 

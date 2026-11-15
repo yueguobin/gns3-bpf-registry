@@ -7,9 +7,9 @@ The registry is data. Consumers must validate it before activation and must neve
 Pin a tag; never fetch `main` in production.
 
 ```text
-https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/registry-v<version>/registry/manifest.json
-https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/registry-v<version>/schema/registry.schema.json
-https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/registry-v<version>/registry/<entry>.json
+https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/gns3-bpf-registry-v<date>/registry/manifest.json
+https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/gns3-bpf-registry-v<date>/schema/registry.schema.json
+https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/gns3-bpf-registry-v<date>/registry/<entry>.json
 ```
 
 1. Fetch the manifest.
@@ -39,7 +39,7 @@ The manifest contains `schemaVersion`, `registryVersion` and `files` (one SHA-25
 ## Versioning
 
 - `schemaVersion` changes only for a schema break.
-- `registryVersion` is `YYYY.MM.PATCH`; tags are `registry-v<registryVersion>` and are immutable.
+- `registryVersion` is `YYYY.MM.PATCH`; it counts content changes and does not need to match a tag date. Release tags are `gns3-bpf-registry-v<YYYY.MM.DD>` named after the actual day the tag is cut (daily or weekly cadence, at most one tag per day) and are immutable; tags up to `registry-v2026.11.6` use the legacy `registry-v` name.
 - Additive entries are compatible. Changes to existing byte boundaries require a new registry version and two approvals; see `CONTRIBUTING.md`.
 
 ## Security
