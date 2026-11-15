@@ -40,9 +40,16 @@ Compile one expression:
 .venv/bin/python tools/bpf_compile.py --entry vxlan --select vni=100 --vlan 100
 ```
 
+Seed a new protocol from scapy metadata (see the seed-protocol skill):
+
+```sh
+.venv/bin/python tools/seed_draft.py --class OSPF_Hdr --module scapy.contrib.ospf --id ospf --under ip:89 --write
+```
+
 ## Verification rules
 
 - `crosscheck.py` builds each field with a sentinel value and asserts the serialized bytes at the documented offset. A recipe sentinel may be a `[build, expected]` pair when the scapy kwarg encoding differs from the wire bits (e.g. scapy's 3-bit TCP `reserved` beside the NS bit). It deliberately does not read scapy `fields_desc`: the VXLAN class is a union and reports the wrong VNI offset.
+- `seed_draft.py` seeds recipe + entry drafts from a scapy class (`--class <C> --under ip:89 --write`), probe-first: `fields_desc` only proposes, the differential probe decides; probe-rejected fields land under `manual` with their guess. Drafts go to `drafts/` (gitignored) and get no governance exemption. The workflow is codified in `.claude/skills/seed-protocol`.
 - `auto_draft.py` re-derives every registered field's `offset`/`size`/`mask`/`shift` from serialized bytes (differential probes with pinned computed fields) and compares against the registry; `--check` fails on drift or missing recipe coverage. Fields the probe cannot derive (bit-packed or length-changing) are declared under `manual` in the recipe with a reason; crosscheck still verifies them byte for byte. `--draft --entry <id>` emits candidate skeletons into `drafts/` (gitignored); drafts get no governance exemption.
 - Per-protocol knowledge lives in `recipes/<id>.json` (packet stack, anchor, probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `pktspec.py` is the shared interpreter: the tools contain no per-protocol code. `$PIN` marks probe-pinned checksums; fixture builds drop them so pcaps keep real checksums. `fieldMap` targets may be layer-qualified (`UDP.chksum`) when two layers share a kwarg name. The probed layer must be last in the stack, so the layer window is `len(packet) - headerLength`.
 - `verify.py` validates the schema, structural invariants, `tcpdump -d` syntax, golden vectors and fixture replay. Replay counts packets with scapy: positive fixtures must match exactly one packet and negative fixtures zero. Do not rely on tcpdump's exit code.
