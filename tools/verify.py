@@ -176,21 +176,23 @@ def check_header_entry(entry: dict) -> None:
     require(int(anchor["base"]) >= 0, f"{entry['id']}: negative anchor base")
     require(int(entry["headerLength"]) >= 1, f"{entry['id']}: headerLength must be positive")
 
-    previous_end = 0
+    previous_offset = 0
     for field in entry["fields"]:
         offset = int(field["offset"])
         size = int(field["size"])
         require(size in (1, 2, 4), f"{entry['id']}.{field['id']}: invalid size")
         require(
-            offset >= previous_end,
-            f"{entry['id']}.{field['id']}: fields must be sorted by "
-            "offset and must not overlap",
+            offset >= previous_offset,
+            f"{entry['id']}.{field['id']}: fields must be sorted by offset",
         )
         require(
             offset + size <= int(entry["headerLength"]),
             f"{entry['id']}.{field['id']}: offset + size exceeds headerLength",
         )
-        previous_end = offset + size
+        # Overlapping reads are allowed: bit-packed words get several
+        # masked views (e.g. IPv6 version/traffic class/flow label all
+        # read the first word). Each field compiles to its own clause.
+        previous_offset = offset
         check_field(entry, field)
 
 

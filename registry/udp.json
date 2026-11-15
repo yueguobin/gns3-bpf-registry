@@ -1,0 +1,34 @@
+{
+  "id": "udp",
+  "label": "UDP",
+  "rfc": ["768"],
+  "notes": "UDP header. Source and destination ports are matched with port primitives by the filter builder and are intentionally not fields. All other header fields are modelled. UDP-Lite (RFC 3828) is a different protocol and is not covered.",
+  "anchor": {
+    "header": "udp",
+    "base": 0
+  },
+  "locator": [],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "length",
+      "label": "Length",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 768 (User Datagram Header Format)",
+      "min": 8,
+      "max": 65535
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 768 (User Datagram Header Format)",
+      "min": 0,
+      "max": 65535
+    }
+  ]
+}

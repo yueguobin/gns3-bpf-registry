@@ -25,7 +25,15 @@ from pktspec import (
     load_specs,
 )
 
-ANCHOR_START = {"arp": 14, "ether": 0, "icmp": 34, "ip": 14, "tcp": 34, "udp": 34}
+ANCHOR_START = {
+    "arp": 14,
+    "ether": 0,
+    "icmp": 34,
+    "ip": 14,
+    "ip6": 14,
+    "tcp": 34,
+    "udp": 34,
+}
 
 # Point-read sentinels come from the declarative recipes; this module has
 # no per-protocol tables of its own.

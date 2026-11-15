@@ -86,6 +86,7 @@ class Recipe:
     layer_len: int
     anchor: dict
     fields: tuple[FieldRecipe, ...]
+    manual: dict[str, str] = dataclass_field(default_factory=dict)
 
 
 def _recipes_from_specs() -> dict[str, Recipe]:
@@ -109,6 +110,7 @@ def _recipes_from_specs() -> dict[str, Recipe]:
                 FieldRecipe(fid, spec.scapy_name(fid), a, b)
                 for fid, (a, b) in sorted(spec.probe.items())
             ),
+            manual=dict(spec.manual),
         )
     return recipes
 
@@ -359,6 +361,7 @@ def audit_registry(registry: dict, strict: bool) -> int:
     """Probe every registered field and report (or fail on) drift."""
     problems: list[str] = []
     probed = 0
+    manual_count = 0
     primitives = 0
 
     for entry_id in sorted(set(RECIPES) - set(registry)):
@@ -390,16 +393,21 @@ def audit_registry(registry: dict, strict: bool) -> int:
 
         reg_fields = {f["id"]: f for f in entry["fields"]}
         recipe_fields = {fr.registry_id: fr for fr in recipe.fields}
-        for fid in sorted(set(reg_fields) - set(recipe_fields)):
+        manual = recipe.manual
+        for fid in sorted(set(reg_fields) - set(recipe_fields) - set(manual)):
             problems.append(
                 f"{entry_id}.{fid}: registered field has no probe recipe "
-                "(coverage gap)"
+                "or manual declaration (coverage gap)"
             )
-        for fid in sorted(set(recipe_fields) - set(reg_fields)):
+        for fid in sorted((set(recipe_fields) | set(manual)) - set(reg_fields)):
             problems.append(
                 f"{entry_id}.{fid}: recipe field missing from the registry "
                 "(typo or unfinished promotion)"
             )
+
+        for fid in sorted(set(reg_fields) & set(manual)):
+            print(f"  {fid}: manual evidence (crosscheck-verified) — {manual[fid]}")
+            manual_count += 1
 
         for fid in sorted(set(reg_fields) & set(recipe_fields)):
             try:
@@ -426,20 +434,18 @@ def audit_registry(registry: dict, strict: bool) -> int:
                 print(f"  {fid}: {detail} — matches registry")
 
     header = len([e for e in registry.values() if "anchor" in e])
+    summary = (
+        f"{probed} fields probed, {manual_count} manual, "
+        f"{header} header entries, {primitives} primitive"
+    )
     if problems:
         stream = sys.stderr if strict else sys.stdout
         prefix = "error" if strict else "warning"
         for problem in problems:
             print(f"{prefix}: {problem}", file=stream)
-        print(
-            f"auto-draft found {len(problems)} problem(s) "
-            f"({probed} fields probed, {header} header entries, {primitives} primitive)"
-        )
+        print(f"auto-draft found {len(problems)} problem(s) ({summary})")
         return 1 if strict else 0
-    print(
-        f"auto-draft OK ({probed} fields probed, "
-        f"{header} header entries, {primitives} primitive)"
-    )
+    print(f"auto-draft OK ({summary})")
     return 0
 
 
@@ -448,7 +454,7 @@ def run_draft(entry_id: str, to_stdout: bool) -> int:
     if recipe is None:
         print(
             f"error: no recipe for entry '{entry_id}' "
-            "(add one to tools/auto_draft.py first)",
+            "(add recipes/<id>.json first)",
             file=sys.stderr,
         )
         return 1

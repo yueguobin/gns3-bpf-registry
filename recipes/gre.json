@@ -1,0 +1,46 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "GRE", "fields": {"chksum_present": 0, "key_present": 0, "seqnum_present": 0, "version": 0, "proto": "0x0800"}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 4,
+  "fieldMap": {
+    "protocol": "proto",
+    "c_bit": "chksum_present",
+    "k_bit": "key_present",
+    "s_bit": "seqnum_present"
+  },
+  "probe": {
+    "protocol": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "c_bit": "bit-packed word; setting the bit changes the header length, so the probe cannot isolate it",
+    "k_bit": "bit-packed word; setting the bit changes the header length, so the probe cannot isolate it",
+    "s_bit": "bit-packed word; setting the bit changes the header length, so the probe cannot isolate it",
+    "version": "bit-packed word; a 3-bit field the leading-aligned probe model cannot map"
+  },
+  "crosscheck": {
+    "protocol": "0x5a5a",
+    "c_bit": 1,
+    "k_bit": 1,
+    "s_bit": 1,
+    "version": 3
+  },
+  "fixtures": {
+    "protocol": ["0x0800", "0x86dd"],
+    "c_bit": [0, 1],
+    "k_bit": [0, 1],
+    "s_bit": [0, 1],
+    "version": [0, 1]
+  },
+  "vectors": [
+    {"name": "gre-protocol-ipv4", "select": [{"field": "protocol", "value": 2048}]},
+    {"name": "gre-protocol-transparent-ethernet", "select": [{"field": "protocol", "value": 25944}]},
+    {"name": "gre-checksum-present", "select": [{"field": "c_bit", "value": 1}]},
+    {"name": "gre-key-present", "select": [{"field": "k_bit", "value": 1}]},
+    {"name": "gre-sequence-present", "select": [{"field": "s_bit", "value": 1}]},
+    {"name": "gre-version-1", "select": [{"field": "version", "value": 1}]}
+  ]
+}

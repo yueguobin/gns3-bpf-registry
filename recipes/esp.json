@@ -1,0 +1,25 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "ESP", "fields": {"spi": "0x12345678", "seq": 1}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 8,
+  "probe": {
+    "spi": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "seq": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "spi": "0x5a5a5a5a",
+    "seq": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "spi": ["0x12345678", "0x12345679"],
+    "seq": [1, 2]
+  },
+  "vectors": [
+    {"name": "esp-spi-0x12345678", "select": [{"field": "spi", "value": 305419896}]},
+    {"name": "esp-seq-1", "select": [{"field": "seq", "value": 1}]}
+  ]
+}
