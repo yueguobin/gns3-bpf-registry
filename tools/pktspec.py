@@ -37,7 +37,21 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from scapy.all import ARP, Dot1Q, ESP, Ether, GRE, ICMP, IP, IPv6, Raw, TCP, UDP
+from scapy.all import (
+    ARP,
+    Dot1Q,
+    ESP,
+    Ether,
+    GRE,
+    ICMP,
+    IP,
+    IPv6,
+    LLC,
+    Raw,
+    STP,
+    TCP,
+    UDP,
+)
 from scapy.contrib.lldp import (
     LLDPDUChassisID,
     LLDPDUEndOfLLDPDU,
@@ -67,12 +81,14 @@ LAYERS = {
         ICMP,
         IP,
         IPv6,
+        LLC,
         LLDPDUChassisID,
         LLDPDUEndOfLLDPDU,
         LLDPDUPortID,
         LLDPDUTimeToLive,
         OSPF_Hdr,
         Raw,
+        STP,
         TCP,
         UDP,
         VXLAN,
