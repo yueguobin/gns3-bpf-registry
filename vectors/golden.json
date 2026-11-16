@@ -131,6 +131,39 @@
       "expect": "arp[6:2] == 0x1 and arp[14:4] == 0xc000020a and arp[24:4] == 0xc000020a"
     },
     {
+      "name": "bgp-length-keepalive",
+      "entry": "bgp",
+      "select": [
+        {
+          "field": "length",
+          "value": 19
+        }
+      ],
+      "expect": "tcp port 179 and tcp[36:2] == 19"
+    },
+    {
+      "name": "bgp-type-keepalive",
+      "entry": "bgp",
+      "select": [
+        {
+          "field": "type",
+          "value": 4
+        }
+      ],
+      "expect": "tcp port 179 and tcp[38:1] == 0x4"
+    },
+    {
+      "name": "bgp-type-update",
+      "entry": "bgp",
+      "select": [
+        {
+          "field": "type",
+          "value": 2
+        }
+      ],
+      "expect": "tcp port 179 and tcp[38:1] == 0x2"
+    },
+    {
       "name": "dhcp-op-bootrequest",
       "entry": "dhcp",
       "select": [
@@ -303,6 +336,96 @@
         }
       ],
       "expect": "(udp port 67 or udp port 68) and (udp[36:4] == 0x2000000 and udp[40:2] == 0x1)"
+    },
+    {
+      "name": "eigrp-version-2",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 88 and ip[20:1] == 2"
+    },
+    {
+      "name": "eigrp-opcode-hello",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 5
+        }
+      ],
+      "expect": "ip proto 88 and ip[21:1] == 0x5"
+    },
+    {
+      "name": "eigrp-checksum-0x1234",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 88 and ip[22:2] == 4660"
+    },
+    {
+      "name": "eigrp-flags-init",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "INIT"
+          ]
+        }
+      ],
+      "expect": "ip proto 88 and (ip[24:4] & 0x1) == 0x1"
+    },
+    {
+      "name": "eigrp-sequence-10",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "sequence",
+          "value": 10
+        }
+      ],
+      "expect": "ip proto 88 and ip[28:4] == 10"
+    },
+    {
+      "name": "eigrp-acknowledgment-10",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "acknowledgment",
+          "value": 10
+        }
+      ],
+      "expect": "ip proto 88 and ip[32:4] == 10"
+    },
+    {
+      "name": "eigrp-vrid-unicast",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "vrid",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 88 and ip[36:2] == 0"
+    },
+    {
+      "name": "eigrp-asn-100",
+      "entry": "eigrp",
+      "select": [
+        {
+          "field": "asn",
+          "value": 100
+        }
+      ],
+      "expect": "ip proto 88 and ip[38:2] == 100"
     },
     {
       "name": "esp-spi-0x12345678",
@@ -811,6 +934,39 @@
         }
       ],
       "expect": "ip proto 89 and ip[34:2] == 0x0"
+    },
+    {
+      "name": "rip-command-response",
+      "entry": "rip",
+      "select": [
+        {
+          "field": "cmd",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 520 and udp[8:1] == 0x2"
+    },
+    {
+      "name": "rip-version-2",
+      "entry": "rip",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 520 and udp[9:1] == 0x2"
+    },
+    {
+      "name": "rip-must-be-zero",
+      "entry": "rip",
+      "select": [
+        {
+          "field": "must_zero",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 520 and udp[10:2] == 0"
     },
     {
       "name": "stp-protocol-id-0",

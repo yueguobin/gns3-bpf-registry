@@ -1,0 +1,68 @@
+{
+  "id": "bgp",
+  "label": "BGP",
+  "rfc": [
+    "4271",
+    "2918"
+  ],
+  "notes": "BGP-4 message header over TCP port 179. The 19-byte fixed header is modelled; the message body that follows (OPEN, UPDATE, NOTIFICATION, KEEPALIVE, ROUTE-REFRESH payload) is variable-length and not modelled. The 16-byte marker exceeds the 4-byte BPF load window and is normally all ones; it is excluded. The anchor base 20 assumes a TCP header without options, the same fixed-header convention as the IP anchor.",
+  "anchor": {
+    "header": "tcp",
+    "base": 20
+  },
+  "locator": [
+    "tcp port 179"
+  ],
+  "headerLength": 19,
+  "fields": [
+    {
+      "id": "length",
+      "label": "Total Message Length",
+      "offset": 16,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 4271 §4.1",
+      "min": 19,
+      "max": 4096,
+      "description": "Total length of the BGP message including the 19-byte header; 19 for a bare KEEPALIVE, at most 4096."
+    },
+    {
+      "id": "type",
+      "label": "Message Type",
+      "offset": 18,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 4271 §4.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "OPEN"
+        },
+        {
+          "value": 2,
+          "label": "UPDATE"
+        },
+        {
+          "value": 3,
+          "label": "NOTIFICATION"
+        },
+        {
+          "value": 4,
+          "label": "KEEPALIVE"
+        },
+        {
+          "value": 5,
+          "label": "ROUTE-REFRESH"
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "id": "marker",
+      "offset": 0,
+      "length": 16,
+      "reason": "16-byte marker: wider than the 4-byte BPF load window; sent as all ones (RFC 4271 section 4.1) and carries no filtering value"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.9",
+  "registryVersion": "2026.11.10",
   "files": {
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
+    "bgp.json": "sha256:69528ef030501487283a3a34d23df2c2b7108563f7af82e853079cc32a206f55",
     "dhcp.json": "sha256:33de3a53720be7a9d2351e0301017c38544793cd5b19070810f459d792a8decf",
+    "eigrp.json": "sha256:aeac37a1dbb8d140782a6f9ce09051b600eeab1f91b0ad35eb9f1f6d0794ab8d",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
     "ethernet.json": "sha256:335501e617e26a8e5b5f964c2a3573ad4bdd6240b36d9802176cf2c3c46f6ec6",
     "gre.json": "sha256:324d661a5907138670e75bd520ec4819933a0de2ef4e9d3954101fa907ddc7e9",
@@ -12,6 +14,7 @@
     "ipv6.json": "sha256:6778da7a164ade0925a6f22361b115ba558225e9d07af2864b37891c0cf5d4be",
     "lldp.json": "sha256:7b5be00b25df6b2c41d687793ae45b2db52cf593ea205d0c1154049787cdbf99",
     "ospf.json": "sha256:be49a2399082563861642712ff82b1c54d572679db99b8653db13a32174d434f",
+    "rip.json": "sha256:c10b6e14475444c2fab0a50ecd4e3649cfd18d422b3b5b02015e2084212fa3b0",
     "stp.json": "sha256:7f58fe750a024dda107e7ca15930736fa63c1ff2d3723aa78451f60252c7c75d",
     "tcp.json": "sha256:65404c7e59b96b1dfa54be5ae84e93925bbc64fee4fd6a00515e4e1473f33a49",
     "udp.json": "sha256:aed8fb53877611be703db077ddd83013fc03e49b3dddaab7513274cfce8dc780",

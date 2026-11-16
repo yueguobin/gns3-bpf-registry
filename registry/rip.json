@@ -1,0 +1,77 @@
+{
+  "id": "rip",
+  "label": "RIP",
+  "rfc": [
+    "2453"
+  ],
+  "notes": "RIP v1/v2 over UDP port 520. Only the fixed 4-byte header is modelled: Command, Version and the must-be-zero word. Route entries are variable-count 20-byte chains, and the first entry of a RIPv2 packet may be an authentication record (RFC 2453 section 4.1) instead of a route, so no byte past the header sits at a trustworthy fixed offset. RIPv1 and RIPv2 share this header; the entry semantics behind it differ.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 520"
+  ],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "cmd",
+      "label": "Command",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2453 §3.6",
+      "values": [
+        {
+          "value": 1,
+          "label": "Request"
+        },
+        {
+          "value": 2,
+          "label": "Response"
+        },
+        {
+          "value": 3,
+          "label": "Traceon (obsolete)"
+        },
+        {
+          "value": 4,
+          "label": "Traceoff (obsolete)"
+        },
+        {
+          "value": 5,
+          "label": "Reserved (Sun)"
+        }
+      ]
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2453 §3.6",
+      "values": [
+        {
+          "value": 1,
+          "label": "RIPv1 (RFC 1058)"
+        },
+        {
+          "value": 2,
+          "label": "RIPv2 (RFC 2453)"
+        }
+      ]
+    },
+    {
+      "id": "must_zero",
+      "label": "Must be Zero",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2453 §3.6",
+      "min": 0,
+      "max": 65535,
+      "description": "Unused; senders set it to zero, receivers must not rely on it."
+    }
+  ]
+}

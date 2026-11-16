@@ -1,0 +1,56 @@
+{
+  "id": "eigrp",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "proto": 88}},
+    {"layer": "EIGRPHeader", "fields": {"ver": 2, "opcode": 5, "chksum": "$PIN", "flags": 0, "seq": 0, "ack": 0, "vrid": 0, "asn": 100}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 20,
+  "fieldMap": {
+    "version": "ver",
+    "checksum": "EIGRPHeader.chksum",
+    "sequence": "seq",
+    "acknowledgment": "ack"
+  },
+  "probe": {
+    "version": ["0x0f", "0xf0"],
+    "opcode": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "flags": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "sequence": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "acknowledgment": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "vrid": ["0x0f0f", "0xf0f0"],
+    "asn": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "opcode": "0x5a",
+    "checksum": "0x5a5a",
+    "flags": "0x5a5a5a5a",
+    "sequence": "0x5a5a5a5a",
+    "acknowledgment": "0x5a5a5a5a",
+    "vrid": "0x5a5a",
+    "asn": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [2, 3],
+    "opcode": [5, 3],
+    "checksum": ["0x1234", "0x1235"],
+    "flags": [1, 2],
+    "sequence": [10, 11],
+    "acknowledgment": [0, 10],
+    "vrid": [0, 1],
+    "asn": [100, 200]
+  },
+  "vectors": [
+    {"name": "eigrp-version-2", "select": [{"field": "version", "value": 2}]},
+    {"name": "eigrp-opcode-hello", "select": [{"field": "opcode", "value": 5}]},
+    {"name": "eigrp-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "eigrp-flags-init", "select": [{"field": "flags", "flags": ["INIT"]}]},
+    {"name": "eigrp-sequence-10", "select": [{"field": "sequence", "value": 10}]},
+    {"name": "eigrp-acknowledgment-10", "select": [{"field": "acknowledgment", "value": 10}]},
+    {"name": "eigrp-vrid-unicast", "select": [{"field": "vrid", "value": 0}]},
+    {"name": "eigrp-asn-100", "select": [{"field": "asn", "value": 100}]}
+  ]
+}

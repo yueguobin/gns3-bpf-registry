@@ -1,0 +1,29 @@
+{
+  "id": "bgp",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "TCP", "fields": {"sport": 12345, "dport": 179, "chksum": "$PIN"}},
+    {"layer": "BGPHeader", "fields": {"marker": 340282366920938463463374607431768211455, "len": 19, "type": 4}}
+  ],
+  "anchor": {"header": "tcp", "base": 20},
+  "headerLength": 19,
+  "fieldMap": {"length": "len"},
+  "probe": {
+    "length": ["0x0f0f", "0xf0f0"],
+    "type": ["0x0f", "0xf0"]
+  },
+  "crosscheck": {
+    "length": "0x5a5a",
+    "type": "0x5a"
+  },
+  "fixtures": {
+    "length": [19, 40],
+    "type": [4, 2]
+  },
+  "vectors": [
+    {"name": "bgp-length-keepalive", "select": [{"field": "length", "value": 19}]},
+    {"name": "bgp-type-keepalive", "select": [{"field": "type", "value": 4}]},
+    {"name": "bgp-type-update", "select": [{"field": "type", "value": 2}]}
+  ]
+}
