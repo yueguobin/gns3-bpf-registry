@@ -29,9 +29,17 @@
   button{font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 10px; cursor:pointer}
   button:hover{border-color:#94a3b8}
   .palette{display:flex; flex-direction:column; gap:4px}
-  .pgroup{display:flex; flex-direction:column; gap:6px; margin-bottom:8px}
+  .palfilter{width:100%; padding:5px 8px; border:1px solid var(--line); border-radius:6px;
+    font:inherit; font-size:12px; margin-bottom:8px; outline:none}
+  .palfilter:focus{border-color:#94a3b8}
+  .pgroup{margin-bottom:8px}
   .pgrouplab{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--line); padding-bottom:2px}
+    border-bottom:1px solid var(--line); padding-bottom:2px; cursor:pointer;
+    display:flex; align-items:center; gap:4px; user-select:none}
+  .pgrouplab .arr{font-size:8px; width:8px; flex:none}
+  .pgrouplab .cnt{margin-left:auto; color:var(--muted); font-size:9px}
+  .pgroup .pbtns{display:flex; flex-direction:column; gap:6px; padding-top:6px}
+  .pgroup:not(.open) .pbtns{display:none}
   .palette button{border-left:4px solid var(--pc); text-align:left; padding:8px 10px;
     background:color-mix(in srgb, var(--pc) 6%, #fff)}
   .palette button:hover{background:color-mix(in srgb, var(--pc) 16%, #fff)}
@@ -335,18 +343,19 @@ const ENTRIES = {
    field KIND no longer participates in coloring. */
 let stack = [], sels = [], editing = null;   // editing: {uid, fid}
 let selLayer = null, uidSeq = 0;
+let famOpen = new Set(["link","custom"]), palFilter = "";   // palette: open families + search
 
 /* ---------- stack ops ---------- */
 function addLayer(eid){
   stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len});
-  selLayer = stack[stack.length-1].uid; renderAll();
+  selLayer = stack[stack.length-1].uid; refreshFams(); renderAll();
 }
 function delLayer(uid){
   stack.splice(stack.findIndex(s=>s.uid===uid),1);
   sels = sels.filter(s=>s.uid!==uid);
   if(selLayer===uid) selLayer=null;
   if(editing && editing.uid===uid) editing=null;
-  renderAll();
+  refreshFams(); renderAll();
 }
 function tunnelIdx(){ return stack.findIndex(s=>ENTRIES[s.eid].tunnel); }
 function prefix(i){ let n=0; for(let k=0;k<i;k++) n+=stack[k].len; return n; }
@@ -467,22 +476,50 @@ function focusCell(){
   if(c){ c.focus(); if(c.select) try{ c.select(); }catch(e){} }
 }
 function renderPalette(){
-  // Palette groups bricks by family: with hundreds of protocols later, the
-  // group headers are the navigation, and 5-6 family hues never run out.
+  // Collapsible family groups + search: with dozens of protocols the rail
+  // stays short; groups auto-open for the families that can legally follow
+  // the current stack top (candidateFams), and search filters by name.
+  const q = palFilter.trim().toLowerCase();
   const groups = Object.keys(FAM).map(fam=>{
-    const bricks = Object.entries(ENTRIES)
-      .filter(([,e])=>e.fam===fam && !e.custom)
-      .map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${e.label}</button>`)
-      .join("");
-    if(!bricks && fam!=="custom") return "";
-    const custom = fam==="custom" ? `<button style="--pc:${FAM.custom.color}" onclick="addCustom()">＋ 自定义层(声明长度)</button>` : "";
-    return `<div class="pgroup"><div class="pgrouplab" style="color:${FAM[fam].color}">${FAM[fam].label}</div>${bricks}${custom}</div>`;
+    if(fam==="custom"){
+      if(q) return "";
+      return `<div class="pgroup open"><div class="pgrouplab" style="color:${FAM.custom.color}" onclick="toggleFam('custom')"><span class="arr">▾</span>自定义</div>
+        <div class="pbtns"><button style="--pc:${FAM.custom.color}" onclick="addCustom()">＋ 自定义层(声明长度)</button></div></div>`;
+    }
+    const list = Object.entries(ENTRIES).filter(([,e])=>e.fam===fam && !e.custom);
+    const shown = list.filter(([,e])=>!q || e.label.toLowerCase().includes(q));
+    if(!shown.length) return "";
+    const open = q ? true : famOpen.has(fam);
+    const btns = shown.map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${e.label}</button>`).join("");
+    return `<div class="pgroup ${open?"open":""}">
+      <div class="pgrouplab" style="color:${FAM[fam].color}" onclick="toggleFam('${fam}')"><span class="arr">${open?"▾":"▸"}</span>${FAM[fam].label}<span class="cnt">${list.length}</span></div>
+      <div class="pbtns">${btns}</div></div>`;
   }).join("");
-  document.getElementById("palette").innerHTML = groups;
+  document.getElementById("palette").innerHTML =
+    `<input id="palfilter" class="palfilter" placeholder="搜索协议…" value="${palFilter}" oninput="filterPal(this.value)">` + groups;
+}
+function candidateFams(){
+  // Which families can legally follow the stack top: the families of every
+  // successor target of the top layer's fields (+ link inside a tunnel).
+  const fams = new Set(["custom"]);
+  if(!stack.length){ fams.add("link"); return fams; }
+  const last = ENTRIES[stack[stack.length-1].eid];
+  if(last.tunnel) fams.add("link");
+  for(const f of last.fields||[])
+    for(const t of Object.values(f.successor||{}))
+      if(ENTRIES[t]) fams.add(ENTRIES[t].fam);
+  return fams;
+}
+function refreshFams(){ famOpen = new Set(candidateFams()); }
+function toggleFam(fam){ famOpen.has(fam) ? famOpen.delete(fam) : famOpen.add(fam); renderPalette(); }
+function filterPal(v){
+  palFilter = v; renderPalette();
+  const inp = document.getElementById("palfilter");
+  if(inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); }
 }
 function addCustom(){
   const n = +prompt("自定义层长度(字节)","12"); if(!n||n<1) return;
-  stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; renderAll();
+  stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; refreshFams(); renderAll();
 }
 function cellHTML(layer, li, f, it, grid){
   const on = sels.some(s=>s.uid===layer.uid && s.fid===f.id);
@@ -594,7 +631,7 @@ function autoLink(uid, f){
   const next = stack[li+1];
   if(!next){                                         // nothing follows: grow the block
     const layer = {uid:++uidSeq, eid:target, len:ENTRIES[target].len};
-    stack.push(layer); selLayer = layer.uid;
+    stack.push(layer); selLayer = layer.uid; refreshFams();
     return;
   }
   if(next.eid===target) return;
@@ -603,6 +640,7 @@ function autoLink(uid, f){
   next.eid = target; next.len = ENTRIES[target].len;
   sels = sels.filter(s=>s.uid!==next.uid);           // old header's fields do not exist in the new one
   if(editing && editing.uid===next.uid) editing=null;
+  refreshFams();
 }
 function structWarnings(){
   const out=[];
@@ -713,14 +751,14 @@ function presetDrill(){
   ["ether","ipv4","udp","vxlan","ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
   sels.push({uid:stack[3].uid, fid:"vni", val:100, dispVal:"100"});
   sels.push({uid:stack[6].uid, fid:"dport", val:443, dispVal:"443"});
-  selLayer = stack[6].uid; renderAll();
+  selLayer = stack[6].uid; refreshFams(); renderAll();
 }
 function presetNative(){
   stack=[]; sels=[]; editing=null; uidSeq=0;
   ["ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
   sels.push({uid:stack[1].uid, fid:"dst", val:0, dispVal:"192.0.2.2"});
   sels.push({uid:stack[2].uid, fid:"flags", val:2, bitMask:2, dispVal:"SYN"});
-  selLayer = stack[2].uid; renderAll();
+  selLayer = stack[2].uid; refreshFams(); renderAll();
 }
 renderAll();   // start empty: build from the palette
 </script>
