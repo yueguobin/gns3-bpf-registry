@@ -287,8 +287,8 @@ const ENTRIES = {
                {v:1,l:"Hello"},{v:2,l:"Database Description"},{v:3,l:"Link State Request"},
                {v:4,l:"Link State Update"},{v:5,l:"Link State Acknowledgment"}]},
              {id:"plen", label:"Packet Length", off:2, len:2, kind:"number"},
-             {id:"rtrid", label:"Router ID", off:4, len:4, kind:"number"},
-             {id:"areaid", label:"Area ID", off:8, len:4, kind:"number"},
+             {id:"rtrid", label:"Router ID", off:4, len:4, kind:"ipv4"},
+             {id:"areaid", label:"Area ID", off:8, len:4, kind:"ipv4"},
              {id:"sum", label:"Checksum", off:12, len:2, kind:"number"},
              {id:"autype", label:"Auth Type", off:14, len:2, kind:"enum",
               values:[{v:0,l:"Null"},{v:1,l:"Simple Password"},{v:2,l:"Cryptographic"}]}]},
@@ -364,6 +364,7 @@ function prefix(i){ let n=0; for(let k=0;k<i;k++) n+=stack[k].len; return n; }
 function hex(v){return "0x"+v.toString(16)}
 function ip2int(s){return s.split(".").reduce((a,o)=>(a<<8)+ +o,0)>>>0}
 function mac2int(s){return parseInt(s.replace(/:/g,""),16)}
+function ipv4val(raw){ return raw.split(".").length===4 ? ip2int(raw) : parseInt(raw,0); }
 function fieldClause(sel){
   const li = stack.findIndex(s=>s.uid===sel.uid); if(li<0) return null;
   const layer = stack[li], e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===sel.fid);
@@ -373,7 +374,7 @@ function fieldClause(sel){
   const win = f.win||f.len;
   let val;
   if(f.kind==="enum") val = sel.val;
-  else if(f.kind==="ipv4") val = ip2int(sel.dispVal);
+  else if(f.kind==="ipv4") val = ipv4val(sel.dispVal);
   else if(f.kind==="mac"){
     const m = mac2int(sel.dispVal);
     const hi = Math.floor(m / 0x10000), lo = m % 0x10000;
@@ -609,7 +610,7 @@ function commitValue(uid, fid, raw){
   const sel = {uid, fid, val:null, dispVal:null};
   if(f.kind==="enum"){ sel.val = +raw; sel.dispVal = (f.values.find(v=>v.v===+raw)||{l:raw}).l; }
   else if(f.kind==="mac"){ sel.dispVal = raw; sel.val = mac2int(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
-  else if(f.kind==="ipv4"){ sel.dispVal = raw; sel.val = ip2int(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
+  else if(f.kind==="ipv4"){ sel.dispVal = raw; sel.val = ipv4val(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
   else if(f.kind==="ipv6"){ sel.dispVal = raw;
     const g = raw.split(":").map(x=>parseInt(x||"0",16));
     if(g.length!==8){ editing=null; renderAll(); return; } }
