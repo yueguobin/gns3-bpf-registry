@@ -1,0 +1,147 @@
+{
+  "id": "eigrp",
+  "label": "EIGRP",
+  "rfc": [
+    "7868"
+  ],
+  "notes": "EIGRP packet header directly over IP protocol 88 (the IPv4 and IPv6 protocol numbers are common, RFC 7868 section 6.1). The fixed 20-byte header is fully modelled; the TLV chain that follows is variable-length and not modelled. scapy's EIGRP class models the trailing word as a single 4-byte AS field with no Virtual Router ID, so the recipe builds the RFC 7868 wire layout (VRID then 16-bit AS) through a corrective header class in tools/pktspec.py; every offset below is probe-verified against those bytes.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": [
+    "ip proto 88"
+  ],
+  "headerLength": 20,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Header Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 0,
+      "max": 255,
+      "description": "EIGRP packet header format version; 2 in current deployments. Distinct from the TLV version."
+    },
+    {
+      "id": "opcode",
+      "label": "Opcode",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 7868 §6.5",
+      "values": [
+        {
+          "value": 1,
+          "label": "Update"
+        },
+        {
+          "value": 2,
+          "label": "Request"
+        },
+        {
+          "value": 3,
+          "label": "Query"
+        },
+        {
+          "value": 4,
+          "label": "Reply"
+        },
+        {
+          "value": 5,
+          "label": "Hello"
+        },
+        {
+          "value": 10,
+          "label": "SIA-Query"
+        },
+        {
+          "value": 11,
+          "label": "SIA-Reply"
+        }
+      ]
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 4,
+      "size": 4,
+      "kind": "bitset",
+      "ref": "RFC 7868 §6.5",
+      "bits": [
+        {
+          "mask": 1,
+          "label": "INIT"
+        },
+        {
+          "mask": 2,
+          "label": "CR"
+        },
+        {
+          "mask": 4,
+          "label": "RS"
+        },
+        {
+          "mask": 8,
+          "label": "EOT"
+        }
+      ]
+    },
+    {
+      "id": "sequence",
+      "label": "Sequence Number",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Per-sender sequence number; 0 means no acknowledgment is required."
+    },
+    {
+      "id": "acknowledgment",
+      "label": "Acknowledgment Number",
+      "offset": 12,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 0,
+      "max": 4294967295,
+      "description": "The sequence number being acknowledged; 0 means no acknowledgment is present."
+    },
+    {
+      "id": "vrid",
+      "label": "Virtual Router ID",
+      "offset": 16,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 0,
+      "max": 65535,
+      "description": "0 for the unicast address family, 1 for the multicast address family; packets with unknown values are discarded."
+    },
+    {
+      "id": "asn",
+      "label": "Autonomous System Number",
+      "offset": 18,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 7868 §6.5",
+      "min": 1,
+      "max": 65535,
+      "description": "16-bit AS number of the sending system; packets from a mismatched AS are ignored."
+    }
+  ]
+}

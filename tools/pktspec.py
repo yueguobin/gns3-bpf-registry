@@ -52,6 +52,9 @@ from scapy.all import (
     TCP,
     UDP,
 )
+from scapy.contrib.bgp import BGPHeader
+from scapy.contrib.eigrp import EIGRP as _ScapyEIGRP
+from scapy.contrib.eigrp import _EIGRP_FLAGS, _EIGRP_OPCODES
 from scapy.contrib.lldp import (
     LLDPDUChassisID,
     LLDPDUEndOfLLDPDU,
@@ -59,8 +62,38 @@ from scapy.contrib.lldp import (
     LLDPDUTimeToLive,
 )
 from scapy.contrib.ospf import OSPF_Hdr
+from scapy.fields import (
+    ByteEnumField,
+    ByteField,
+    FlagsField,
+    IntField,
+    ShortField,
+    XShortField,
+)
 from scapy.layers.dhcp import BOOTP
+from scapy.layers.rip import RIP
 from scapy.layers.vxlan import VXLAN
+
+
+class EIGRPHeader(_ScapyEIGRP):
+    """EIGRP header per RFC 7868 section 6.5.
+
+    scapy's EIGRP models the trailing word as one 4-byte AS field and has
+    no Virtual Router ID; the wire format is VRID (2 bytes) followed by a
+    16-bit AS number. Only the header is rebuilt (no TLV list): recipes
+    never model the variable tail.
+    """
+
+    fields_desc = [
+        ByteField("ver", 2),
+        ByteEnumField("opcode", 5, _EIGRP_OPCODES),
+        XShortField("chksum", None),
+        FlagsField("flags", 0, 32, _EIGRP_FLAGS),
+        IntField("seq", 0),
+        IntField("ack", 0),
+        ShortField("vrid", 0),
+        ShortField("asn", 100),
+    ]
 
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
@@ -73,8 +106,10 @@ LAYERS = {
     cls.__name__: cls
     for cls in (
         ARP,
+        BGPHeader,
         BOOTP,
         Dot1Q,
+        EIGRPHeader,
         ESP,
         Ether,
         GRE,
@@ -87,6 +122,7 @@ LAYERS = {
         LLDPDUPortID,
         LLDPDUTimeToLive,
         OSPF_Hdr,
+        RIP,
         Raw,
         STP,
         TCP,

@@ -1,0 +1,32 @@
+{
+  "id": "rip",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 520, "chksum": "$PIN"}},
+    {"layer": "RIP", "fields": {"cmd": 2, "version": 2, "null": 0}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 4,
+  "fieldMap": {"must_zero": "null"},
+  "probe": {
+    "cmd": ["0x0f", "0xf0"],
+    "version": ["0x0f", "0xf0"],
+    "must_zero": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "cmd": "0x5a",
+    "version": "0x5a",
+    "must_zero": "0x5a5a"
+  },
+  "fixtures": {
+    "cmd": [2, 1],
+    "version": [2, 1],
+    "must_zero": [0, 1]
+  },
+  "vectors": [
+    {"name": "rip-command-response", "select": [{"field": "cmd", "value": 2}]},
+    {"name": "rip-version-2", "select": [{"field": "version", "value": 2}]},
+    {"name": "rip-must-be-zero", "select": [{"field": "must_zero", "value": 0}]}
+  ]
+}
