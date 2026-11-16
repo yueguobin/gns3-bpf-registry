@@ -28,12 +28,16 @@
   .card h2{font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px}
   button{font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 10px; cursor:pointer}
   button:hover{border-color:#94a3b8}
-  .palette{display:flex; flex-direction:column; gap:8px}
+  .palette{display:flex; flex-direction:column; gap:4px}
+  .pgroup{display:flex; flex-direction:column; gap:6px; margin-bottom:8px}
+  .pgrouplab{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--line); padding-bottom:2px}
   .palette button{border-left:4px solid var(--pc); text-align:left; padding:8px 10px;
     background:color-mix(in srgb, var(--pc) 6%, #fff)}
   .palette button:hover{background:color-mix(in srgb, var(--pc) 16%, #fff)}
   @media (max-width:920px){
     .palette{flex-direction:row; flex-wrap:wrap}
+    .pgroup{flex-direction:row; flex-wrap:wrap}
   }
   .presets{margin-left:auto; display:flex; gap:8px}
   /* ---- vertical stack: each protocol is one rectangular brick ---- */
@@ -147,16 +151,26 @@
 </div>
 
 <script>
-/* ---------- mock registry (field layout mirrors registry/*.json) ---------- */
+/* ---------- mock registry (field layout mirrors registry/*.json) ----------
+   Color encodes FAMILY (link/net/trans/tunnel/app), never per-protocol identity:
+   the label strip's protocol name is the identity, 5-6 family hues always suffice. */
+const FAM = {
+  link:   {color:"#64748b", label:"链路层"},
+  net:    {color:"#3b82f6", label:"网络层"},
+  trans:  {color:"#10b981", label:"传输层"},
+  tunnel: {color:"#ef4444", label:"隧道/Overlay"},
+  app:    {color:"#f59e0b", label:"应用层"},
+  custom: {color:"#94a3b8", label:"自定义"},
+};
 const ENTRIES = {
-  ether:  {label:"Ethernet", len:14, anchor:"ether", base:0, color:"#64748b",
+  ether:  {label:"Ethernet", len:14, anchor:"ether", base:0, fam:"link",
            fields:[
              {id:"dst", label:"Destination MAC", off:0, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether dst"}},
              {id:"src", label:"Source MAC", off:6, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether src"}},
              {id:"type", label:"EtherType", off:12, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"},{v:34984,l:"802.1Q"}],
               successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp", 34984:"vlan"}}]},
-  vlan:   {label:"VLAN (802.1Q)", len:4, anchor:"ether", base:14, color:"#0284c7",
+  vlan:   {label:"VLAN (802.1Q)", len:4, anchor:"ether", base:14, fam:"link",
            fields:[
              {id:"pcp", label:"PCP", off:0, win:2, mask:0xe000, shift:13, kind:"number"},
              {id:"dei", label:"DEI", off:0, win:2, mask:0x1000, shift:12, kind:"number"},
@@ -165,7 +179,7 @@ const ENTRIES = {
              {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
               successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
-  ipv4:   {label:"IPv4", len:20, anchor:"ip", base:0, color:"#3b82f6",
+  ipv4:   {label:"IPv4", len:20, anchor:"ip", base:0, fam:"net",
            tail:{note:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"},
            fields:[
              {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
@@ -181,7 +195,7 @@ const ENTRIES = {
              {id:"sum", label:"Header Checksum", off:10, len:2, kind:"number"},
              {id:"src", label:"Source Address", off:12, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
              {id:"dst", label:"Destination Address", off:16, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
-  ipv6:   {label:"IPv6", len:40, anchor:"ip6", base:0, color:"#8b5cf6",
+  ipv6:   {label:"IPv6", len:40, anchor:"ip6", base:0, fam:"net",
            fields:[
              {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
              {id:"tc", label:"Traffic Class", off:0, len:2, mask:0x0ff0, shift:4, kind:"number"},
@@ -191,13 +205,13 @@ const ENTRIES = {
              {id:"hlim", label:"Hop Limit", off:7, len:1, kind:"number"},
              {id:"src", label:"Source Address", off:8, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
              {id:"dst", label:"Destination Address", off:24, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
-  udp:    {label:"UDP", len:8, anchor:"udp", base:0, color:"#10b981",
+  udp:    {label:"UDP", len:8, anchor:"udp", base:0, fam:"trans",
            fields:[
              {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
              {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"}},
              {id:"len", label:"Length", off:4, len:2, kind:"number"},
              {id:"sum", label:"Checksum", off:6, len:2, kind:"number"}]},
-  tcp:    {label:"TCP", len:20, anchor:"tcp", base:0, color:"#f59e0b",
+  tcp:    {label:"TCP", len:20, anchor:"tcp", base:0, fam:"trans",
            tail:{note:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"},
            fields:[
              {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
@@ -211,13 +225,13 @@ const ENTRIES = {
              {id:"win", label:"Window", off:14, len:2, kind:"number"},
              {id:"sum", label:"Checksum", off:16, len:2, kind:"number"},
              {id:"urg", label:"Urgent Pointer", off:18, len:2, kind:"number"}]},
-  vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, color:"#ef4444", tunnel:true, locator:"udp port 4789",
+  vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, fam:"tunnel", tunnel:true, locator:"udp port 4789",
            fields:[
              {id:"flags", label:"Flags", off:0, len:1, kind:"number"},
              {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:"常量零,无构建入口"}},
              {id:"vni", label:"VNI", off:4, len:3, win:4, mask:0xffffff00, shift:8, kind:"number"},
              {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:"常量零,无构建入口"}}]},
-  arp:    {label:"ARP", len:28, anchor:"arp", base:0, color:"#ec4899",
+  arp:    {label:"ARP", len:28, anchor:"arp", base:0, fam:"link",
            fields:[
              {id:"htype", label:"Hardware Type", off:0, len:2, kind:"number"},
              {id:"ptype", label:"Protocol Type", off:2, len:2, kind:"number"},
@@ -228,7 +242,7 @@ const ENTRIES = {
              {id:"sip", label:"Sender IP", off:14, len:4, kind:"ipv4"},
              {id:"tmac", label:"Target MAC", off:18, len:6, kind:"mac"},
              {id:"tip", label:"Target IP", off:24, len:4, kind:"ipv4"}]},
-  custom: {label:"自定义层", len:12, anchor:null, color:"#94a3b8", custom:true, fields:[]},
+  custom: {label:"自定义层", len:12, anchor:null, fam:"custom", custom:true, fields:[]},
 };
 /* One hue per brick: cells inherit the layer color (--lc, set on .lrow);
    field KIND no longer participates in coloring. */
@@ -350,9 +364,18 @@ function focusCell(){
   if(c){ c.focus(); if(c.select) try{ c.select(); }catch(e){} }
 }
 function renderPalette(){
-  document.getElementById("palette").innerHTML =
-    Object.entries(ENTRIES).map(([id,e])=>`<button style="--pc:${e.color}" onclick="addLayer('${id}')">${e.label}</button>`).join("")
-    + `<button onclick="addCustom()">＋ 自定义层(声明长度)</button>`;
+  // Palette groups bricks by family: with hundreds of protocols later, the
+  // group headers are the navigation, and 5-6 family hues never run out.
+  const groups = Object.keys(FAM).map(fam=>{
+    const bricks = Object.entries(ENTRIES)
+      .filter(([,e])=>e.fam===fam && !e.custom)
+      .map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${e.label}</button>`)
+      .join("");
+    if(!bricks && fam!=="custom") return "";
+    const custom = fam==="custom" ? `<button style="--pc:${FAM.custom.color}" onclick="addCustom()">＋ 自定义层(声明长度)</button>` : "";
+    return `<div class="pgroup"><div class="pgrouplab" style="color:${FAM[fam].color}">${FAM[fam].label}</div>${bricks}${custom}</div>`;
+  }).join("");
+  document.getElementById("palette").innerHTML = groups;
 }
 function addCustom(){
   const n = +prompt("自定义层长度(字节)","12"); if(!n||n<1) return;
@@ -513,7 +536,7 @@ function layerHTML(s, i, ti, extra){
   const body = e.fields.length
     ? gridHTML(s, i, e)
     : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">自定义层无字段,作用是推进标尺</div>`;
-  return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${e.color}" onclick="layerClick(${s.uid})">
+  return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${FAM[e.fam].color}" onclick="layerClick(${s.uid})">
     <div class="lhead"><b>${e.label}</b>
       <span class="meta">${s.len}B · 累计偏移 ${prefix(i)}${drill?" · 钻取层":""}${e.tunnel?" · 隧道":""}</span>
       <span class="del" onclick="event.stopPropagation(); delLayer(${s.uid})">×</span>
@@ -539,7 +562,7 @@ function renderStack(){
       // own frame, like the textbook VXLAN figure (inner frame inside the envelope).
       const inner = stack.slice(ti+1).map((s,j)=>layerHTML(s, ti+1+j, ti)).join("")
         || `<div style="padding:10px; color:var(--muted); font-size:12px">尚无内层报文 — 继续向上方添加积木,它们会成为隧道载荷</div>`;
-      const wrap = `<div class="innerbox" style="--tc:${e.color}">
+      const wrap = `<div class="innerbox" style="--tc:${FAM[e.fam].color}">
         <div class="innerlab">📦 内层报文 · ${e.label} 载荷（钻取:绝对偏移 + 守卫）</div>${inner}</div>`;
       html += layerHTML(stack[i], i, ti, wrap);
       return finish(html);
