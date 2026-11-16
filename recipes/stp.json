@@ -1,7 +1,20 @@
 {
   "stack": [
-    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:80:c2:00:00:00"}},
-    {"layer": "LLC", "fields": {"dsap": 66, "ssap": 66, "ctrl": 3}},
+    {
+      "layer": "Ether",
+      "fields": {
+        "src": "$ETH_SRC",
+        "dst": "01:80:c2:00:00:00"
+      }
+    },
+    {
+      "layer": "LLC",
+      "fields": {
+        "dsap": 66,
+        "ssap": 66,
+        "ctrl": 3
+      }
+    },
     {
       "layer": "STP",
       "fields": {
@@ -22,7 +35,10 @@
       }
     }
   ],
-  "anchor": {"header": "ether", "base": 17},
+  "anchor": {
+    "header": "ether",
+    "base": 17
+  },
   "headerLength": 35,
   "fieldMap": {
     "protocol_id": "proto",
@@ -35,23 +51,51 @@
     "message_age": "age",
     "max_age": "maxage",
     "hello_time": "hellotime",
-    "forward_delay": "fwddelay"
+    "forward_delay": "fwddelay",
+    "root_mac": "rootmac",
+    "bridge_mac": "bridgemac"
   },
   "probe": {
-    "protocol_id": ["0xf0f", "0xf0f0"],
-    "version": ["0xf", "0xf0"],
-    "bpdu_type": ["0xf", "0xf0"],
-    "flags": ["0xf", "0xf0"],
-    "root_priority": ["0xf0f", "0xf0f0"],
-    "root_path_cost": ["0xf0f0f0f", "0xf0f0f0f0"],
-    "bridge_priority": ["0xf0f", "0xf0f0"],
-    "port_id": ["0xf0f", "0xf0f0"]
+    "protocol_id": [
+      "0xf0f",
+      "0xf0f0"
+    ],
+    "version": [
+      "0xf",
+      "0xf0"
+    ],
+    "bpdu_type": [
+      "0xf",
+      "0xf0"
+    ],
+    "flags": [
+      "0xf",
+      "0xf0"
+    ],
+    "root_priority": [
+      "0xf0f",
+      "0xf0f0"
+    ],
+    "root_path_cost": [
+      "0xf0f0f0f",
+      "0xf0f0f0f0"
+    ],
+    "bridge_priority": [
+      "0xf0f",
+      "0xf0f0"
+    ],
+    "port_id": [
+      "0xf0f",
+      "0xf0f0"
+    ]
   },
   "manual": {
     "message_age": "scapy's age is a BCDFloatField in seconds while the wire carries 16-bit 1/256 s units (i2m = 256x), so int sentinels overflow the 2-byte pack and the per-bit probe cannot run; offset 27 follows IEEE 802.1D-2004 Fig. 9-1 and the [build, expected] crosscheck pair verifies the bytes",
     "max_age": "scapy's maxage is a BCDFloatField in seconds while the wire carries 16-bit 1/256 s units (i2m = 256x), so int sentinels overflow the 2-byte pack and the per-bit probe cannot run; offset 29 follows IEEE 802.1D-2004 Fig. 9-1 and the [build, expected] crosscheck pair verifies the bytes",
     "hello_time": "scapy's hellotime is a BCDFloatField in seconds while the wire carries 16-bit 1/256 s units (i2m = 256x), so int sentinels overflow the 2-byte pack and the per-bit probe cannot run; offset 31 follows IEEE 802.1D-2004 Fig. 9-1 and the [build, expected] crosscheck pair verifies the bytes",
-    "forward_delay": "scapy's fwddelay is a BCDFloatField in seconds while the wire carries 16-bit 1/256 s units (i2m = 256x), so int sentinels overflow the 2-byte pack and the per-bit probe cannot run; offset 33 follows IEEE 802.1D-2004 Fig. 9-1 and the [build, expected] crosscheck pair verifies the bytes"
+    "forward_delay": "scapy's fwddelay is a BCDFloatField in seconds while the wire carries 16-bit 1/256 s units (i2m = 256x), so int sentinels overflow the 2-byte pack and the per-bit probe cannot run; offset 33 follows IEEE 802.1D-2004 Fig. 9-1 and the [build, expected] crosscheck pair verifies the bytes",
+    "root_mac": "6-byte MAC fields take no integer probe sentinel (scapy builds MACs from strings); the wire bytes are crosscheck-verified",
+    "bridge_mac": "6-byte MAC fields take no integer probe sentinel (scapy builds MACs from strings); the wire bytes are crosscheck-verified"
   },
   "crosscheck": {
     "protocol_id": "0x5a5a",
@@ -62,46 +106,243 @@
     "root_path_cost": "0x5a5a5a5a",
     "bridge_priority": "0x5a5a",
     "port_id": "0x5a5a",
-    "message_age": [2, "0x0200"],
-    "max_age": [20, "0x1400"],
-    "hello_time": [2, "0x0200"],
-    "forward_delay": [15, "0x0f00"]
+    "message_age": [
+      2,
+      "0x0200"
+    ],
+    "max_age": [
+      20,
+      "0x1400"
+    ],
+    "hello_time": [
+      2,
+      "0x0200"
+    ],
+    "forward_delay": [
+      15,
+      "0x0f00"
+    ],
+    "root_mac": "02:00:00:00:00:5a",
+    "bridge_mac": "02:00:00:00:00:5b"
   },
   "fixtures": {
-    "protocol_id": [0, 4096],
-    "version": [0, 2],
-    "bpdu_type": [0, 128],
-    "flags": [129, 2],
-    "root_priority": [32768, 4096],
-    "root_path_cost": [4, 19],
-    "bridge_priority": [32768, 4096],
-    "port_id": [32769, 32768],
-    "message_age": [0, 1],
-    "max_age": [0, 1],
-    "hello_time": [0, 1],
-    "forward_delay": [0, 1]
+    "protocol_id": [
+      0,
+      4096
+    ],
+    "version": [
+      0,
+      2
+    ],
+    "bpdu_type": [
+      0,
+      128
+    ],
+    "flags": [
+      129,
+      2
+    ],
+    "root_priority": [
+      32768,
+      4096
+    ],
+    "root_path_cost": [
+      4,
+      19
+    ],
+    "bridge_priority": [
+      32768,
+      4096
+    ],
+    "port_id": [
+      32769,
+      32768
+    ],
+    "message_age": [
+      0,
+      1
+    ],
+    "max_age": [
+      0,
+      1
+    ],
+    "hello_time": [
+      0,
+      1
+    ],
+    "forward_delay": [
+      0,
+      1
+    ],
+    "root_mac": [
+      "02:00:00:00:00:02",
+      "02:00:00:00:00:03"
+    ],
+    "bridge_mac": [
+      "02:00:00:00:00:01",
+      "02:00:00:00:00:04"
+    ]
   },
   "vectors": [
-    {"name": "stp-protocol-id-0", "select": [{"field": "protocol_id", "value": 0}]},
-    {"name": "stp-version-rstp", "select": [{"field": "version", "value": 2}]},
-    {"name": "stp-bpdu-type-tcn", "select": [{"field": "bpdu_type", "value": 128}]},
-    {"name": "stp-flags-topology-change", "select": [{"field": "flags", "flags": ["TC"]}]},
-    {"name": "stp-flags-tc-tca", "select": [{"field": "flags", "flags": ["TC", "TCA"]}]},
-    {"name": "stp-root-priority-32768", "select": [{"field": "root_priority", "value": 32768}]},
-    {"name": "stp-root-path-cost-19", "select": [{"field": "root_path_cost", "value": 19}]},
-    {"name": "stp-bridge-priority-4096", "select": [{"field": "bridge_priority", "value": 4096}]},
-    {"name": "stp-port-id-0x8001", "select": [{"field": "port_id", "value": 32769}]},
-    {"name": "stp-message-age-1s", "select": [{"field": "message_age", "value": 256}]},
-    {"name": "stp-max-age-20s", "select": [{"field": "max_age", "value": 5120}]},
-    {"name": "stp-hello-time-2s", "select": [{"field": "hello_time", "value": 512}]},
-    {"name": "stp-forward-delay-15s", "select": [{"field": "forward_delay", "value": 3840}]},
+    {
+      "name": "stp-protocol-id-0",
+      "select": [
+        {
+          "field": "protocol_id",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "stp-version-rstp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "name": "stp-bpdu-type-tcn",
+      "select": [
+        {
+          "field": "bpdu_type",
+          "value": 128
+        }
+      ]
+    },
+    {
+      "name": "stp-flags-topology-change",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "TC"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stp-flags-tc-tca",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "TC",
+            "TCA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stp-root-priority-32768",
+      "select": [
+        {
+          "field": "root_priority",
+          "value": 32768
+        }
+      ]
+    },
+    {
+      "name": "stp-root-path-cost-19",
+      "select": [
+        {
+          "field": "root_path_cost",
+          "value": 19
+        }
+      ]
+    },
+    {
+      "name": "stp-bridge-priority-4096",
+      "select": [
+        {
+          "field": "bridge_priority",
+          "value": 4096
+        }
+      ]
+    },
+    {
+      "name": "stp-port-id-0x8001",
+      "select": [
+        {
+          "field": "port_id",
+          "value": 32769
+        }
+      ]
+    },
+    {
+      "name": "stp-message-age-1s",
+      "select": [
+        {
+          "field": "message_age",
+          "value": 256
+        }
+      ]
+    },
+    {
+      "name": "stp-max-age-20s",
+      "select": [
+        {
+          "field": "max_age",
+          "value": 5120
+        }
+      ]
+    },
+    {
+      "name": "stp-hello-time-2s",
+      "select": [
+        {
+          "field": "hello_time",
+          "value": 512
+        }
+      ]
+    },
+    {
+      "name": "stp-forward-delay-15s",
+      "select": [
+        {
+          "field": "forward_delay",
+          "value": 3840
+        }
+      ]
+    },
     {
       "name": "stp-root-bridge-bpdu",
       "select": [
-        {"field": "bpdu_type", "value": 0},
-        {"field": "root_priority", "value": 32768},
-        {"field": "root_path_cost", "value": 0},
-        {"field": "message_age", "value": 0}
+        {
+          "field": "bpdu_type",
+          "value": 0
+        },
+        {
+          "field": "root_priority",
+          "value": 32768
+        },
+        {
+          "field": "root_path_cost",
+          "value": 0
+        },
+        {
+          "field": "message_age",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "stp-root-mac",
+      "select": [
+        {
+          "field": "root_mac",
+          "value": "02:00:00:00:00:02"
+        }
+      ]
+    },
+    {
+      "name": "stp-bridge-mac",
+      "select": [
+        {
+          "field": "bridge_mac",
+          "value": "02:00:00:00:00:01"
+        }
       ]
     }
   ]

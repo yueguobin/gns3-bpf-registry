@@ -11,7 +11,8 @@
 - Every field has a `ref` to an RFC or another normative standard.
 - `size` is 1, 2 or 4. Wider logical fields use a mask and shift.
 - Field windows may overlap: bit-packed words carry one masked view per field (e.g. IPv6 version, traffic class and flow label all read the first word). Fields stay sorted by offset.
-- Addresses and ports stay out of the field tables; the filter builder emits host/port primitives.
+- Encapsulation-layer addresses and ports (outer Ethernet/IP headers, TCP/UDP ports) stay out of the field tables; the filter builder emits host/port primitives for them. Addresses embedded in a protocol's payload (ARP sender/target, DHCP yiaddr, chaddr) are not reachable by primitives and are first-class `ipv4`/`mac` fields; a mac compiles to a 4+2 two-load conjunction, the same shape libpcap emits for `ether host`.
+- Byte coverage: every byte of a fixed header is either covered by a registered field view or listed in the entry's `excluded` section with a reason; `verify.py` enforces this. There is no third state.
 - VLAN is primitive-only (`emit: "vlan {value}"`) and belongs in the builder's VLAN slot, first in the expression.
 - Additive changes only. Changing an existing field's `offset`, `size` or `mask` requires a new `registryVersion` and two approvals.
 - Published tags are immutable.

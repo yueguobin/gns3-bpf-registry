@@ -1,7 +1,9 @@
 {
   "id": "tcp",
   "label": "TCP",
-  "rfc": ["9293"],
+  "rfc": [
+    "9293"
+  ],
   "notes": "TCP header. Source and destination ports are matched with port primitives by the filter builder and are intentionally not fields. All other fields of the 20-byte base header are modelled. TCP options follow the base header and do not shift them. Data Offset and Reserved are two masked views of byte 12.",
   "anchor": {
     "header": "tcp",
@@ -16,7 +18,7 @@
       "offset": 4,
       "size": 4,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 4294967295
     },
@@ -26,7 +28,7 @@
       "offset": 8,
       "size": 4,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 4294967295
     },
@@ -38,7 +40,7 @@
       "mask": "0xf0",
       "shift": 4,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 15
     },
@@ -50,7 +52,7 @@
       "mask": "0x0f",
       "shift": 0,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 15
     },
@@ -60,7 +62,7 @@
       "offset": 13,
       "size": 1,
       "kind": "bitset",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "bits": [
         {
           "mask": 1,
@@ -102,7 +104,7 @@
       "offset": 14,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 65535
     },
@@ -112,7 +114,7 @@
       "offset": 16,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 65535
     },
@@ -122,9 +124,23 @@
       "offset": 18,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 9293 §3.1",
+      "ref": "RFC 9293 \u00a73.1",
       "min": 0,
       "max": 65535
+    }
+  ],
+  "excluded": [
+    {
+      "id": "src_port",
+      "offset": 0,
+      "length": 2,
+      "reason": "source port; the port/srcport primitives express it precisely"
+    },
+    {
+      "id": "dst_port",
+      "offset": 2,
+      "length": 2,
+      "reason": "destination port; the port/dstport primitives express it precisely"
     }
   ]
 }

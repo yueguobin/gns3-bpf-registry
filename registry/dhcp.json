@@ -1,13 +1,19 @@
 {
   "id": "dhcp",
   "label": "DHCP",
-  "rfc": ["2131", "2132"],
-  "notes": "DHCP over UDP ports 67 and 68. The modelled fields are the fixed 236-byte BOOTP header (op through file, RFC 2131 §2). The four IP address fields (ciaddr, yiaddr, siaddr, giaddr) are matched with host primitives; chaddr (16-byte hardware address), sname (64 bytes) and file (128 bytes) exceed the 4-byte load window. The variable options region follows at offset 236: the magic cookie (0x63825363, RFC 2132 §2) and the DHCP options, including the message type (option 53), which has no fixed offset and is therefore not modelled. htype is kept as a number: its values come from the IANA ARP parameters (1 = 10Mb Ethernet) and RFC 2131 defines no closed set.",
+  "rfc": [
+    "2131",
+    "2132"
+  ],
+  "notes": "DHCP over UDP ports 67 and 68. All fixed-offset fields of the 236-byte BOOTP header (RFC 2131 \u00a72) are modelled, including the four payload-embedded IP addresses (host primitives do not reach UDP payload bytes, so they are ipv4 fields) and the client MAC view of chaddr. The variable options region follows at offset 236: the magic cookie (0x63825363, RFC 2132 \u00a72) and the DHCP options, including the message type (option 53), which has no fixed offset. htype is kept as a number: its values come from the IANA ARP parameters (1 = 10Mb Ethernet) and RFC 2131 defines no closed set.",
   "anchor": {
     "header": "udp",
     "base": 8
   },
-  "locator": ["udp port 67", "udp port 68"],
+  "locator": [
+    "udp port 67",
+    "udp port 68"
+  ],
   "headerLength": 236,
   "fields": [
     {
@@ -16,7 +22,7 @@
       "offset": 0,
       "size": 1,
       "kind": "enum",
-      "ref": "RFC 2131 §2",
+      "ref": "RFC 2131 \u00a72",
       "values": [
         {
           "value": 1,
@@ -34,7 +40,7 @@
       "offset": 1,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 2131 §2",
+      "ref": "RFC 2131 \u00a72",
       "min": 0,
       "max": 255
     },
@@ -44,7 +50,7 @@
       "offset": 2,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 2131 §2",
+      "ref": "RFC 2131 \u00a72",
       "min": 0,
       "max": 255
     },
@@ -54,7 +60,7 @@
       "offset": 3,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 2131 §2",
+      "ref": "RFC 2131 \u00a72",
       "min": 0,
       "max": 255
     },
@@ -64,7 +70,7 @@
       "offset": 4,
       "size": 4,
       "kind": "number",
-      "ref": "RFC 2131 §2",
+      "ref": "RFC 2131 \u00a72",
       "min": 0,
       "max": 4294967295
     },
@@ -74,7 +80,7 @@
       "offset": 8,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 2131 §4.1",
+      "ref": "RFC 2131 \u00a74.1",
       "min": 0,
       "max": 65535
     },
@@ -84,13 +90,74 @@
       "offset": 10,
       "size": 2,
       "kind": "bitset",
-      "ref": "RFC 2131 §4.1",
+      "ref": "RFC 2131 \u00a74.1",
       "bits": [
         {
           "mask": 32768,
           "label": "Broadcast"
         }
       ]
+    },
+    {
+      "id": "ciaddr",
+      "label": "Client IP Address",
+      "offset": 12,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2131 \u00a72"
+    },
+    {
+      "id": "yiaddr",
+      "label": "Your IP Address",
+      "offset": 16,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2131 \u00a72"
+    },
+    {
+      "id": "siaddr",
+      "label": "Server IP Address",
+      "offset": 20,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2131 \u00a72"
+    },
+    {
+      "id": "giaddr",
+      "label": "Gateway IP Address",
+      "offset": 24,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2131 \u00a72"
+    },
+    {
+      "id": "chaddr_mac",
+      "label": "Client Hardware Address",
+      "offset": 28,
+      "size": 6,
+      "kind": "mac",
+      "ref": "RFC 2131 \u00a72",
+      "description": "The leading 6 bytes of the 16-byte chaddr field (the client MAC)."
+    }
+  ],
+  "excluded": [
+    {
+      "id": "chaddr_tail",
+      "offset": 34,
+      "length": 10,
+      "reason": "chaddr padding beyond the 6-byte MAC; zero on the wire"
+    },
+    {
+      "id": "sname",
+      "offset": 44,
+      "length": 64,
+      "reason": "server host name; fixed offset but a 64-byte string with no field semantics"
+    },
+    {
+      "id": "file",
+      "offset": 108,
+      "length": 128,
+      "reason": "boot file name; fixed offset but a 128-byte string with no field semantics"
     }
   ]
 }

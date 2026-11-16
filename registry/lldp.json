@@ -7,7 +7,9 @@
     "header": "ether",
     "base": 14
   },
-  "locator": ["ether proto 35020"],
+  "locator": [
+    "ether proto 35020"
+  ],
   "headerLength": 22,
   "fields": [
     {
@@ -18,7 +20,7 @@
       "mask": "0x1ff",
       "shift": 0,
       "kind": "number",
-      "ref": "IEEE 802.1AB-2016 §8.5.2",
+      "ref": "IEEE 802.1AB-2016 \u00a78.5.2",
       "min": 0,
       "max": 511,
       "description": "Length of the Chassis ID TLV value in bytes (the subtype byte plus the chassis id); 7 for a MAC-address chassis id."
@@ -29,7 +31,7 @@
       "offset": 2,
       "size": 1,
       "kind": "enum",
-      "ref": "IEEE 802.1AB-2016 §8.5.2 (Table 8-3)",
+      "ref": "IEEE 802.1AB-2016 \u00a78.5.2 (Table 8-3)",
       "values": [
         {
           "value": 0,
@@ -64,6 +66,14 @@
           "label": "Locally Assigned"
         }
       ]
+    }
+  ],
+  "excluded": [
+    {
+      "id": "tail",
+      "offset": 3,
+      "length": 19,
+      "reason": "chassis ID value (variable length) and the Port ID / TTL / End TLVs; offsets shift with the chassis ID length, so only the first TLV header sits at a fixed offset"
     }
   ]
 }

@@ -1,7 +1,9 @@
 {
   "id": "ipv4",
   "label": "IPv4",
-  "rfc": ["791"],
+  "rfc": [
+    "791"
+  ],
   "notes": "IPv4 header. Source and destination addresses are matched with host primitives by the filter builder and are intentionally not fields. All other fields of the 20-byte header are modelled. Version and IHL are two masked views of byte 0; Flags and Fragment Offset are two masked views of the word at offset 6. IPv4 options shift later fields and are not modelled in v1.",
   "anchor": {
     "header": "ip",
@@ -18,7 +20,7 @@
       "mask": "0xf0",
       "shift": 4,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 15
     },
@@ -30,7 +32,7 @@
       "mask": "0x0f",
       "shift": 0,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 15
     },
@@ -40,7 +42,7 @@
       "offset": 1,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 255
     },
@@ -50,7 +52,7 @@
       "offset": 2,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 65535
     },
@@ -60,7 +62,7 @@
       "offset": 4,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 65535
     },
@@ -72,7 +74,7 @@
       "mask": "0xe0",
       "shift": 5,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 7
     },
@@ -84,7 +86,7 @@
       "mask": "0x1fff",
       "shift": 0,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 8191
     },
@@ -94,7 +96,7 @@
       "offset": 8,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 255
     },
@@ -104,7 +106,7 @@
       "offset": 9,
       "size": 1,
       "kind": "enum",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "values": [
         {
           "value": 1,
@@ -146,9 +148,23 @@
       "offset": 10,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 791 §3.1",
+      "ref": "RFC 791 \u00a73.1",
       "min": 0,
       "max": 65535
+    }
+  ],
+  "excluded": [
+    {
+      "id": "src",
+      "offset": 12,
+      "length": 4,
+      "reason": "source address; the src/host primitives express it precisely"
+    },
+    {
+      "id": "dst",
+      "offset": 16,
+      "length": 4,
+      "reason": "destination address; the dst/host primitives express it precisely"
     }
   ]
 }

@@ -1,8 +1,10 @@
 {
   "id": "ipv6",
   "label": "IPv6",
-  "rfc": ["8200"],
-  "notes": "IPv6 fixed 40-byte header. Source and destination addresses are matched with host primitives and are intentionally not fields. Version, Traffic Class and Flow Label are three overlapping masked views of the first 32-bit word. Extension headers do not shift the fields modelled here. Payload Length excludes the fixed header and any extension headers (RFC 8200 §3).",
+  "rfc": [
+    "8200"
+  ],
+  "notes": "IPv6 fixed 40-byte header. Source and destination addresses are matched with host primitives and are intentionally not fields. Version, Traffic Class and Flow Label are three overlapping masked views of the first 32-bit word. Extension headers do not shift the fields modelled here. Payload Length excludes the fixed header and any extension headers (RFC 8200 \u00a73).",
   "anchor": {
     "header": "ip6",
     "base": 0
@@ -18,7 +20,7 @@
       "mask": "0xf0",
       "shift": 4,
       "kind": "number",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "min": 0,
       "max": 15
     },
@@ -30,7 +32,7 @@
       "mask": "0x0ff0",
       "shift": 4,
       "kind": "number",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "min": 0,
       "max": 255
     },
@@ -42,7 +44,7 @@
       "mask": "0x000fffff",
       "shift": 0,
       "kind": "number",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "min": 0,
       "max": 1048575
     },
@@ -52,7 +54,7 @@
       "offset": 4,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "min": 0,
       "max": 65535
     },
@@ -62,7 +64,7 @@
       "offset": 6,
       "size": 1,
       "kind": "enum",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "values": [
         {
           "value": 0,
@@ -112,9 +114,23 @@
       "offset": 7,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 8200 §3",
+      "ref": "RFC 8200 \u00a73",
       "min": 0,
       "max": 255
+    }
+  ],
+  "excluded": [
+    {
+      "id": "src",
+      "offset": 8,
+      "length": 16,
+      "reason": "source address; the src/host primitives express it precisely"
+    },
+    {
+      "id": "dst",
+      "offset": 24,
+      "length": 16,
+      "reason": "destination address; the dst/host primitives express it precisely"
     }
   ]
 }

@@ -6,7 +6,11 @@
     "manifest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schemaVersion", "registryVersion", "files"],
+      "required": [
+        "schemaVersion",
+        "registryVersion",
+        "files"
+      ],
       "properties": {
         "schemaVersion": {
           "const": 1
@@ -31,10 +35,22 @@
     "anchor": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["header", "base"],
+      "required": [
+        "header",
+        "base"
+      ],
       "properties": {
         "header": {
-          "enum": ["ether", "ip", "ip6", "tcp", "udp", "icmp", "icmp6", "arp"]
+          "enum": [
+            "ether",
+            "ip",
+            "ip6",
+            "tcp",
+            "udp",
+            "icmp",
+            "icmp6",
+            "arp"
+          ]
         },
         "base": {
           "type": "integer",
@@ -45,7 +61,10 @@
     "enumValue": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["value", "label"],
+      "required": [
+        "value",
+        "label"
+      ],
       "properties": {
         "value": {
           "type": "integer",
@@ -61,7 +80,10 @@
     "bitValue": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mask", "label"],
+      "required": [
+        "mask",
+        "label"
+      ],
       "properties": {
         "mask": {
           "type": "integer",
@@ -77,7 +99,14 @@
     "headerField": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "kind", "offset", "size", "ref"],
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "offset",
+        "size",
+        "ref"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -88,14 +117,25 @@
           "minLength": 1
         },
         "kind": {
-          "enum": ["number", "enum", "bitset"]
+          "enum": [
+            "number",
+            "enum",
+            "bitset",
+            "ipv4",
+            "mac"
+          ]
         },
         "offset": {
           "type": "integer",
           "minimum": 0
         },
         "size": {
-          "enum": [1, 2, 4]
+          "enum": [
+            1,
+            2,
+            4,
+            6
+          ]
         },
         "mask": {
           "type": "string",
@@ -146,35 +186,26 @@
                 "const": "number"
               }
             },
-            "required": ["kind"]
+            "required": [
+              "kind"
+            ]
           },
           "then": {
-            "required": ["min", "max"],
+            "required": [
+              "min",
+              "max"
+            ],
             "not": {
               "anyOf": [
                 {
-                  "required": ["values"]
+                  "required": [
+                    "values"
+                  ]
                 },
                 {
-                  "required": ["bits"]
-                }
-              ]
-            }
-          },
-          "else": {
-            "not": {
-              "anyOf": [
-                {
-                  "required": ["min"]
-                },
-                {
-                  "required": ["max"]
-                },
-                {
-                  "required": ["mask"]
-                },
-                {
-                  "required": ["shift"]
+                  "required": [
+                    "bits"
+                  ]
                 }
               ]
             }
@@ -187,14 +218,39 @@
                 "const": "enum"
               }
             },
-            "required": ["kind"]
+            "required": [
+              "kind"
+            ]
           },
           "then": {
-            "required": ["values"]
+            "required": [
+              "values"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "min"
+                  ]
+                },
+                {
+                  "required": [
+                    "max"
+                  ]
+                },
+                {
+                  "required": [
+                    "bits"
+                  ]
+                }
+              ]
+            }
           },
           "else": {
             "not": {
-              "required": ["values"]
+              "required": [
+                "values"
+              ]
             }
           }
         },
@@ -205,14 +261,95 @@
                 "const": "bitset"
               }
             },
-            "required": ["kind"]
+            "required": [
+              "kind"
+            ]
           },
           "then": {
-            "required": ["bits"]
+            "required": [
+              "bits"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "min"
+                  ]
+                },
+                {
+                  "required": [
+                    "max"
+                  ]
+                },
+                {
+                  "required": [
+                    "mask"
+                  ]
+                },
+                {
+                  "required": [
+                    "shift"
+                  ]
+                }
+              ]
+            }
           },
           "else": {
             "not": {
-              "required": ["bits"]
+              "required": [
+                "bits"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "ipv4",
+                  "mac"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "min"
+                  ]
+                },
+                {
+                  "required": [
+                    "max"
+                  ]
+                },
+                {
+                  "required": [
+                    "values"
+                  ]
+                },
+                {
+                  "required": [
+                    "bits"
+                  ]
+                },
+                {
+                  "required": [
+                    "mask"
+                  ]
+                },
+                {
+                  "required": [
+                    "shift"
+                  ]
+                }
+              ]
             }
           }
         }
@@ -221,7 +358,15 @@
     "emitField": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "kind", "ref", "emit", "min", "max"],
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "ref",
+        "emit",
+        "min",
+        "max"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -260,7 +405,15 @@
     "headerEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "rfc", "anchor", "locator", "headerLength", "fields"],
+      "required": [
+        "id",
+        "label",
+        "rfc",
+        "anchor",
+        "locator",
+        "headerLength",
+        "fields"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -302,13 +455,49 @@
           "items": {
             "$ref": "#/$defs/headerField"
           }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "offset",
+              "length",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       }
     },
     "primitiveEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "rfc", "fields"],
+      "required": [
+        "id",
+        "label",
+        "rfc",
+        "fields"
+      ],
       "properties": {
         "id": {
           "type": "string",

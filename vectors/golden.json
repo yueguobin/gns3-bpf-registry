@@ -24,6 +24,113 @@
       "expect": "arp[6:2] == 0x2"
     },
     {
+      "name": "arp-htype-ethernet",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "htype",
+          "value": 1
+        }
+      ],
+      "expect": "arp[0:2] == 1"
+    },
+    {
+      "name": "arp-ptype-ipv4",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "ptype",
+          "value": 2048
+        }
+      ],
+      "expect": "arp[2:2] == 2048"
+    },
+    {
+      "name": "arp-hlen-6",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "hlen",
+          "value": 6
+        }
+      ],
+      "expect": "arp[4:1] == 6"
+    },
+    {
+      "name": "arp-plen-4",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "plen",
+          "value": 4
+        }
+      ],
+      "expect": "arp[5:1] == 4"
+    },
+    {
+      "name": "arp-sender-ip",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "sender_ip",
+          "value": "192.0.2.10"
+        }
+      ],
+      "expect": "arp[14:4] == 0xc000020a"
+    },
+    {
+      "name": "arp-target-ip",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "target_ip",
+          "value": "192.0.2.20"
+        }
+      ],
+      "expect": "arp[24:4] == 0xc0000214"
+    },
+    {
+      "name": "arp-sender-mac",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "sender_mac",
+          "value": "02:00:00:00:00:01"
+        }
+      ],
+      "expect": "(arp[8:4] == 0x2000000 and arp[12:2] == 0x1)"
+    },
+    {
+      "name": "arp-target-mac",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "target_mac",
+          "value": "02:00:00:00:00:03"
+        }
+      ],
+      "expect": "(arp[18:4] == 0x2000000 and arp[22:2] == 0x3)"
+    },
+    {
+      "name": "arp-gratuitous",
+      "entry": "arp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 1
+        },
+        {
+          "field": "sender_ip",
+          "value": "192.0.2.10"
+        },
+        {
+          "field": "target_ip",
+          "value": "192.0.2.10"
+        }
+      ],
+      "expect": "arp[6:2] == 0x1 and arp[14:4] == 0xc000020a and arp[24:4] == 0xc000020a"
+    },
+    {
       "name": "dhcp-op-bootrequest",
       "entry": "dhcp",
       "select": [
@@ -141,6 +248,61 @@
         }
       ],
       "expect": "vlan 100 and (udp port 67 or udp port 68) and udp[8:1] == 0x1"
+    },
+    {
+      "name": "dhcp-yiaddr-offer",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "yiaddr",
+          "value": "192.0.2.50"
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[24:4] == 0xc0000232"
+    },
+    {
+      "name": "dhcp-ciaddr-renewing",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "ciaddr",
+          "value": "192.0.2.1"
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[20:4] == 0xc0000201"
+    },
+    {
+      "name": "dhcp-siaddr-server",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "siaddr",
+          "value": "192.0.2.1"
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[28:4] == 0xc0000201"
+    },
+    {
+      "name": "dhcp-giaddr-relay",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "giaddr",
+          "value": "10.0.0.1"
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and udp[32:4] == 0xa000001"
+    },
+    {
+      "name": "dhcp-chaddr-client",
+      "entry": "dhcp",
+      "select": [
+        {
+          "field": "chaddr_mac",
+          "value": "02:00:00:00:00:01"
+        }
+      ],
+      "expect": "(udp port 67 or udp port 68) and (udp[36:4] == 0x2000000 and udp[40:2] == 0x1)"
     },
     {
       "name": "esp-spi-0x12345678",
@@ -822,6 +984,28 @@
       "expect": "ether[14:2] = 0x4242 and ether[20:1] == 0x0 and ether[22:2] == 32768 and ether[30:4] == 0 and ether[44:2] == 0"
     },
     {
+      "name": "stp-root-mac",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "root_mac",
+          "value": "02:00:00:00:00:02"
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and (ether[24:4] == 0x2000000 and ether[28:2] == 0x2)"
+    },
+    {
+      "name": "stp-bridge-mac",
+      "entry": "stp",
+      "select": [
+        {
+          "field": "bridge_mac",
+          "value": "02:00:00:00:00:01"
+        }
+      ],
+      "expect": "ether[14:2] = 0x4242 and (ether[36:4] == 0x2000000 and ether[40:2] == 0x1)"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [
@@ -1050,6 +1234,17 @@
         }
       ],
       "expect": "vlan 100 and (udp port 4789 or udp port 8472) and (udp[12:4] & 0xffffff00) == 0x6400"
+    },
+    {
+      "name": "vxlan-reserved-0",
+      "entry": "vxlan",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 4789 or udp port 8472) and udp[15:1] == 0"
     }
   ]
 }

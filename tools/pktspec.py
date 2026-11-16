@@ -62,7 +62,7 @@ from scapy.contrib.ospf import OSPF_Hdr
 from scapy.layers.dhcp import BOOTP
 from scapy.layers.vxlan import VXLAN
 
-from bpf_compile import ROOT, CompileError, parse_int
+from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
 
@@ -189,15 +189,56 @@ def _layer(entry_id: str, obj) -> LayerSpec:
     return LayerSpec(name, {k: resolve(v) for k, v in obj["fields"].items()})
 
 
-def _int_pair(entry_id: str, field_id: str, pair) -> tuple[int, int]:
+def _int_pair(entry_id: str, field_id: str, pair):
+    """Fixture/probe values: ints, or address strings kept verbatim.
+
+    Address literals (``192.0.2.1``, ``02:00:00:00:00:01``) build via
+    scapy as strings and compile through the address parsers, so they
+    pass through untouched; everything else must parse as an integer.
+    """
     if not isinstance(pair, list) or len(pair) != 2:
         raise RecipeError(f"{entry_id}.{field_id}: expected a two-item [a, b] pair")
-    return parse_int(pair[0]), parse_int(pair[1])
+    return tuple(_fixture_value(entry_id, field_id, value) for value in pair)
 
 
-def _crosscheck_pair(entry_id: str, field_id: str, value) -> tuple[int, int]:
+def _is_ipv4_literal(value: str) -> bool:
+    return value.count(".") == 3
+
+
+def _is_mac_literal(value: str) -> bool:
+    return ":" in value and len(value.replace(":", "").replace("-", "")) == 12
+
+
+def _fixture_value(entry_id: str, field_id: str, value):
+    """Address literals pass through as strings; everything else is an int.
+
+    The test is structural (dotted quad / coloned MAC), NOT parser-based:
+    "0x0200" parses as an integer and must stay an integer.
+    """
+    if isinstance(value, str):
+        if _is_ipv4_literal(value):
+            parse_ipv4(value)
+            return value
+        if _is_mac_literal(value):
+            parse_mac(value)
+            return value
+    return parse_int(value)
+
+
+def _crosscheck_pair(entry_id: str, field_id: str, value) -> tuple:
+    """Sentinel -> (build value, expected wire integer).
+
+    Address literals build as strings (scapy requires MAC strings) while
+    the expectation is the parsed integer, so the byte comparison in
+    crosscheck.py stays pure integer arithmetic.
+    """
     if isinstance(value, list):
         return _int_pair(entry_id, field_id, value)
+    if isinstance(value, str):
+        if _is_ipv4_literal(value):
+            return value, parse_ipv4(value)
+        if _is_mac_literal(value):
+            return value, parse_mac(value)
     sentinel = parse_int(value)
     return sentinel, sentinel
 

@@ -1,22 +1,221 @@
 {
   "stack": [
-    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
-    {"layer": "ARP", "fields": {"hwtype": 1, "ptype": "0x0800", "hwlen": 6, "plen": 4, "op": 1, "hwsrc": "$ETH_SRC", "hwdst": "$ETH_DST", "psrc": "$IP_SRC", "pdst": "$IP_DST"}}
+    {
+      "layer": "Ether",
+      "fields": {
+        "src": "$ETH_SRC",
+        "dst": "$ETH_DST"
+      }
+    },
+    {
+      "layer": "ARP",
+      "fields": {
+        "hwtype": 1,
+        "ptype": "0x0800",
+        "hwlen": 6,
+        "plen": 4,
+        "op": 1,
+        "hwsrc": "$ETH_SRC",
+        "hwdst": "$ETH_DST",
+        "psrc": "$IP_SRC",
+        "pdst": "$IP_DST"
+      }
+    }
   ],
-  "anchor": {"header": "arp", "base": 0},
+  "anchor": {
+    "header": "arp",
+    "base": 0
+  },
   "headerLength": 28,
-  "fieldMap": {"opcode": "op"},
+  "fieldMap": {
+    "htype": "hwtype",
+    "ptype": "ptype",
+    "hlen": "hwlen",
+    "plen": "plen",
+    "opcode": "op",
+    "sender_mac": "hwsrc",
+    "sender_ip": "psrc",
+    "target_mac": "hwdst",
+    "target_ip": "pdst"
+  },
   "probe": {
-    "opcode": ["0x0f0f", "0xf0f0"]
+    "opcode": [
+      "0x0f0f",
+      "0xf0f0"
+    ],
+    "sender_ip": [
+      "0x0f0f0f0f",
+      "0xf0f0f0f0"
+    ],
+    "target_ip": [
+      "0x0f0f0f0f",
+      "0xf0f0f0f0"
+    ]
+  },
+  "manual": {
+    "htype": "scapy reinterprets the hardware-address fields when hwtype changes, so the probe sees derived byte changes outside the field; the crosscheck sentinel verifies the wire bytes",
+    "ptype": "scapy reinterprets the protocol-address fields when ptype changes, so the probe sees derived byte changes outside the field; the crosscheck sentinel verifies the wire bytes",
+    "hlen": "scapy derives the hardware-address size from hwlen, so the value changes the header size; the crosscheck sentinel verifies the wire bytes",
+    "plen": "scapy derives the protocol-address size from plen, so the value changes the header size; the crosscheck sentinel verifies the wire bytes",
+    "sender_mac": "6-byte MAC fields take no integer probe sentinel (scapy builds MACs from strings); the wire bytes are crosscheck-verified",
+    "target_mac": "6-byte MAC fields take no integer probe sentinel (scapy builds MACs from strings); the wire bytes are crosscheck-verified"
   },
   "crosscheck": {
-    "opcode": "0x5a5a"
+    "htype": "0x5a5a",
+    "ptype": "0x5a5a",
+    "hlen": "0x5a",
+    "plen": "0x5a",
+    "opcode": "0x5a5a",
+    "sender_mac": "02:00:00:00:00:5a",
+    "sender_ip": "0x5a5a5a5a",
+    "target_mac": "02:00:00:00:00:5a",
+    "target_ip": "0x5a5a5a5a"
   },
   "fixtures": {
-    "opcode": [1, 2]
+    "htype": [
+      1,
+      6
+    ],
+    "ptype": [
+      "0x0800",
+      "0x86dd"
+    ],
+    "hlen": [
+      6,
+      4
+    ],
+    "plen": [
+      4,
+      6
+    ],
+    "opcode": [
+      1,
+      2
+    ],
+    "sender_mac": [
+      "02:00:00:00:00:01",
+      "02:00:00:00:00:02"
+    ],
+    "sender_ip": [
+      "192.0.2.10",
+      "192.0.2.11"
+    ],
+    "target_mac": [
+      "02:00:00:00:00:03",
+      "02:00:00:00:00:04"
+    ],
+    "target_ip": [
+      "192.0.2.20",
+      "192.0.2.21"
+    ]
   },
   "vectors": [
-    {"name": "arp-opcode-request", "select": [{"field": "opcode", "value": 1}]},
-    {"name": "arp-opcode-reply", "select": [{"field": "opcode", "value": 2}]}
+    {
+      "name": "arp-opcode-request",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "arp-opcode-reply",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "name": "arp-htype-ethernet",
+      "select": [
+        {
+          "field": "htype",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "arp-ptype-ipv4",
+      "select": [
+        {
+          "field": "ptype",
+          "value": 2048
+        }
+      ]
+    },
+    {
+      "name": "arp-hlen-6",
+      "select": [
+        {
+          "field": "hlen",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "name": "arp-plen-4",
+      "select": [
+        {
+          "field": "plen",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "name": "arp-sender-ip",
+      "select": [
+        {
+          "field": "sender_ip",
+          "value": "192.0.2.10"
+        }
+      ]
+    },
+    {
+      "name": "arp-target-ip",
+      "select": [
+        {
+          "field": "target_ip",
+          "value": "192.0.2.20"
+        }
+      ]
+    },
+    {
+      "name": "arp-sender-mac",
+      "select": [
+        {
+          "field": "sender_mac",
+          "value": "02:00:00:00:00:01"
+        }
+      ]
+    },
+    {
+      "name": "arp-target-mac",
+      "select": [
+        {
+          "field": "target_mac",
+          "value": "02:00:00:00:00:03"
+        }
+      ]
+    },
+    {
+      "name": "arp-gratuitous",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 1
+        },
+        {
+          "field": "sender_ip",
+          "value": "192.0.2.10"
+        },
+        {
+          "field": "target_ip",
+          "value": "192.0.2.10"
+        }
+      ]
+    }
   ]
 }

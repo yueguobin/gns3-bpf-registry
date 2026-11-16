@@ -1,13 +1,17 @@
 {
   "id": "ospf",
   "label": "OSPF",
-  "rfc": ["2328"],
-  "notes": "OSPFv2 common header (24 bytes) over IPv4 transport (protocol 89). Router ID and Area ID are dotted-quad identifiers, not packet addresses, so they are modelled as number fields — host primitives cannot reach them. The 8-byte Authentication field is not modelled: it exceeds the 4-byte BPF load window, and under cryptographic authentication (RFC 2328 Appendix D) its content is derived. OSPFv3 (RFC 5340, runs on IPv6) has a different header and is out of scope.",
+  "rfc": [
+    "2328"
+  ],
+  "notes": "OSPFv2 common header (24 bytes) over IPv4 transport (protocol 89). Router ID and Area ID are dotted-quad identifiers, not packet addresses, so they are modelled as number fields \u2014 host primitives cannot reach them. The 8-byte Authentication field is not modelled: it exceeds the 4-byte BPF load window, and under cryptographic authentication (RFC 2328 Appendix D) its content is derived. OSPFv3 (RFC 5340, runs on IPv6) has a different header and is out of scope.",
   "anchor": {
     "header": "ip",
     "base": 20
   },
-  "locator": ["ip proto 89"],
+  "locator": [
+    "ip proto 89"
+  ],
   "headerLength": 24,
   "fields": [
     {
@@ -16,7 +20,7 @@
       "offset": 0,
       "size": 1,
       "kind": "number",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "min": 0,
       "max": 255
     },
@@ -26,7 +30,7 @@
       "offset": 1,
       "size": 1,
       "kind": "enum",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "values": [
         {
           "value": 1,
@@ -56,7 +60,7 @@
       "offset": 2,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "min": 0,
       "max": 65535
     },
@@ -66,7 +70,7 @@
       "offset": 4,
       "size": 4,
       "kind": "number",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "min": 0,
       "max": 4294967295
     },
@@ -76,7 +80,7 @@
       "offset": 8,
       "size": 4,
       "kind": "number",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "min": 0,
       "max": 4294967295
     },
@@ -86,7 +90,7 @@
       "offset": 12,
       "size": 2,
       "kind": "number",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "min": 0,
       "max": 65535
     },
@@ -96,7 +100,7 @@
       "offset": 14,
       "size": 2,
       "kind": "enum",
-      "ref": "RFC 2328 §A.1",
+      "ref": "RFC 2328 \u00a7A.1",
       "values": [
         {
           "value": 0,
@@ -111,6 +115,14 @@
           "label": "Cryptographic"
         }
       ]
+    }
+  ],
+  "excluded": [
+    {
+      "id": "auth_data",
+      "offset": 16,
+      "length": 8,
+      "reason": "64-bit authentication payload (cleartext password or cryptographic message digest); opaque bytes"
     }
   ]
 }

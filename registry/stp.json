@@ -2,12 +2,14 @@
   "id": "stp",
   "label": "STP",
   "rfc": [],
-  "notes": "Spanning Tree Protocol BPDUs (IEEE 802.1D-2004) over 802.2 LLC on Ethernet: DSAP/SSAP 0x42, UI control 0x03, sent to 01:80:c2:00:00:00. The anchor base is 17 (14-byte Ethernet + 3-byte LLC header) and the locator matches the LLC header bytes. headerLength 35 is the Configuration/RST BPDU of Fig. 9-1/9-3; a TCN BPDU carries only the first 4 bytes, which the early fields still cover. Cisco PVST+/rapid-PVST (SNAP-encapsulated on the Cisco multicast address) is out of scope. Not modelled: the 48-bit MAC halves of the Root and Bridge Identifiers (address-like and wider than the 4-byte read window; their priority halves are modelled as root_priority/bridge_priority) and the 2-bit RSTP Port Role sub-field of the flags byte (a two-bit enum is not expressible as single-bit bitset masks; 0 unknown, 1 alternate/backup, 2 root, 3 designated). The four timers are stored on the wire in 1/256-second units, so filter values are wire units (20 s Max Age = 5120). Their fixtures use 0/1 because scapy's timer kwargs are seconds (wire = 256 x kwarg) and the fixture value must be both the built kwarg and the matched wire value; golden vectors carry realistic wire values.",
+  "notes": "Spanning Tree Protocol BPDUs (IEEE 802.1D-2004) over 802.2 LLC on Ethernet: DSAP/SSAP 0x42, UI control 0x03, sent to 01:80:c2:00:00:00. The anchor base is 17 (14-byte Ethernet + 3-byte LLC header) and the locator matches the LLC header bytes. headerLength 35 is the Configuration/RST BPDU of Fig. 9-1/9-3; a TCN BPDU carries only the first 4 bytes, which the early fields still cover. Cisco PVST+/rapid-PVST (SNAP-encapsulated on the Cisco multicast address) is out of scope. The Root and Bridge Identifier MAC halves are modelled as mac fields (4+2 two-load conjunctions). Not modelled: the 2-bit RSTP Port Role sub-field of the flags byte (a two-bit enum is not expressible as single-bit bitset masks; 0 unknown, 1 alternate/backup, 2 root, 3 designated). The four timers are stored on the wire in 1/256-second units, so filter values are wire units (20 s Max Age = 5120). Their fixtures use 0/1 because scapy's timer kwargs are seconds (wire = 256 x kwarg) and the fixture value must be both the built kwarg and the matched wire value; golden vectors carry realistic wire values.",
   "anchor": {
     "header": "ether",
     "base": 17
   },
-  "locator": ["ether[14:2] = 0x4242"],
+  "locator": [
+    "ether[14:2] = 0x4242"
+  ],
   "headerLength": 35,
   "fields": [
     {
@@ -16,7 +18,7 @@
       "offset": 0,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Always 0x0000 for STP/RSTP/MSTP BPDUs."
@@ -27,7 +29,7 @@
       "offset": 2,
       "size": 1,
       "kind": "enum",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "values": [
         {
           "value": 0,
@@ -50,7 +52,7 @@
       "offset": 3,
       "size": 1,
       "kind": "enum",
-      "ref": "IEEE 802.1D-2004 §9.3.1-9.3.3",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1-9.3.3",
       "values": [
         {
           "value": 0,
@@ -73,7 +75,7 @@
       "offset": 4,
       "size": 1,
       "kind": "bitset",
-      "ref": "IEEE 802.1D-2004 §9.3.1, Fig. 9-3",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1, Fig. 9-3",
       "bits": [
         {
           "mask": 1,
@@ -108,10 +110,19 @@
       "offset": 5,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "The most significant 2 octets of the 8-byte Root Bridge Identifier; the trailing 6 bytes are the root bridge MAC address (not modelled). Configured priorities are multiples of 4096 (default 32768)."
+    },
+    {
+      "id": "root_mac",
+      "label": "Root Mac",
+      "offset": 7,
+      "size": 6,
+      "kind": "mac",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
+      "description": "The 48-bit address half of the 8-byte Root Bridge Identifier."
     },
     {
       "id": "root_path_cost",
@@ -119,7 +130,7 @@
       "offset": 13,
       "size": 4,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 4294967295,
       "description": "Path cost from the transmitting bridge to the root; 0 on the root bridge itself."
@@ -130,10 +141,19 @@
       "offset": 17,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "The most significant 2 octets of the 8-byte Bridge Identifier; the trailing 6 bytes are the transmitting bridge's MAC address (not modelled)."
+    },
+    {
+      "id": "bridge_mac",
+      "label": "Bridge Mac",
+      "offset": 19,
+      "size": 6,
+      "kind": "mac",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
+      "description": "The 48-bit address half of the 8-byte Bridge Identifier."
     },
     {
       "id": "port_id",
@@ -141,7 +161,7 @@
       "offset": 25,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Port priority (4 bits) plus port number (12 bits) of the transmitting port, e.g. 0x8001 for port priority 128, port 1."
@@ -152,7 +172,7 @@
       "offset": 27,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Time since the root bridge originated the configuration information, in 1/256-second units (1 s = 256, 0 on the root bridge)."
@@ -163,7 +183,7 @@
       "offset": 29,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Maximum age of configuration information, in 1/256-second units (20 s = 5120)."
@@ -174,7 +194,7 @@
       "offset": 31,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Interval between configuration BPDUs, in 1/256-second units (2 s = 512)."
@@ -185,7 +205,7 @@
       "offset": 33,
       "size": 2,
       "kind": "number",
-      "ref": "IEEE 802.1D-2004 §9.3.1",
+      "ref": "IEEE 802.1D-2004 \u00a79.3.1",
       "min": 0,
       "max": 65535,
       "description": "Listening/learning state duration, in 1/256-second units (15 s = 3840)."

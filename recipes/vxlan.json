@@ -1,29 +1,137 @@
 {
   "stack": [
-    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
-    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
-    {"layer": "UDP", "fields": {"sport": 12345, "dport": 4789, "chksum": "$PIN"}},
-    {"layer": "VXLAN", "fields": {"flags": "0x08", "vni": 100}}
+    {
+      "layer": "Ether",
+      "fields": {
+        "src": "$ETH_SRC",
+        "dst": "$ETH_DST"
+      }
+    },
+    {
+      "layer": "IP",
+      "fields": {
+        "src": "$IP_SRC",
+        "dst": "$IP_DST",
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "UDP",
+      "fields": {
+        "sport": 12345,
+        "dport": 4789,
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "VXLAN",
+      "fields": {
+        "flags": "0x08",
+        "vni": 100,
+        "reserved2": 0
+      }
+    }
   ],
-  "anchor": {"header": "udp", "base": 8},
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
   "headerLength": 8,
   "probe": {
-    "flags": ["0x0f", "0xf0"],
-    "vni": ["0x0f0f0f", "0xf0f0f0"]
+    "flags": [
+      "0x0f",
+      "0xf0"
+    ],
+    "vni": [
+      "0x0f0f0f",
+      "0xf0f0f0"
+    ],
+    "reserved": [
+      "0x0f",
+      "0xf0"
+    ]
   },
   "crosscheck": {
     "flags": "0x5a",
-    "vni": "0x123456"
+    "vni": "0x123456",
+    "reserved": "0x5a"
   },
   "fixtures": {
-    "flags": ["0x08", 0],
-    "vni": [100, 101]
+    "flags": [
+      "0x08",
+      0
+    ],
+    "vni": [
+      100,
+      101
+    ],
+    "reserved": [
+      0,
+      1
+    ]
   },
   "vectors": [
-    {"name": "vxlan-flags-i", "select": [{"field": "flags", "value": 8}]},
-    {"name": "vxlan-vni-100", "select": [{"field": "vni", "value": 100}]},
-    {"name": "vxlan-vni-max", "select": [{"field": "vni", "value": 16777215}]},
-    {"name": "vxlan-flags-and-vni", "select": [{"field": "vni", "value": 100}, {"field": "flags", "value": 8}]},
-    {"name": "vxlan-vni-100-vlan-100", "vlan": 100, "select": [{"field": "vni", "value": 100}]}
-  ]
+    {
+      "name": "vxlan-flags-i",
+      "select": [
+        {
+          "field": "flags",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "name": "vxlan-vni-100",
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "name": "vxlan-vni-max",
+      "select": [
+        {
+          "field": "vni",
+          "value": 16777215
+        }
+      ]
+    },
+    {
+      "name": "vxlan-flags-and-vni",
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        },
+        {
+          "field": "flags",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "name": "vxlan-vni-100-vlan-100",
+      "vlan": 100,
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "name": "vxlan-reserved-0",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ]
+    }
+  ],
+  "fieldMap": {
+    "reserved": "reserved2"
+  }
 }
