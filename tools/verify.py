@@ -83,6 +83,31 @@ def validate_schema(schema: dict) -> None:
             )
 
 
+def _check_mask(field: dict, label: str, size: int) -> int:
+    """Normalize a mask/shift view; return the logical width (mask >> shift)."""
+    mask_int = parse_int(field["mask"])
+    shift = int(field.get("shift", 0))
+    max_raw = (1 << (8 * size)) - 1
+    require(0 < mask_int <= max_raw, f"{label}: mask does not fit in {size} byte(s)")
+    require(shift >= 0, f"{label}: shift must be non-negative")
+    trailing = (mask_int & -mask_int).bit_length() - 1
+    require(
+        shift == trailing,
+        f"{label}: shift must equal the mask's trailing-zero count ({trailing})",
+    )
+    require(
+        mask_int & ((1 << shift) - 1) == 0,
+        f"{label}: mask has significant bits below shift",
+    )
+    normalized = mask_int >> shift
+    require(normalized > 0, f"{label}: mask >> shift must be non-zero")
+    require(
+        normalized & (normalized + 1) == 0,
+        f"{label}: mask >> shift must be a contiguous low-bit mask",
+    )
+    return normalized
+
+
 def check_field(entry: dict, field: dict) -> None:
     entry_id = entry["id"]
     field_id = field["id"]
@@ -99,25 +124,7 @@ def check_field(entry: dict, field: dict) -> None:
 
         mask = field.get("mask")
         if mask is not None:
-            mask_int = parse_int(mask)
-            shift = int(field.get("shift", 0))
-            require(0 < mask_int <= max_raw, f"{label}: mask does not fit in {size} byte(s)")
-            require(shift >= 0, f"{label}: shift must be non-negative")
-            trailing = (mask_int & -mask_int).bit_length() - 1
-            require(
-                shift == trailing,
-                f"{label}: shift must equal the mask's trailing-zero count ({trailing})",
-            )
-            require(
-                mask_int & ((1 << shift) - 1) == 0,
-                f"{label}: mask has significant bits below shift",
-            )
-            normalized = mask_int >> shift
-            require(normalized > 0, f"{label}: mask >> shift must be non-zero")
-            require(
-                normalized & (normalized + 1) == 0,
-                f"{label}: mask >> shift must be a contiguous low-bit mask",
-            )
+            normalized = _check_mask(field, label, size)
             require(
                 maximum <= normalized,
                 f"{label}: max {maximum} does not fit mask >> shift ({normalized})",
@@ -134,16 +141,27 @@ def check_field(entry: dict, field: dict) -> None:
         require("values" in field, f"{label}: enum needs values")
         values = [parse_int(item["value"]) for item in field["values"]]
         require(len(values) == len(set(values)), f"{label}: duplicate enum values")
-        require(
-            all(0 <= value <= max_raw for value in values),
-            f"{label}: enum value does not fit in {size} byte(s)",
-        )
         labels = [item["label"] for item in field["values"]]
         require(len(labels) == len(set(labels)), f"{label}: duplicate enum labels")
-        require(
-            "mask" not in field and "shift" not in field,
-            f"{label}: enum fields cannot use mask or shift",
-        )
+        mask = field.get("mask")
+        if mask is not None:
+            # A masked enum is a multi-bit sub-field (e.g. the 2-bit RSTP
+            # port role inside the flags byte): logical values must fit
+            # the normalized mask width.
+            normalized = _check_mask(field, label, size)
+            require(
+                all(0 <= value <= normalized for value in values),
+                f"{label}: enum value does not fit mask >> shift ({normalized})",
+            )
+        else:
+            require(
+                "shift" not in field,
+                f"{label}: shift requires mask",
+            )
+            require(
+                all(0 <= value <= max_raw for value in values),
+                f"{label}: enum value does not fit in {size} byte(s)",
+            )
         return
 
     if kind == "bitset":
@@ -167,6 +185,28 @@ def check_field(entry: dict, field: dict) -> None:
         )
         return
 
+    if kind == "ipv4":
+        require(
+            size == 4,
+            f"{label}: ipv4 fields are exactly 4 bytes",
+        )
+        require(
+            "mask" not in field and "shift" not in field,
+            f"{label}: ipv4 fields cannot use mask or shift",
+        )
+        return
+
+    if kind == "mac":
+        require(
+            size == 6,
+            f"{label}: mac fields are exactly 6 bytes",
+        )
+        require(
+            "mask" not in field and "shift" not in field,
+            f"{label}: mac fields cannot use mask or shift",
+        )
+        return
+
     fail(f"{label}: unknown kind {kind!r}")
 
 
@@ -174,26 +214,59 @@ def check_header_entry(entry: dict) -> None:
     anchor = entry["anchor"]
     require(anchor["header"] in ANCHORS, f"{entry['id']}: invalid anchor header")
     require(int(anchor["base"]) >= 0, f"{entry['id']}: negative anchor base")
-    require(int(entry["headerLength"]) >= 1, f"{entry['id']}: headerLength must be positive")
+    header_length = int(entry["headerLength"])
+    require(header_length >= 1, f"{entry['id']}: headerLength must be positive")
 
     previous_offset = 0
+    covered = bytearray(header_length)
     for field in entry["fields"]:
         offset = int(field["offset"])
         size = int(field["size"])
-        require(size in (1, 2, 4), f"{entry['id']}.{field['id']}: invalid size")
+        require(
+            size in (1, 2, 4) or (field["kind"] == "mac" and size == 6),
+            f"{entry['id']}.{field['id']}: invalid size",
+        )
         require(
             offset >= previous_offset,
             f"{entry['id']}.{field['id']}: fields must be sorted by offset",
         )
         require(
-            offset + size <= int(entry["headerLength"]),
+            offset + size <= header_length,
             f"{entry['id']}.{field['id']}: offset + size exceeds headerLength",
         )
         # Overlapping reads are allowed: bit-packed words get several
         # masked views (e.g. IPv6 version/traffic class/flow label all
         # read the first word). Each field compiles to its own clause.
         previous_offset = offset
+        covered[offset : offset + size] = b"\x01" * size
         check_field(entry, field)
+
+    excluded = entry.get("excluded", [])
+    excluded_ids = [item["id"] for item in excluded]
+    require(
+        len(excluded_ids) == len(set(excluded_ids)),
+        f"{entry['id']}: duplicate exclusion IDs",
+    )
+    for item in excluded:
+        offset = int(item["offset"])
+        length = int(item["length"])
+        require(length >= 1, f"{entry['id']}.{item['id']}: exclusion length must be positive")
+        require(
+            offset + length <= header_length,
+            f"{entry['id']}.{item['id']}: exclusion exceeds headerLength",
+        )
+        require(item["reason"].strip(), f"{entry['id']}.{item['id']}: empty exclusion reason")
+        covered[offset : offset + length] = b"\x01" * length
+
+    # Byte-coverage invariant: every byte of the fixed header is either
+    # readable through a registered field view or carries a recorded,
+    # reasoned exclusion. There is no third state.
+    gaps = [index for index, byte in enumerate(covered) if not byte]
+    require(
+        not gaps,
+        f"{entry['id']}: bytes {gaps} of the {header_length}-byte header are "
+        "claimed neither by a field view nor by an exclusion",
+    )
 
 
 def check_primitive_entry(entry: dict) -> None:

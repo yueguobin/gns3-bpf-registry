@@ -92,10 +92,11 @@ def check_field(entry: dict, field: dict) -> None:
     else:
         actual = word
 
+    built_with = f"{sentinel:#x}" if isinstance(sentinel, int) else repr(sentinel)
     require(
         actual == expected,
         f"{entry_id}.{field_id}: serialized bytes give {actual:#x}, "
-        f"expected {expected:#x} (built with {sentinel:#x})",
+        f"expected {expected:#x} (built with {built_with})",
     )
     print(f"  {entry_id}.{field_id}: {start}+{size} -> {actual:#x}")
 

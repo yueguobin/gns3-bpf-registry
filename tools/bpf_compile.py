@@ -39,6 +39,31 @@ def parse_int(value: Any) -> int:
     raise CompileError(f"not an integer: {value!r}")
 
 
+def parse_ipv4(value: Any) -> int:
+    """Parse an IPv4 address (dotted quad) or any integer form."""
+    if isinstance(value, str) and value.count(".") == 3:
+        try:
+            octets = [int(part) for part in value.split(".")]
+        except ValueError as exc:
+            raise CompileError(f"not an IPv4 address: {value!r}") from exc
+        if any(octet < 0 or octet > 255 for octet in octets):
+            raise CompileError(f"not an IPv4 address: {value!r}")
+        return int.from_bytes(bytes(octets), "big")
+    return parse_int(value)
+
+
+def parse_mac(value: Any) -> int:
+    """Parse a MAC address (aa:bb:cc:dd:ee:ff or aabbccddeeff) or integer."""
+    if isinstance(value, str):
+        compact = value.replace(":", "").replace("-", "")
+        if len(compact) == 12:
+            try:
+                return int(compact, 16)
+            except ValueError as exc:
+                raise CompileError(f"not a MAC address: {value!r}") from exc
+    return parse_int(value)
+
+
 def load_entry(entry_id: str, registry_dir: Path = REGISTRY_DIR) -> dict[str, Any]:
     """Load one registry entry by ID."""
     path = registry_dir / f"{entry_id}.json"
@@ -149,24 +174,48 @@ def _field_clause(
 
     if "value" not in item:
         raise CompileError(f"{field['id']}: expected 'value'")
-    value = parse_int(item["value"])
+
+    # A 6-byte MAC has no single tcpdump read: the classic BPF load
+    # widths are 1/2/4 bytes, so it compiles to a 4+2 conjunction —
+    # the same shape libpcap emits for its own `ether host` primitive.
+    if kind == "mac":
+        mac = parse_mac(item["value"])
+        high, low = mac >> 16, mac & 0xFFFF
+        return (
+            f"({anchor}[{offset}:4] == {_hex(high)} "
+            f"and {anchor}[{offset + 4}:2] == {_hex(low)})"
+        )
+
+    value = (
+        parse_ipv4(item["value"]) if kind == "ipv4" else parse_int(item["value"])
+    )
 
     mask = field.get("mask")
     if mask is not None:
         mask_int = parse_int(mask)
         shift = int(field.get("shift", 0))
-        _check_range(field, value)
         expected = value << shift
         if expected & ~mask_int:
             raise CompileError(
                 f"{field['id']}={value} does not fit mask {mask} with shift {shift}"
             )
+        if kind == "enum":
+            allowed = {parse_int(v["value"]) for v in field["values"]}
+            if value not in allowed:
+                raise CompileError(
+                    f"{field['id']}={value} is not a declared enum value"
+                )
+        else:
+            _check_range(field, value)
         return f"({address} & {_hex(mask_int)}) == {_hex(expected)}"
 
     if kind == "enum":
         allowed = {parse_int(value_item["value"]) for value_item in field["values"]}
         if value not in allowed:
             raise CompileError(f"{field['id']}={value} is not a declared enum value")
+        return f"{address} == {_hex(value)}"
+
+    if kind == "ipv4":
         return f"{address} == {_hex(value)}"
 
     _check_range(field, value)
@@ -241,13 +290,16 @@ def _parse_cli_selection(
             raise CompileError(f"--select must be FIELD=VALUE, got {raw!r}")
         field_id, raw_value = raw.split("=", 1)
         field = next((item for item in entry["fields"] if item["id"] == field_id), None)
-        if (
-            field is not None
-            and field["kind"] == "bitset"
-            and not _looks_numeric(raw_value)
-        ):
+        kind = field["kind"] if field is not None else None
+        if kind == "bitset" and not _looks_numeric(raw_value):
             labels = [part.strip() for part in raw_value.split(",") if part.strip()]
             selection.append({"field": field_id, "flags": labels})
+        elif kind == "ipv4":
+            parse_ipv4(raw_value)  # validate now; the string passes through
+            selection.append({"field": field_id, "value": raw_value})
+        elif kind == "mac":
+            parse_mac(raw_value)
+            selection.append({"field": field_id, "value": raw_value})
         else:
             selection.append({"field": field_id, "value": parse_int(raw_value)})
     return selection

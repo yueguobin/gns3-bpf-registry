@@ -62,10 +62,17 @@ about wire layout.
 ## Inclusion rules (current standard)
 
 A field goes in iff: fixed offset (position independent of other field
-values) AND not an address/port (primitives) AND fits a 1/2/4-byte read
-window (bit-packed words become masked views; overlapping windows are
-fine). Everything else in the RFC header diagram is included —
-checksums, version fields, reserved bits included.
+values) AND fits a 1/2/4-byte read window (bit-packed words become
+masked views; overlapping windows are fine). Everything in the RFC
+header diagram is included — checksums, version fields, reserved bits,
+and payload-embedded addresses (`ipv4` single-window, `mac` as a 4+2
+two-load conjunction; scapy's IPField probes with int sentinels, MAC
+fields go under `manual` with string crosscheck sentinels). Only
+ENCAPSULATION-layer addresses/ports stay out (host/port primitives
+express those precisely) and must be recorded in the entry's
+`excluded` section. Every byte of the fixed header ends up either in a
+field view or in `excluded` with a reason — verify.py enforces byte
+coverage; there is no third state.
 
 ## Hard limits
 
