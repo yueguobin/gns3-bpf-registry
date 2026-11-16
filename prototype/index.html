@@ -254,10 +254,11 @@ const ENTRIES = {
            fields:[
              {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
              {id:"ihl", label:"IHL", off:0, len:1, mask:0x0f, kind:"number"},
-             {id:"tos", label:"ToS", off:1, len:1, kind:"number"},
+             {id:"dscp", label:"DSCP", off:1, len:1, mask:0xfc, kind:"number"},
+             {id:"ecn", label:"ECN", off:1, len:1, mask:0x03, kind:"enum", values:[{v:0,l:"Non-ECT"},{v:1,l:"ECT(1)"},{v:2,l:"ECT(0)"},{v:3,l:"CE"}]},
              {id:"len", label:"Total Length", off:2, len:2, kind:"number"},
              {id:"id", label:"Identification", off:4, len:2, kind:"number"},
-             {id:"flags", label:"Flags", off:6, len:1, mask:0xe0, shift:5, kind:"number"},
+             {id:"flags", label:"Flags", off:6, len:1, mask:0xe0, kind:"bitset", bits:[{m:0x80,l:"Rsvd"},{m:0x40,l:"DF"},{m:0x20,l:"MF"}]},
              {id:"frag", label:"Fragment Offset", off:6, len:2, mask:0x1fff, kind:"number"},
              {id:"ttl", label:"TTL", off:8, len:1, kind:"number"},
              {id:"proto", label:"Protocol", off:9, len:1, kind:"enum",
@@ -299,7 +300,7 @@ const ENTRIES = {
              {id:"urg", label:"Urgent Pointer", off:18, len:2, kind:"number"}]},
   vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, fam:"tunnel", tunnel:true, locator:"udp port 4789",
            fields:[
-             {id:"flags", label:"Flags", off:0, len:1, kind:"number"},
+             {id:"flags", label:"Flags", off:0, len:1, mask:0x08, kind:"bitset", bits:[{m:0x08,l:"I (Valid VNI)"}]},
              {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}},
              {id:"vni", label:"VNI", off:4, len:3, win:4, mask:0xffffff00, shift:8, kind:"number"},
              {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}}]},
@@ -333,9 +334,8 @@ const ENTRIES = {
   gre:    {label:"GRE", len:4, anchor:"ip", base:20, fam:"tunnel", tunnel:true, locator:"ip proto 47",
            pin:"(ip[20:2] & 0xb000) == 0", pinLabel:"GRE C/K/S = 0",
            fields:[
-             {id:"c_bit", label:"C", off:0, len:2, mask:0x8000, shift:15, kind:"number"},
-             {id:"k_bit", label:"K", off:0, len:2, mask:0x2000, shift:13, kind:"number"},
-             {id:"s_bit", label:"S", off:0, len:2, mask:0x1000, shift:12, kind:"number"},
+             {id:"flags", label:"Flags", off:0, len:2, mask:0xb000, kind:"bitset",
+              bits:[{m:0x8000,l:"C (Checksum Present)"},{m:0x2000,l:"K (Key Present)"},{m:0x1000,l:"S (Seq Present)"}]},
              {id:"ver", label:"Version", off:0, len:2, mask:0x0007, kind:"number"},
              {id:"proto", label:"Protocol Type", off:2, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:25944,l:"Transparent Ethernet Bridging"},{v:34887,l:"MPLS Unicast"}],
@@ -367,7 +367,7 @@ const ENTRIES = {
              {id:"rootcost", label:"Root Path Cost", off:13, len:4, kind:"number"},
              {id:"brprio", label:"Bridge Priority", off:17, len:2, kind:"number"},
              {id:"brmac", label:"Bridge Mac", off:19, len:6, kind:"mac"},
-             {id:"portid", label:"Port ID", off:25, len:2, kind:"number"},
+             {id:"portid", label:"Port ID", off:25, len:2, kind:"number", description:"Port priority (high nibble; config 128 = wire 0x8) + port number"},
              {id:"age", label:"Message Age", off:27, len:2, kind:"number"},
              {id:"maxage", label:"Max Age", off:29, len:2, kind:"number"},
              {id:"hello", label:"Hello Time", off:31, len:2, kind:"number"},
@@ -463,7 +463,8 @@ function guards(){
   const g = [];
   const tun = ENTRIES[stack[ti].eid];
   if(tun.locator) g.push({t:T("guard"), e:Array.isArray(tun.locator) ? "("+tun.locator.join(" or ")+")" : tun.locator});
-  if(tun.pin) g.push({t:tun.pinLabel || T("optPin"), e:tun.pin});
+  if(tun.pin && !sels.some(s=>stack.findIndex(x=>x.uid===s.uid)===ti && s.fid==="flags"))
+    g.push({t:tun.pinLabel || T("optPin"), e:tun.pin});
   for(let i=ti+1;i<stack.length;i++)
     if(ENTRIES[stack[i].eid].anchor==="ip")
       g.push({t:T("ihlPin"), e:`(ether[${prefix(i)}] & 0x0f) == 5`});
@@ -707,6 +708,10 @@ function autoLink(uid, f){
 }
 function structWarnings(){
   const out=[];
+  const ti0 = tunnelIdx();
+  if(ti0>=0 && ENTRIES[stack[ti0].eid].pin
+     && sels.some(s=>s.uid===stack[ti0].uid && s.fid==="flags") && stack.length>ti0+1)
+    out.push({warn:true, m:"GRE presence bits set: optional Checksum/Key/Seq fields shift the inner packet — offsets below assume the 4-byte base header"});
   for(const s of sels){
     const li = stack.findIndex(x=>x.uid===s.uid); if(li<0) continue;
     const e = ENTRIES[stack[li].eid];
