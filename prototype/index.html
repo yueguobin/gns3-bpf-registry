@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>BPF 可视化计算器 · 原型</title>
+<style>
+  :root{
+    --bg:#f8fafc; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  }
+  *{box-sizing:border-box; margin:0}
+  body{font:14px/1.5 system-ui,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); padding:20px; max-width:1180px; margin:0 auto}
+  h1{font-size:18px; margin-bottom:4px}
+  .sub{color:var(--muted); font-size:12px; margin-bottom:14px}
+  /* ---- two-column layout: construction on the left, sticky brick rail on the right.
+         The rail is a full-viewport sticky column; the palette card is flex-centered
+         INSIDE it — deterministic screen-centering, no transform math, never clipped. ---- */
+  .layout{display:flex; gap:14px; align-items:flex-start}
+  .main{flex:1; min-width:0}
+  .sidebar{flex:none; width:172px; position:sticky; top:0; height:100vh;
+    display:flex; align-items:center; margin-bottom:-100vh}
+  .sidebar .card{width:100%; margin:0; max-height:calc(100vh - 24px); overflow-y:auto}
+  @media (max-width:920px){
+    .layout{flex-direction:column-reverse}
+    .sidebar{position:static; height:auto; margin-bottom:0}
+    .sidebar .card{max-height:none; overflow:visible}
+  }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .card h2{font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px}
+  button{font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 10px; cursor:pointer}
+  button:hover{border-color:#94a3b8}
+  .palette{display:flex; flex-direction:column; gap:8px}
+  .palette button{border-left:4px solid var(--pc); text-align:left; padding:8px 10px;
+    background:color-mix(in srgb, var(--pc) 6%, #fff)}
+  .palette button:hover{background:color-mix(in srgb, var(--pc) 16%, #fff)}
+  @media (max-width:920px){
+    .palette{flex-direction:row; flex-wrap:wrap}
+  }
+  .presets{margin-left:auto; display:flex; gap:8px}
+  /* ---- vertical stack: each protocol is one rectangular brick ---- */
+  .lrow{border:2px solid var(--lc); border-radius:10px; margin-bottom:8px;
+    background:color-mix(in srgb, var(--lc) 5%, #fff)}
+  .lrow.sel{outline:2px solid #0f172a; outline-offset:-2px}
+  .lhead{display:flex; align-items:center; gap:10px; padding:6px 10px;
+    background:var(--lc); color:#fff; border-radius:7px 7px 0 0}
+  .lhead b{color:#fff}
+  .lhead .meta{color:rgba(255,255,255,.85); font-size:11px; font-family:ui-monospace,monospace}
+  .lhead .del{margin-left:auto; color:rgba(255,255,255,.85); cursor:pointer}
+  .lhead .del:hover{color:#fff}
+  /* ---- RFC-style 32-bit word grid ---- */
+  .pwrap{display:flex; padding:12px 10px 10px; overflow-x:auto}
+  .gut{flex:none; width:34px; display:flex; flex-direction:column}
+  .gut span{height:38px; font-size:9px; color:var(--muted); font-family:ui-monospace,monospace;
+    display:flex; align-items:center; justify-content:flex-end; padding-right:6px; border-right:1px solid var(--line)}
+  .pbody{flex:1; min-width:760px}
+  .pruler{margin-bottom:2px; height:30px}
+  .p32{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:10px; margin-bottom:1px; height:15px}
+  .p32::before,.p32::after{content:""; flex:1; border-top:1px solid var(--muted); position:relative; top:0}
+  .p32 .ah{color:var(--muted)}
+  .pticks{display:grid; grid-template-columns:repeat(4,1fr); color:var(--muted); font-size:9px; font-family:ui-monospace,monospace; height:13px}
+  .pticks span{text-align:center; border-left:1px solid var(--line); padding:1px 0}
+  .pticks span:first-child{border-left:none}
+  .pgridrow{display:grid; grid-template-columns:repeat(32,1fr); grid-auto-rows:38px}
+  .pfullrow{display:flex}
+  .pfullrow .pc{flex:1; height:38px}
+  .pc{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    border:1.5px solid color-mix(in srgb, var(--lc) 55%, #fff);
+    background:color-mix(in srgb, var(--lc) 9%, #fff);
+    font-size:10.5px; line-height:1.15; text-align:center; cursor:pointer; overflow:hidden; padding:1px 2px;
+    min-width:0}
+  .pc:hover{background:color-mix(in srgb, var(--lc) 20%, #fff)}
+  .pc.on{background:color-mix(in srgb, var(--lc) 30%, #fff); box-shadow:inset 0 0 0 2px var(--lc); font-weight:600}
+  .pc .bw{font-size:8.5px; color:var(--muted); font-family:ui-monospace,monospace}
+  .pc .pv{font-weight:700; font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pc .pl{font-size:8.5px; color:var(--muted); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pc .cont{color:var(--muted); font-size:9px}
+  .pc .pb{font-style:normal; font-size:8px; color:#166534; background:#dcfce7; border:1px solid #bbf7d0;
+    border-radius:3px; padding:0 3px; line-height:1.3}
+  .pc .mini{display:flex; gap:1px; width:100%; justify-content:center; padding:0 1px}
+  .pc .mini i{font-style:normal; font-size:8.5px; border:1px solid color-mix(in srgb, var(--lc) 55%, #fff);
+    border-radius:2px; flex:1; max-width:26px; min-width:0; background:#fff; line-height:1.5; overflow:hidden;
+    cursor:pointer}
+  .pc .mini i:hover{background:color-mix(in srgb, var(--lc) 25%, #fff)}
+  .pc .mini i.on{background:var(--lc); color:#fff; font-weight:700}
+  .pc.excl{border-style:dashed; border-color:#cbd5e1; background:#f1f5f9; color:var(--muted); cursor:help}
+  .pc.tail{border:1.5px dashed #cbd5e1; color:var(--muted); cursor:help; font-size:10px;
+    background:repeating-linear-gradient(45deg,#f8fafc,#f8fafc 6px,#f1f5f9 6px,#f1f5f9 12px)}
+  /* ---- tunnel payload nesting: inner packet lives INSIDE the tunnel envelope ---- */
+  .innerbox{margin:0 10px 10px 26px; border:2px solid var(--tc); border-radius:8px;
+    background:color-mix(in srgb, var(--tc) 4%, #fff); padding:8px}
+  .innerlab{font-size:11px; color:var(--tc); margin-bottom:6px; font-weight:600}
+  .innerbox .lrow{margin-bottom:6px}
+  /* ---- in-cell editing ---- */
+  .pc.editing{overflow:visible; z-index:20; box-shadow:inset 0 0 0 2px #0f172a}
+  .pc>input,.pc>select{position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff;
+    font-size:10.5px; font-family:inherit; text-align:center; padding:0 2px; outline:none; border-radius:4px}
+  .total{margin-top:6px; font-size:12px; color:var(--muted); font-family:ui-monospace,monospace; text-align:right}
+  /* ---- chips / expr ---- */
+  .chips{display:flex; flex-wrap:wrap; gap:6px}
+  .chip{display:inline-flex; gap:6px; align-items:center; border:1px solid var(--line); background:#fff; border-radius:99px; padding:3px 10px; font-size:12px}
+  .chip .x{cursor:pointer; color:var(--muted)}
+  .chip.guard{border-color:#fda4af; background:#fff1f2}
+  .chip.field{border-color:#bfdbfe; background:#eff6ff}
+  .chip.warn{border-color:#fde047; background:#fefce8}
+  .chip.hint{border-color:#bae6fd; background:#f0f9ff}
+  .expr{font-family:ui-monospace,monospace; background:#0f172a; color:#e2e8f0; border-radius:8px; padding:12px; font-size:13px; word-break:break-all; white-space:pre-wrap}
+  .mode{display:inline-block; font-size:11px; padding:2px 8px; border-radius:99px; margin-left:8px; vertical-align:middle}
+  .mode.native{background:#dcfce7; color:#166534}
+  .mode.drill{background:#fee2e2; color:#991b1b}
+  .note{font-size:11px; color:var(--muted); margin-top:8px}
+</style>
+</head>
+<body>
+<h1>BPF 可视化计算器 <span id="modeBadge" class="mode native">原生模式</span></h1>
+<div class="sub">每层按 RFC 教科书 32 位字格渲染:列位置 = offset×8 + 掩码位,行号 = offset÷4 —— 格子本身就是偏移量。点字段输入值,自动生成表达式,用户永远不数字节。</div>
+
+<div class="layout">
+  <div class="main">
+    <div class="card">
+      <h2 style="display:flex; align-items:center">1 · 报文构造
+        <span class="presets">
+          <button onclick="presetDrill()">示例:VXLAN 内层过滤</button>
+          <button onclick="presetNative()">示例:原生 TCP</button>
+        </span>
+      </h2>
+      <div id="stack"></div>
+      <div class="total" id="total"></div>
+    </div>
+
+    <div class="card">
+      <h2>2 · 已选条件与守卫</h2>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="card">
+      <h2>3 · 生成的 BPF 表达式</h2>
+      <div class="expr" id="expr">尚未选择字段</div>
+      <div class="note" id="exprNote"></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="card">
+      <h2>层积木</h2>
+      <div class="palette" id="palette"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- mock registry (field layout mirrors registry/*.json) ---------- */
+const ENTRIES = {
+  ether:  {label:"Ethernet", len:14, anchor:"ether", base:0, color:"#64748b",
+           fields:[
+             {id:"dst", label:"Destination MAC", off:0, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether dst"}},
+             {id:"src", label:"Source MAC", off:6, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether src"}},
+             {id:"type", label:"EtherType", off:12, len:2, kind:"enum",
+              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"},{v:34984,l:"802.1Q"}],
+              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp", 34984:"vlan"}}]},
+  vlan:   {label:"VLAN (802.1Q)", len:4, anchor:"ether", base:14, color:"#0284c7",
+           fields:[
+             {id:"pcp", label:"PCP", off:0, win:2, mask:0xe000, shift:13, kind:"number"},
+             {id:"dei", label:"DEI", off:0, win:2, mask:0x1000, shift:12, kind:"number"},
+             {id:"vid", label:"VID", off:0, win:2, mask:0x0fff, kind:"number",
+              excl:{reason:"VLAN 原语,须置于表达式首位", primitive:"vlan"}},
+             {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
+              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
+              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
+  ipv4:   {label:"IPv4", len:20, anchor:"ip", base:0, color:"#3b82f6",
+           tail:{note:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"},
+           fields:[
+             {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
+             {id:"ihl", label:"IHL", off:0, len:1, mask:0x0f, kind:"number"},
+             {id:"tos", label:"ToS", off:1, len:1, kind:"number"},
+             {id:"len", label:"Total Length", off:2, len:2, kind:"number"},
+             {id:"id", label:"Identification", off:4, len:2, kind:"number"},
+             {id:"flags", label:"Flags", off:6, len:1, mask:0xe0, shift:5, kind:"number"},
+             {id:"frag", label:"Fragment Offset", off:6, len:2, mask:0x1fff, kind:"number"},
+             {id:"ttl", label:"TTL", off:8, len:1, kind:"number"},
+             {id:"proto", label:"Protocol", off:9, len:1, kind:"enum", values:[{v:1,l:"ICMP"},{v:6,l:"TCP"},{v:17,l:"UDP"},{v:89,l:"OSPF"}],
+              successor:{6:"tcp", 17:"udp"}},
+             {id:"sum", label:"Header Checksum", off:10, len:2, kind:"number"},
+             {id:"src", label:"Source Address", off:12, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
+             {id:"dst", label:"Destination Address", off:16, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
+  ipv6:   {label:"IPv6", len:40, anchor:"ip6", base:0, color:"#8b5cf6",
+           fields:[
+             {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
+             {id:"tc", label:"Traffic Class", off:0, len:2, mask:0x0ff0, shift:4, kind:"number"},
+             {id:"fl", label:"Flow Label", off:0, len:4, mask:0x000fffff, kind:"number"},
+             {id:"plen", label:"Payload Length", off:4, len:2, kind:"number"},
+             {id:"nh", label:"Next Header", off:6, len:1, kind:"number", successor:{6:"tcp", 17:"udp"}},
+             {id:"hlim", label:"Hop Limit", off:7, len:1, kind:"number"},
+             {id:"src", label:"Source Address", off:8, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
+             {id:"dst", label:"Destination Address", off:24, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
+  udp:    {label:"UDP", len:8, anchor:"udp", base:0, color:"#10b981",
+           fields:[
+             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
+             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"}},
+             {id:"len", label:"Length", off:4, len:2, kind:"number"},
+             {id:"sum", label:"Checksum", off:6, len:2, kind:"number"}]},
+  tcp:    {label:"TCP", len:20, anchor:"tcp", base:0, color:"#f59e0b",
+           tail:{note:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"},
+           fields:[
+             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
+             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"}},
+             {id:"seq", label:"Sequence Number", off:4, len:4, kind:"number"},
+             {id:"ack", label:"Acknowledgment Number", off:8, len:4, kind:"number"},
+             {id:"doff", label:"Data Offset", off:12, len:1, mask:0xf0, shift:4, kind:"number"},
+             {id:"resv", label:"Reserved", off:12, len:1, mask:0x0e, kind:"number"},
+             {id:"ns", label:"NS", off:12, len:1, mask:0x01, kind:"bitset", bits:[{m:1,l:"NS"}]},
+             {id:"flags", label:"Flags", off:13, len:1, kind:"bitset", bits:[{m:1,l:"FIN"},{m:2,l:"SYN"},{m:4,l:"RST"},{m:8,l:"PSH"},{m:16,l:"ACK"},{m:32,l:"URG"},{m:64,l:"ECE"},{m:128,l:"CWR"}]},
+             {id:"win", label:"Window", off:14, len:2, kind:"number"},
+             {id:"sum", label:"Checksum", off:16, len:2, kind:"number"},
+             {id:"urg", label:"Urgent Pointer", off:18, len:2, kind:"number"}]},
+  vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, color:"#ef4444", tunnel:true, locator:"udp port 4789",
+           fields:[
+             {id:"flags", label:"Flags", off:0, len:1, kind:"number"},
+             {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:"常量零,无构建入口"}},
+             {id:"vni", label:"VNI", off:4, len:3, win:4, mask:0xffffff00, shift:8, kind:"number"},
+             {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:"常量零,无构建入口"}}]},
+  arp:    {label:"ARP", len:28, anchor:"arp", base:0, color:"#ec4899",
+           fields:[
+             {id:"htype", label:"Hardware Type", off:0, len:2, kind:"number"},
+             {id:"ptype", label:"Protocol Type", off:2, len:2, kind:"number"},
+             {id:"hlen", label:"HW Size", off:4, len:1, kind:"number"},
+             {id:"plen", label:"Proto Size", off:5, len:1, kind:"number"},
+             {id:"opcode", label:"Opcode", off:6, len:2, kind:"enum", values:[{v:1,l:"Request"},{v:2,l:"Reply"}]},
+             {id:"smac", label:"Sender MAC", off:8, len:6, kind:"mac"},
+             {id:"sip", label:"Sender IP", off:14, len:4, kind:"ipv4"},
+             {id:"tmac", label:"Target MAC", off:18, len:6, kind:"mac"},
+             {id:"tip", label:"Target IP", off:24, len:4, kind:"ipv4"}]},
+  custom: {label:"自定义层", len:12, anchor:null, color:"#94a3b8", custom:true, fields:[]},
+};
+/* One hue per brick: cells inherit the layer color (--lc, set on .lrow);
+   field KIND no longer participates in coloring. */
+let stack = [], sels = [], editing = null;   // editing: {uid, fid}
+let selLayer = null, uidSeq = 0;
+
+/* ---------- stack ops ---------- */
+function addLayer(eid){
+  stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len});
+  selLayer = stack[stack.length-1].uid; renderAll();
+}
+function delLayer(uid){
+  stack.splice(stack.findIndex(s=>s.uid===uid),1);
+  sels = sels.filter(s=>s.uid!==uid);
+  if(selLayer===uid) selLayer=null;
+  if(editing && editing.uid===uid) editing=null;
+  renderAll();
+}
+function tunnelIdx(){ return stack.findIndex(s=>ENTRIES[s.eid].tunnel); }
+function prefix(i){ let n=0; for(let k=0;k<i;k++) n+=stack[k].len; return n; }
+
+/* ---------- expression compile (verified against bpf_compile.py) ---------- */
+function hex(v){return "0x"+v.toString(16)}
+function ip2int(s){return s.split(".").reduce((a,o)=>(a<<8)+ +o,0)>>>0}
+function mac2int(s){return parseInt(s.replace(/:/g,""),16)}
+function fieldClause(sel){
+  const li = stack.findIndex(s=>s.uid===sel.uid); if(li<0) return null;
+  const layer = stack[li], e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===sel.fid);
+  const drill = tunnelIdx()>=0 && li>tunnelIdx();
+  if(!drill && f.excl && f.excl.primitive)
+    return f.excl.primitive+" "+sel.dispVal;
+  const win = f.win||f.len;
+  let val;
+  if(f.kind==="enum") val = sel.val;
+  else if(f.kind==="ipv4") val = ip2int(sel.dispVal);
+  else if(f.kind==="mac"){
+    const m = mac2int(sel.dispVal);
+    const hi = Math.floor(m / 0x10000), lo = m % 0x10000;
+    const o = drill? prefix(li)+f.off : e.base+f.off;
+    const a = drill? "ether" : e.anchor;
+    return `(${a}[${o}:4] == ${hex(hi)} and ${a}[${o+4}:2] == ${hex(lo)})`;
+  }
+  else if(f.kind==="ipv6"){
+    const g = sel.dispVal.split(":").map(x=>parseInt(x||"0",16));
+    if(g.length!==8) return null;
+    const w = [0,1,2,3].map(i=>(((g[i*2]||0)<<16)|(g[i*2+1]||0))>>>0);
+    const o = prefix(li)+f.off;
+    return w.map((x,i)=>`ether[${o+i*4}:4] == ${hex(x)}`).join(" and ");
+  }
+  else val = +sel.val;
+  const kw = drill? "ether" : e.anchor;
+  const o  = drill? prefix(li)+f.off : e.base+f.off;
+  if(f.mask){ const sh=f.shift||0; return `(${kw}[${o}:${win}] & ${hex(f.mask)}) == ${hex(val<<sh)}`; }
+  if(f.kind==="bitset"){ const m=sel.bitMask; return `(${kw}[${o}:${win}] & ${hex(m)}) == ${hex(m)}`; }
+  return `${kw}[${o}:${win}] == ${f.kind==="number"?val:hex(val)}`;
+}
+function guards(){
+  const ti = tunnelIdx(); if(ti<0) return [];
+  const g = [];
+  const tun = ENTRIES[stack[ti].eid];
+  if(tun.locator) g.push({t:"链路守卫", e:tun.locator});
+  for(let i=ti+1;i<stack.length;i++)
+    if(ENTRIES[stack[i].eid].anchor==="ip")
+      g.push({t:"IHL 钉子", e:`(ether[${prefix(i)}] & 0x0f) == 5`});
+  return g;
+}
+function compile(){
+  const ti = tunnelIdx();
+  const clauses = guards().map(g=>g.e);
+  // VLAN slot: a VLAN layer declared before the tunnel (or with no tunnel)
+  // always leads the expression — the `vlan` keyword shifts every following
+  // protocol keyword (ip/tcp/port, including the tunnel locator) past the
+  // 4-byte tag, while raw ether[] reads stay absolute. VLAN layers inside
+  // the tunnel payload are plain drill layers (raw reads only).
+  const vli = stack.findIndex(s=>s.eid==="vlan" && (ti<0 || stack.indexOf(s)<ti));
+  const vsel = vli>=0 ? sels.find(s=>s.uid===stack[vli].uid && s.fid==="vid") : null;
+  for(const s of sels){
+    if(s===vsel) continue;                          // emitted below, in the VLAN slot
+    const c = fieldClause(s); if(c) clauses.push(c);
+  }
+  if(vli>=0 && (clauses.length || vsel))
+    clauses.unshift(vsel ? `vlan ${vsel.val}` : "vlan");
+  return clauses.length? clauses.join(" and ") : null;
+}
+
+/* ---------- layout: fields never split ----------
+   Column = MSB-first bit position: off*8 + (win*8 - mask.bitlen); width = popcount(mask).
+   A field that fits inside one 32-bit word row sits in the word grid at its bit
+   column (IP/TCP/UDP-style headers stay the classic textbook grid). A field that
+   would cross a row boundary (MAC 48b, IPv6 addresses 128b) gets a whole row of
+   its own — the textbook convention of one address per row. Wrapping therefore
+   only ever happens BETWEEN fields, never inside one. */
+const bitlen = v => v.toString(2).length;
+const popcount = v => v.toString(2).replace(/0/g,"").length;
+function fieldBits(f){
+  const total = (f.win||f.len)*8;
+  if(f.mask) return {start: f.off*8 + (total - bitlen(f.mask)), width: popcount(f.mask)};
+  return {start: f.off*8, width: total};
+}
+function layoutRows(e){
+  const out=[], aligned={};
+  for(const f of e.fields){
+    const {start, width} = fieldBits(f);
+    const r=Math.floor(start/32), c=start%32;
+    if(c+width<=32)
+      (aligned[r] ??= {sort:r*32, byte:r*4, grid:true, items:[]}).items.push({f, col:c, width});
+    else
+      out.push({sort:start, byte:Math.floor(start/8), grid:false, items:[{f, col:0, width}]});
+  }
+  for(const k of Object.keys(aligned)) out.push(aligned[k]);
+  out.sort((a,b)=>a.sort-b.sort);
+  return out;
+}
+
+/* ---------- render ---------- */
+function renderAll(){ renderPalette(); renderStack(); renderChips(); renderExpr(); focusCell(); }
+function focusCell(){
+  const c = document.getElementById("cellEdit");
+  if(c){ c.focus(); if(c.select) try{ c.select(); }catch(e){} }
+}
+function renderPalette(){
+  document.getElementById("palette").innerHTML =
+    Object.entries(ENTRIES).map(([id,e])=>`<button style="--pc:${e.color}" onclick="addLayer('${id}')">${e.label}</button>`).join("")
+    + `<button onclick="addCustom()">＋ 自定义层(声明长度)</button>`;
+}
+function addCustom(){
+  const n = +prompt("自定义层长度(字节)","12"); if(!n||n<1) return;
+  stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; renderAll();
+}
+function cellHTML(layer, li, f, it, grid){
+  const on = sels.some(s=>s.uid===layer.uid && s.fid===f.id);
+  const width = it.width;
+  const style = grid ? `grid-column:${it.col+1}/span ${width};` : "";
+  if(f.excl && !f.excl.primitive)
+    return `<div class="pc excl" title="${f.label}: ${f.excl.reason} — 常量,不可过滤" style="${style}">
+      <span>🔒 ${f.label}</span><span class="bw">${width}b</span></div>`;
+
+  const isEd = editing && editing.uid===layer.uid && editing.fid===f.id;
+  const sel = sels.find(s=>s.uid===layer.uid && s.fid===f.id);
+  const tip = `${f.label} · 偏移 ${f.off}B · ${width}bit · ${f.kind}`
+    + (f.excl && f.excl.primitive ? `；原生输出「${f.excl.primitive}」，钻取输出字节窗口` : "")
+    + (f.kind==="enum" ? "；点击下拉选择" : f.kind==="bitset" ? "；点击字母位直接开关" : "；双击直接输入");
+  const pb = (f.excl && f.excl.primitive) ? `<span class="pb">原语</span>` : "";
+
+  if(isEd && (f.kind==="number"||f.kind==="ipv4"||f.kind==="ipv6"||f.kind==="mac")){
+    const ph = f.kind==="ipv4"?"192.0.2.1":f.kind==="ipv6"?"2001:db8::1":f.kind==="mac"?"aa:bb:cc:dd:ee:ff":"数值";
+    return `<div class="pc editing ${on?"on":""}" style="${style}" title="${tip}">
+      <input id="cellEdit" value="${sel?sel.dispVal:""}" placeholder="${ph}" spellcheck="false"
+        onkeydown="cellKey(event)" onblur="cellDone()"
+        onclick="event.stopPropagation()" ondblclick="event.stopPropagation()"></div>`;
+  }
+  if(isEd && f.kind==="enum"){
+    return `<div class="pc editing ${on?"on":""}" style="${style}" title="${tip}">
+      <select id="cellEdit" onchange="commitValue(${layer.uid},'${f.id}',this.value)"
+        onblur="if(editing){editing=null;renderAll()}" onclick="event.stopPropagation()">
+        <option value="" disabled selected hidden>—</option>
+        ${f.values.map(v=>`<option value="${v.v}" ${sel&&sel.val===v.v?"selected":""}>${v.l}</option>`).join("")}
+      </select></div>`;
+  }
+  const mini = f.kind==="bitset" ? `<span class="mini">${f.bits.map(b=>
+      `<i title="${b.l}" class="${sel&&sel.bitMask&b.m?"on":""}"
+        onclick="event.stopPropagation(); toggleBit(${layer.uid},'${f.id}',${b.m})">${b.l[0]}</i>`).join("")}</span>` : "";
+  // value stays visible in the cell: the cell IS the "what am I filtering on" display
+  const lbl = sel
+    ? `<span class="pv" title="${sel.dispVal}">${sel.dispVal}</span>${mini}<span class="pl">${pb?pb+" ":""}${f.label} · ${width}b</span>`
+    : `<span>${pb?pb+" ":""}${f.label}</span>${mini}<span class="bw">${width}b</span>`;
+  const act = f.kind==="enum"
+    ? `onclick="pickField(${layer.uid},'${f.id}')"`
+    : (f.kind==="bitset" ? "" : `ondblclick="pickValue(${layer.uid},'${f.id}')"`);
+  return `<div class="pc ${isEd?"editing":""} ${on?"on":""}" style="${style}" ${act} title="${tip}">${lbl}</div>`;
+}
+function gridHTML(layer, li, e){
+  const rows = layoutRows(e);
+  if(e.tail) rows.push({byte:null, grid:false, tailRow:true});
+  const firstAlign = rows.findIndex(r=>r.grid);   // the one 32-bit ruler sits over the first word row
+  let gut = "", body = "";
+  rows.forEach((r,i)=>{
+    const ruler = i===firstAlign
+      ? `<div class="pruler"><div class="p32"><span class="ah">◄</span>32 位<span class="ah">►</span></div>
+         <div class="pticks"><span>8</span><span>8</span><span>8</span><span>8</span></div></div>`
+      : "";
+    gut += `<span${ruler?` style="height:${38+32}px"`:""}>${r.byte ?? ""}</span>`;
+    if(r.tailRow){
+      body += `<div class="pfullrow"><div class="pc tail" title="${e.tail.note}">🔒 选项 + 填充（变长 · 随 ${e.id==="ipv4"?"IHL":"数据偏移"} 展开）</div></div>`;
+      return;
+    }
+    const cells = r.items.map(it=>cellHTML(layer, li, it.f, it, r.grid)).join("");
+    body += ruler + (r.grid ? `<div class="pgridrow">${cells}</div>` : `<div class="pfullrow">${cells}</div>`);
+  });
+  return `<div class="pwrap"><div class="gut">${gut}</div><div class="pbody">${body}</div></div>`;
+}
+/* ---------- in-cell editing: dblclick inputs values, click opens dropdowns, letters toggle bits ---------- */
+function pickField(uid, fid){       // enum: single click opens in-place dropdown
+  event.stopPropagation(); selLayer=uid;
+  const layer = stack.find(s=>s.uid===uid);
+  const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
+  if(f.kind==="enum") editing={uid,fid};
+  renderAll();
+}
+function pickValue(uid, fid){       // number / ipv4 / ipv6 / mac: double click inputs in place
+  event.stopPropagation(); selLayer=uid; editing={uid,fid}; renderAll();
+}
+function commitValue(uid, fid, raw){
+  raw = raw==null ? "" : (""+raw).trim();
+  const layer = stack.find(s=>s.uid===uid);
+  if(!raw || !layer){ editing=null; renderAll(); return; }
+  const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
+  const sel = {uid, fid, val:null, dispVal:null};
+  if(f.kind==="enum"){ sel.val = +raw; sel.dispVal = (f.values.find(v=>v.v===+raw)||{l:raw}).l; }
+  else if(f.kind==="mac"){ sel.dispVal = raw; sel.val = mac2int(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
+  else if(f.kind==="ipv4"){ sel.dispVal = raw; sel.val = ip2int(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
+  else if(f.kind==="ipv6"){ sel.dispVal = raw;
+    const g = raw.split(":").map(x=>parseInt(x||"0",16));
+    if(g.length!==8){ editing=null; renderAll(); return; } }
+  else { sel.dispVal = raw; sel.val = +raw; if(isNaN(sel.val)){editing=null;renderAll();return;} }
+  sels = sels.filter(s=>!(s.uid===uid && s.fid===fid)); sels.push(sel);
+  autoLink(uid, f);
+  editing=null; renderAll();
+}
+/* Successor linkage: a value that names the next protocol (EtherType, IP proto,
+   IPv6 next header) re-shapes the layer that follows. Custom layers and tunnel
+   envelopes are never silently destroyed — those surface a warning instead. */
+function autoLink(uid, f){
+  const succ = f.successor; if(!succ) return;
+  const sel = sels.find(s=>s.uid===uid && s.fid===f.id);
+  if(!sel) return;
+  const target = succ[sel.val];
+  if(!target || !ENTRIES[target]) return;
+  const li = stack.findIndex(s=>s.uid===uid);
+  const next = stack[li+1];
+  if(!next){                                         // nothing follows: grow the block
+    const layer = {uid:++uidSeq, eid:target, len:ENTRIES[target].len};
+    stack.push(layer); selLayer = layer.uid;
+    return;
+  }
+  if(next.eid===target) return;
+  const ne = ENTRIES[next.eid];
+  if(ne.custom || ne.tunnel) return;                 // never silently destroy; structWarnings reports it
+  next.eid = target; next.len = ENTRIES[target].len;
+  sels = sels.filter(s=>s.uid!==next.uid);           // old header's fields do not exist in the new one
+  if(editing && editing.uid===next.uid) editing=null;
+}
+function structWarnings(){
+  const out=[];
+  for(const s of sels){
+    const li = stack.findIndex(x=>x.uid===s.uid); if(li<0) continue;
+    const e = ENTRIES[stack[li].eid];
+    const f = e.fields.find(x=>x.id===s.fid);
+    if(!f || !f.successor) continue;
+    const target = f.successor[s.val];
+    if(!target || !ENTRIES[target]) continue;
+    const next = stack[li+1];
+    if(next && next.eid!==target)
+      out.push({warn:true, m:`${e.label}.${f.label}=${s.dispVal} 指向 ${ENTRIES[target].label},下一层却是 ${ENTRIES[next.eid].label}`});
+  }
+  return out;
+}
+function toggleBit(uid, fid, m){    // letter boxes toggle directly: click = select, click again = clear
+  const layer = stack.find(s=>s.uid===uid);
+  const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
+  let sel = sels.find(s=>s.uid===uid && s.fid===fid);
+  if(!sel){ sels.push({uid, fid, val:m, bitMask:m, dispVal:f.bits.find(b=>b.m===m).l}); }
+  else{
+    const nb = sel.bitMask ^ m;
+    if(!nb) sels = sels.filter(s=>s!==sel);
+    else{ sel.bitMask=nb; sel.val=nb; sel.dispVal=f.bits.filter(b=>nb&b.m).map(b=>b.l).join("+"); }
+  }
+  renderAll();
+}
+function cellKey(e){
+  if(e.key==="Enter") commitValue(editing.uid, editing.fid, e.target.value);
+  else if(e.key==="Escape"){ editing=null; renderAll(); }
+}
+function cellDone(){
+  if(!editing) return;
+  const c = document.getElementById("cellEdit");
+  if(c && (""+c.value).trim()) commitValue(editing.uid, editing.fid, c.value);
+  else { editing=null; renderAll(); }
+}
+function layerHTML(s, i, ti, extra){
+  const e = ENTRIES[s.eid], drill = ti>=0 && i>ti;
+  const body = e.fields.length
+    ? gridHTML(s, i, e)
+    : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">自定义层无字段,作用是推进标尺</div>`;
+  return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${e.color}" onclick="layerClick(${s.uid})">
+    <div class="lhead"><b>${e.label}</b>
+      <span class="meta">${s.len}B · 累计偏移 ${prefix(i)}${drill?" · 钻取层":""}${e.tunnel?" · 隧道":""}</span>
+      <span class="del" onclick="event.stopPropagation(); delLayer(${s.uid})">×</span>
+    </div>
+    ${body}${extra||""}
+  </div>`;
+}
+function layerClick(uid){
+  // Layer selection must NOT re-render the tree: a rebuild between the two
+  // clicks of a double-click would land on a fresh node and kill dblclick.
+  const inner = event.target.closest(".lrow");
+  if(inner && +inner.dataset.uid !== uid) return;   // let the innermost row handle it
+  selLayer = uid;
+  document.querySelectorAll(".lrow").forEach(r=>r.classList.toggle("sel", r.dataset.uid==uid));
+}
+function renderStack(){
+  const ti = tunnelIdx();
+  let html = "";
+  for(let i=0;i<stack.length;i++){
+    const e = ENTRIES[stack[i].eid];
+    if(e.tunnel){
+      // The inner packet is the tunnel's PAYLOAD: nest it inside the tunnel's
+      // own frame, like the textbook VXLAN figure (inner frame inside the envelope).
+      const inner = stack.slice(ti+1).map((s,j)=>layerHTML(s, ti+1+j, ti)).join("")
+        || `<div style="padding:10px; color:var(--muted); font-size:12px">尚无内层报文 — 继续向上方添加积木,它们会成为隧道载荷</div>`;
+      const wrap = `<div class="innerbox" style="--tc:${e.color}">
+        <div class="innerlab">📦 内层报文 · ${e.label} 载荷（钻取:绝对偏移 + 守卫）</div>${inner}</div>`;
+      html += layerHTML(stack[i], i, ti, wrap);
+      return finish(html);
+    }
+    html += layerHTML(stack[i], i, ti);
+  }
+  return finish(html);
+}
+function finish(html){
+  document.getElementById("stack").innerHTML = html || `<div style="padding:20px;color:var(--muted)">从上方积木添加层…</div>`;
+  document.getElementById("total").textContent = stack.length? `报文总长 ${prefix(stack.length)} 字节` : "";
+}
+function renderChips(){
+  const w = structWarnings().map(x=>`<span class="chip ${x.warn?"warn":"hint"}" title="${x.warn?"结构不符:按此封装,该条件永不匹配":"结构提示"}">${x.warn?"⚠":"💡"} ${x.m}</span>`);
+  const g = guards().map(x=>`<span class="chip guard" title="守卫子句:封装不符则整条安全不匹配">🛡 ${x.t}: <code>${x.e}</code></span>`);
+  const c = sels.map((s,i)=>{
+    const layer = stack.find(x=>x.uid===s.uid); if(!layer) return "";
+    const e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===s.fid);
+    return `<span class="chip field">${e.label}.${f.label} = ${s.dispVal} <span class="x" onclick="sels.splice(${i},1);renderAll()">×</span></span>`;
+  }).join("");
+  document.getElementById("chips").innerHTML = (w.join("")+g.join("")+c) || `<span style="color:var(--muted);font-size:12px">尚未选择字段</span>`;
+}
+function renderExpr(){
+  const ex = compile();
+  document.getElementById("expr").textContent = ex ?? "尚未选择字段";
+  const ti = tunnelIdx();
+  const drill = sels.some(s=>{const i=stack.findIndex(x=>x.uid===s.uid); return ti>=0 && i>ti;});
+  const badge = document.getElementById("modeBadge");
+  badge.className = "mode "+(drill?"drill":"native");
+  badge.textContent = drill?"钻取模式(绝对偏移+守卫)":"原生模式(关键字锚点)";
+  document.getElementById("exprNote").textContent = ex ? (ti>=0
+    ? "钻取模式:绝对偏移由累计标尺计算;守卫子句校验声明的封装,错配安全漏报、永不误匹配。"
+    : "原生模式:关键字锚点/原语,libpcap 自动处理外层 IHL/VLAN。") : "";
+}
+/* ---------- presets ---------- */
+function presetDrill(){
+  stack=[]; sels=[]; editing=null; uidSeq=0;
+  ["ether","ipv4","udp","vxlan","ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
+  sels.push({uid:stack[3].uid, fid:"vni", val:100, dispVal:"100"});
+  sels.push({uid:stack[6].uid, fid:"dport", val:443, dispVal:"443"});
+  selLayer = stack[6].uid; renderAll();
+}
+function presetNative(){
+  stack=[]; sels=[]; editing=null; uidSeq=0;
+  ["ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
+  sels.push({uid:stack[1].uid, fid:"dst", val:0, dispVal:"192.0.2.2"});
+  sels.push({uid:stack[2].uid, fid:"flags", val:2, bitMask:2, dispVal:"SYN"});
+  selLayer = stack[2].uid; renderAll();
+}
+renderAll();   // start empty: build from the palette
+</script>
+</body>
+</html>
