@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>BPF 可视化计算器 · 原型</title>
+<title>BPF Expression Visual Calculator</title>
 <style>
   :root{
     --bg:#f8fafc; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
@@ -47,7 +47,6 @@
     .palette{flex-direction:row; flex-wrap:wrap}
     .pgroup{flex-direction:row; flex-wrap:wrap}
   }
-  .presets{margin-left:auto; display:flex; gap:8px}
   /* ---- vertical stack: each protocol is one rectangular brick ---- */
   .lrow{border:2px solid var(--lc); border-radius:10px; margin-bottom:8px;
     background:color-mix(in srgb, var(--lc) 5%, #fff)}
@@ -118,33 +117,29 @@
   .mode{display:inline-block; font-size:11px; padding:2px 8px; border-radius:99px; margin-left:8px; vertical-align:middle}
   .mode.native{background:#dcfce7; color:#166534}
   .mode.drill{background:#fee2e2; color:#991b1b}
+  .langbtn{font-size:11px; padding:2px 10px; border-radius:99px; margin-left:8px; vertical-align:middle; background:#fff}
   .note{font-size:11px; color:var(--muted); margin-top:8px}
 </style>
 </head>
 <body>
-<h1>BPF 可视化计算器 <span id="modeBadge" class="mode native">原生模式</span></h1>
-<div class="sub">每层按 RFC 教科书 32 位字格渲染:列位置 = offset×8 + 掩码位,行号 = offset÷4 —— 格子本身就是偏移量。点字段输入值,自动生成表达式,用户永远不数字节。</div>
+<h1><span id="tTitle">BPF Expression Visual Calculator</span> <span id="modeBadge" class="mode native">Native</span> <button id="langBtn" class="langbtn" onclick="toggleLang()">中文</button></h1>
+<div class="sub" id="tSub"></div>
 
 <div class="layout">
   <div class="main">
     <div class="card">
-      <h2 style="display:flex; align-items:center">1 · 报文构造
-        <span class="presets">
-          <button onclick="presetDrill()">示例:VXLAN 内层过滤</button>
-          <button onclick="presetNative()">示例:原生 TCP</button>
-        </span>
-      </h2>
+      <h2 id="tSec1"></h2>
       <div id="stack"></div>
       <div class="total" id="total"></div>
     </div>
 
     <div class="card">
-      <h2>2 · 已选条件与守卫</h2>
+      <h2 id="tSec2"></h2>
       <div class="chips" id="chips"></div>
     </div>
 
     <div class="card">
-      <h2>3 · 生成的 BPF 表达式</h2>
+      <h2 id="tSec3"></h2>
       <div class="expr" id="expr">尚未选择字段</div>
       <div class="note" id="exprNote"></div>
     </div>
@@ -152,29 +147,96 @@
 
   <div class="sidebar">
     <div class="card">
-      <h2>层积木</h2>
+      <h2 id="tPal"></h2>
       <div class="palette" id="palette"></div>
     </div>
   </div>
 </div>
 
 <script>
+/* ---------- i18n: English default, Chinese optional ---------- */
+let LANG = "en";
+try{ LANG = localStorage.getItem("bpfcalc-lang") || "en"; }catch(e){}
+const STR = {
+  en:{
+    title:"BPF Expression Visual Calculator",
+    sub:"Stack protocol bricks like building a packet — every field visible in its textbook word grid, click a field to input a value, offsets are computed for you. Never count bytes again.",
+    sec1:"1 · Packet Construction", sec2:"2 · Selected Conditions & Guards", sec3:"3 · Generated BPF Expression",
+    pal:"Bricks", searchPh:"Search protocols…",
+    customBtn:"＋ Custom layer (declare length)", customPrompt:"Custom layer length (bytes)",
+    noFields:"Custom layer has no fields; its job is to advance the offset ruler.",
+    offset:"offset", drillL:" · drill", tunnelL:" · tunnel",
+    inner:"📦 Inner packet · ${label} payload (drill: absolute offsets + guards)",
+    innerEmpty:"No inner packet yet — bricks added next become the tunnel payload",
+    emptyStack:"Add bricks from the rail…",
+    total:n=>`Total ${n} bytes`,
+    noneYet:"No field selected yet",
+    modeNative:"Native (keyword anchors)", modeDrill:"Drill (absolute offsets + guards)",
+    noteDrill:"Drill mode: absolute offsets come from the accumulated ruler; guard clauses verify the declared encapsulation — mismatches safe-miss, never false-match.",
+    noteNative:"Native mode: keyword anchors / primitives; libpcap handles outer IHL/VLAN.",
+    guard:"Guard", ihlPin:"IHL pin", optPin:"optional-field pin",
+    warnMis:(a,b,c)=>`${a}=${b} points to ${c}`,
+    warnTail:", but the next layer is ",
+    clickDd:"; click for dropdown", dblIn:"; double-click to input", letTgl:"; click letters to toggle",
+    notFilterable:"not filterable", exclConst:"constant, not filterable",
+    prim1:"native emits \"", prim2:"\", drill emits the byte window",
+    varLen:"variable", value:"value",
+  },
+  zh:{
+    title:"BPF 表达式可视化计算器",
+    sub:"像搭报文一样逐层拼积木,每个字段按教科书 32 位字格展示;点字段输入值,偏移自动计算,用户永远不数字节。",
+    sec1:"1 · 报文构造", sec2:"2 · 已选条件与守卫", sec3:"3 · 生成的 BPF 表达式",
+    pal:"层积木", searchPh:"搜索协议…",
+    customBtn:"＋ 自定义层(声明长度)", customPrompt:"自定义层长度(字节)",
+    noFields:"自定义层无字段,作用是推进标尺。",
+    offset:"累计偏移", drillL:" · 钻取层", tunnelL:" · 隧道",
+    inner:"📦 内层报文 · ${label} 载荷（钻取:绝对偏移 + 守卫）",
+    innerEmpty:"尚无内层报文 — 继续添加积木,它们会成为隧道载荷",
+    emptyStack:"从右侧积木栏添加层…",
+    total:n=>`报文总长 ${n} 字节`,
+    noneYet:"尚未选择字段",
+    modeNative:"原生模式(关键字锚点)", modeDrill:"钻取模式(绝对偏移+守卫)",
+    noteDrill:"钻取模式:绝对偏移由累计标尺计算;守卫子句校验声明的封装,错配安全漏报、永不误匹配。",
+    noteNative:"原生模式:关键字锚点/原语,libpcap 自动处理外层 IHL/VLAN。",
+    guard:"守卫", ihlPin:"IHL 钉子", optPin:"可选字段钉子",
+    warnMis:(a,b,c)=>`${a}.${b}=${c}`,
+    warnTail:",下一层却是 ",
+    clickDd:"；点击下拉选择", dblIn:"；双击直接输入", letTgl:"；点击字母位直接开关",
+    notFilterable:"不可过滤", exclConst:"常量,不可过滤",
+    prim1:"原生输出「", prim2:"」,钻取输出字节窗口",
+    varLen:"变长", value:"数值",
+  },
+};
+function T(k){ const v = STR[LANG] && STR[LANG][k]; return v===undefined ? (STR.en[k] ?? k) : v; }
+function L(x){ return x && typeof x==="object" ? (x[LANG] ?? x.en) : x; }
+function toggleLang(){ LANG = LANG==="en" ? "zh" : "en"; try{ localStorage.setItem("bpfcalc-lang", LANG); }catch(e){} renderChrome(); renderAll(); }
+function renderChrome(){
+  document.title = T("title");
+  document.getElementById("tTitle").textContent = T("title");
+  document.getElementById("tSub").textContent = T("sub");
+  document.getElementById("tSec1").textContent = T("sec1");
+  document.getElementById("tSec2").textContent = T("sec2");
+  document.getElementById("tSec3").textContent = T("sec3");
+  document.getElementById("tPal").textContent = T("pal");
+  document.getElementById("langBtn").textContent = LANG==="en" ? "中文" : "English";
+  document.documentElement.lang = LANG==="en" ? "en" : "zh-CN";
+}
 /* ---------- mock registry (field layout mirrors registry/*.json) ----------
    Color encodes FAMILY (link/net/trans/tunnel/app), never per-protocol identity:
    the label strip's protocol name is the identity, 5-6 family hues always suffice. */
 const FAM = {
-  link:   {color:"#64748b", label:"链路层"},
-  net:    {color:"#3b82f6", label:"网络层"},
-  trans:  {color:"#10b981", label:"传输层"},
-  tunnel: {color:"#ef4444", label:"隧道/Overlay"},
-  app:    {color:"#f59e0b", label:"应用层"},
-  custom: {color:"#94a3b8", label:"自定义"},
+  link:   {color:"#64748b", label:{en:"Link Layer", zh:"链路层"}},
+  net:    {color:"#3b82f6", label:{en:"Network Layer", zh:"网络层"}},
+  trans:  {color:"#10b981", label:{en:"Transport", zh:"传输层"}},
+  tunnel: {color:"#ef4444", label:{en:"Tunnel / Overlay", zh:"隧道/Overlay"}},
+  app:    {color:"#f59e0b", label:{en:"Application", zh:"应用层"}},
+  custom: {color:"#94a3b8", label:{en:"Custom", zh:"自定义"}},
 };
 const ENTRIES = {
   ether:  {label:"Ethernet", len:14, anchor:"ether", base:0, fam:"link",
            fields:[
-             {id:"dst", label:"Destination MAC", off:0, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether dst"}},
-             {id:"src", label:"Source MAC", off:6, len:6, kind:"mac", excl:{reason:"封装层地址,原语精确表达", primitive:"ether src"}},
+             {id:"dst", label:"Destination MAC", off:0, len:6, kind:"mac", excl:{reason:{en:"encapsulation address; primitives are exact", zh:"封装层地址,原语精确表达"}, primitive:"ether dst"}},
+             {id:"src", label:"Source MAC", off:6, len:6, kind:"mac", excl:{reason:{en:"encapsulation address; primitives are exact", zh:"封装层地址,原语精确表达"}, primitive:"ether src"}},
              {id:"type", label:"EtherType", off:12, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"},{v:34984,l:"802.1Q"},{v:35020,l:"LLDP"}],
               successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp", 34984:"vlan", 35020:"lldp"}}]},
@@ -183,12 +245,12 @@ const ENTRIES = {
              {id:"pcp", label:"PCP", off:0, win:2, mask:0xe000, shift:13, kind:"number"},
              {id:"dei", label:"DEI", off:0, win:2, mask:0x1000, shift:12, kind:"number"},
              {id:"vid", label:"VID", off:0, win:2, mask:0x0fff, kind:"number",
-              excl:{reason:"VLAN 原语,须置于表达式首位", primitive:"vlan"}},
+              excl:{reason:{en:"VLAN primitive; must lead the expression", zh:"VLAN 原语,须置于表达式首位"}, primitive:"vlan"}},
              {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
               successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
   ipv4:   {label:"IPv4", len:20, anchor:"ip", base:0, fam:"net",
-           tail:{note:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"},
+           tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when IHL>5 (variable). The drill guard pins IHL=5, so the region is absent and following offsets stay exact.", zh:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"}},
            fields:[
              {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
              {id:"ihl", label:"IHL", off:0, len:1, mask:0x0f, kind:"number"},
@@ -216,13 +278,13 @@ const ENTRIES = {
              {id:"dst", label:"Destination Address", off:24, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
   udp:    {label:"UDP", len:8, anchor:"udp", base:0, fam:"trans",
            fields:[
-             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
-             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"},
+             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:{en:"port primitive", zh:"端口原语"}, primitive:"src port"}},
+             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:{en:"port primitive", zh:"端口原语"}, primitive:"dst port"},
               successor:{67:"dhcp", 68:"dhcp", 4789:"vxlan"}},
              {id:"len", label:"Length", off:4, len:2, kind:"number"},
              {id:"sum", label:"Checksum", off:6, len:2, kind:"number"}]},
   tcp:    {label:"TCP", len:20, anchor:"tcp", base:0, fam:"trans",
-           tail:{note:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"},
+           tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when Data Offset>5 (variable). Without a data-offset pin, drill offsets of later layers assume the 20-byte minimum header.", zh:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"}},
            fields:[
              {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
              {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"}},
@@ -238,9 +300,9 @@ const ENTRIES = {
   vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, fam:"tunnel", tunnel:true, locator:"udp port 4789",
            fields:[
              {id:"flags", label:"Flags", off:0, len:1, kind:"number"},
-             {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:"常量零,无构建入口"}},
+             {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}},
              {id:"vni", label:"VNI", off:4, len:3, win:4, mask:0xffffff00, shift:8, kind:"number"},
-             {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:"常量零,无构建入口"}}]},
+             {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}}]},
   arp:    {label:"ARP", len:28, anchor:"arp", base:0, fam:"link",
            fields:[
              {id:"htype", label:"Hardware Type", off:0, len:2, kind:"number"},
@@ -264,7 +326,7 @@ const ENTRIES = {
              {id:"ident", label:"Identifier", off:4, len:2, kind:"number"},
              {id:"seq", label:"Sequence Number", off:6, len:2, kind:"number"}]},
   esp:    {label:"ESP", len:8, anchor:"ip", base:20, fam:"net", locator:"ip proto 50",
-           tail:{label:"Encrypted Payload", note:"SPI/Seq 之后全部加密(载荷+填充+ICV),无可过滤的固定字段。"},
+           tail:{label:{en:"Encrypted Payload", zh:"加密载荷"}, note:{en:"Everything after SPI/Seq is encrypted (payload+padding+ICV); no filterable fixed fields.", zh:"SPI/Seq 之后全部加密(载荷+填充+ICV),无可过滤的固定字段。"}},
            fields:[
              {id:"spi", label:"Security Parameters Index", off:0, len:4, kind:"number"},
              {id:"seq", label:"Sequence Number", off:4, len:4, kind:"number"}]},
@@ -280,7 +342,7 @@ const ENTRIES = {
               successor:{2048:"ipv4", 34525:"ipv6", 25944:"ether"}}]},
   ospf:   {label:"OSPF", len:24, anchor:"ip", base:20, fam:"net", locator:"ip proto 89",
            excluded:[{off:16, len:8, label:"Auth Data",
-             reason:"64-bit 认证载荷(明文口令或密码学摘要);不透明字节,且超出 4 字节 BPF 载入窗口"}],
+             reason:{en:"64-bit authentication payload (password or digest); opaque bytes beyond the 4-byte BPF load window", zh:"64-bit 认证载荷(明文口令或密码学摘要);不透明字节,且超出 4 字节 BPF 载入窗口"}}],
            fields:[
              {id:"ver", label:"Version", off:0, len:1, kind:"number"},
              {id:"type", label:"Type", off:1, len:1, kind:"enum", values:[
@@ -312,7 +374,7 @@ const ENTRIES = {
              {id:"fwd", label:"Forward Delay", off:33, len:2, kind:"number"}]},
   lldp:   {label:"LLDP", len:22, anchor:"ether", base:14, fam:"link", locator:"ether proto 35020",
            excluded:[{off:3, len:19, label:"TLV chain",
-             reason:"chassis ID 值(变长)与其后的 Port ID/TTL/End TLV;偏移随 chassis 长度漂移,只有第一个 TLV 头固定"}],
+             reason:{en:"chassis ID value (variable) and the Port ID/TTL/End TLVs; offsets drift with the chassis length, only the first TLV header is fixed", zh:"chassis ID 值(变长)与其后的 Port ID/TTL/End TLV;偏移随 chassis 长度漂移,只有第一个 TLV 头固定"}}],
            fields:[
              {id:"chlen", label:"Chassis ID Length", off:0, len:2, mask:0x1ff, kind:"number"},
              {id:"chsub", label:"Chassis ID Subtype", off:2, len:1, kind:"enum", values:[
@@ -320,10 +382,10 @@ const ENTRIES = {
                {v:4,l:"MAC Address"},{v:5,l:"Network Address"},{v:6,l:"Interface Name"},{v:7,l:"Locally Assigned"}]}]},
   dhcp:   {label:"DHCP", len:236, anchor:"udp", base:8, fam:"app", locator:["udp port 67","udp port 68"],
            excluded:[
-             {off:34, len:10, label:"chaddr pad", reason:"chaddr 6 字节 MAC 之后的补零"},
-             {off:44, len:64, label:"Server Name", reason:"64 字节服务器名字符串,无字段语义"},
-             {off:108, len:128, label:"Boot File Name", reason:"128 字节引导文件名字符串,无字段语义"}],
-           tail:{label:"Options (TLV)", note:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"},
+             {off:34, len:10, label:"chaddr pad", reason:{en:"zero padding after the 6-byte chaddr MAC", zh:"chaddr 6 字节 MAC 之后的补零"}},
+             {off:44, len:64, label:"Server Name", reason:{en:"64-byte server-name string; no field semantics", zh:"64 字节服务器名字符串,无字段语义"}},
+             {off:108, len:128, label:"Boot File Name", reason:{en:"128-byte boot-file-name string; no field semantics", zh:"128 字节引导文件名字符串,无字段语义"}}],
+           tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"After the magic cookie (0x63825363): a variable TLV option chain; option 53 (message type) has no fixed offset.", zh:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"}},
            fields:[
              {id:"op", label:"Op Code", off:0, len:1, kind:"enum", values:[{v:1,l:"BOOTREQUEST"},{v:2,l:"BOOTREPLY"}]},
              {id:"htype", label:"HW Address Type", off:1, len:1, kind:"number"},
@@ -400,11 +462,11 @@ function guards(){
   const ti = tunnelIdx(); if(ti<0) return [];
   const g = [];
   const tun = ENTRIES[stack[ti].eid];
-  if(tun.locator) g.push({t:"链路守卫", e:Array.isArray(tun.locator) ? "("+tun.locator.join(" or ")+")" : tun.locator});
-  if(tun.pin) g.push({t:tun.pinLabel || "可选字段钉子", e:tun.pin});
+  if(tun.locator) g.push({t:T("guard"), e:Array.isArray(tun.locator) ? "("+tun.locator.join(" or ")+")" : tun.locator});
+  if(tun.pin) g.push({t:tun.pinLabel || T("optPin"), e:tun.pin});
   for(let i=ti+1;i<stack.length;i++)
     if(ENTRIES[stack[i].eid].anchor==="ip")
-      g.push({t:"IHL 钉子", e:`(ether[${prefix(i)}] & 0x0f) == 5`});
+      g.push({t:T("ihlPin"), e:`(ether[${prefix(i)}] & 0x0f) == 5`});
   return g;
 }
 function compile(){
@@ -471,7 +533,7 @@ function layoutRows(e){
 }
 
 /* ---------- render ---------- */
-function renderAll(){ renderPalette(); renderStack(); renderChips(); renderExpr(); focusCell(); }
+function renderAll(){ renderChrome(); renderPalette(); renderStack(); renderChips(); renderExpr(); focusCell(); }
 function focusCell(){
   const c = document.getElementById("cellEdit");
   if(c){ c.focus(); if(c.select) try{ c.select(); }catch(e){} }
@@ -484,8 +546,8 @@ function renderPalette(){
   const groups = Object.keys(FAM).map(fam=>{
     if(fam==="custom"){
       if(q) return "";
-      return `<div class="pgroup open"><div class="pgrouplab" style="color:${FAM.custom.color}" onclick="toggleFam('custom')"><span class="arr">▾</span>自定义</div>
-        <div class="pbtns"><button style="--pc:${FAM.custom.color}" onclick="addCustom()">＋ 自定义层(声明长度)</button></div></div>`;
+      return `<div class="pgroup open"><div class="pgrouplab" style="color:${FAM.custom.color}" onclick="toggleFam('custom')"><span class="arr">▾</span>${L(FAM.custom.label)}</div>
+        <div class="pbtns"><button style="--pc:${FAM.custom.color}" onclick="addCustom()">${T("customBtn")}</button></div></div>`;
     }
     const list = Object.entries(ENTRIES).filter(([,e])=>e.fam===fam && !e.custom);
     const shown = list.filter(([,e])=>!q || e.label.toLowerCase().includes(q));
@@ -493,11 +555,11 @@ function renderPalette(){
     const open = q ? true : famOpen.has(fam);
     const btns = shown.map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${e.label}</button>`).join("");
     return `<div class="pgroup ${open?"open":""}">
-      <div class="pgrouplab" style="color:${FAM[fam].color}" onclick="toggleFam('${fam}')"><span class="arr">${open?"▾":"▸"}</span>${FAM[fam].label}<span class="cnt">${list.length}</span></div>
+      <div class="pgrouplab" style="color:${FAM[fam].color}" onclick="toggleFam('${fam}')"><span class="arr">${open?"▾":"▸"}</span>${L(FAM[fam].label)}<span class="cnt">${list.length}</span></div>
       <div class="pbtns">${btns}</div></div>`;
   }).join("");
   document.getElementById("palette").innerHTML =
-    `<input id="palfilter" class="palfilter" placeholder="搜索协议…" value="${palFilter}" oninput="filterPal(this.value)">` + groups;
+    `<input id="palfilter" class="palfilter" placeholder="${T("searchPh")}" value="${palFilter}" oninput="filterPal(this.value)">` + groups;
 }
 function candidateFams(){
   // Which families can legally follow the stack top: the families of every
@@ -519,7 +581,7 @@ function filterPal(v){
   if(inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); }
 }
 function addCustom(){
-  const n = +prompt("自定义层长度(字节)","12"); if(!n||n<1) return;
+  const n = +prompt(T("customPrompt"),"12"); if(!n||n<1) return;
   stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; refreshFams(); renderAll();
 }
 function cellHTML(layer, li, f, it, grid){
@@ -527,18 +589,18 @@ function cellHTML(layer, li, f, it, grid){
   const width = it.width;
   const style = grid ? `grid-column:${it.col+1}/span ${width};` : "";
   if(f.excl && !f.excl.primitive)
-    return `<div class="pc excl" title="${f.label}: ${f.excl.reason} — 常量,不可过滤" style="${style}">
+    return `<div class="pc excl" title="${f.label}: ${L(f.excl.reason)} — ${T("exclConst")}" style="${style}">
       <span>🔒 ${f.label}</span><span class="bw">${width}b</span></div>`;
 
   const isEd = editing && editing.uid===layer.uid && editing.fid===f.id;
   const sel = sels.find(s=>s.uid===layer.uid && s.fid===f.id);
   const tip = `${f.label} · 偏移 ${f.off}B · ${width}bit · ${f.kind}`
-    + (f.excl && f.excl.primitive ? `；原生输出「${f.excl.primitive}」，钻取输出字节窗口` : "")
-    + (f.kind==="enum" ? "；点击下拉选择" : f.kind==="bitset" ? "；点击字母位直接开关" : "；双击直接输入");
+    + (f.excl && f.excl.primitive ? `; ${T("prim1")}${f.excl.primitive}${T("prim2")}` : "")
+    + (f.kind==="enum" ? T("clickDd") : f.kind==="bitset" ? T("letTgl") : T("dblIn"));
   const pb = (f.excl && f.excl.primitive) ? `<span class="pb">原语</span>` : "";
 
   if(isEd && (f.kind==="number"||f.kind==="ipv4"||f.kind==="ipv6"||f.kind==="mac")){
-    const ph = f.kind==="ipv4"?"192.0.2.1":f.kind==="ipv6"?"2001:db8::1":f.kind==="mac"?"aa:bb:cc:dd:ee:ff":"数值";
+    const ph = f.kind==="ipv4"?"192.0.2.1":f.kind==="ipv6"?"2001:db8::1":f.kind==="mac"?"aa:bb:cc:dd:ee:ff":T("value");
     return `<div class="pc editing ${on?"on":""}" style="${style}" title="${tip}">
       <input id="cellEdit" value="${sel?sel.dispVal:""}" placeholder="${ph}" spellcheck="false"
         onkeydown="cellKey(event)" onblur="cellDone()"
@@ -579,11 +641,11 @@ function gridHTML(layer, li, e){
       : "";
     gut += `<span${ruler?` style="height:${38+32}px"`:""}>${r.byte ?? ""}</span>`;
     if(r.exLabel){
-      body += `<div class="pfullrow"><div class="pc excl" title="${r.reason} — 不可过滤">${r.exLabel}</div></div>`;
+      body += `<div class="pfullrow"><div class="pc excl" title="${L(r.reason)} — ${T("notFilterable")}">${r.exLabel}</div></div>`;
       return;
     }
     if(r.tailRow){
-      body += `<div class="pfullrow"><div class="pc tail" title="${e.tail.note}">🔒 ${e.tail.label || "Options + Padding"}（变长）</div></div>`;
+      body += `<div class="pfullrow"><div class="pc tail" title="${L(e.tail.note)}">🔒 ${L(e.tail.label) || "Options + Padding"}（${T("varLen")}）</div></div>`;
       return;
     }
     const cells = r.items.map(it=>cellHTML(layer, li, it.f, it, r.grid)).join("");
@@ -654,7 +716,7 @@ function structWarnings(){
     if(!target || !ENTRIES[target]) continue;
     const next = stack[li+1];
     if(next && next.eid!==target)
-      out.push({warn:true, m:`${e.label}.${f.label}=${s.dispVal} 指向 ${ENTRIES[target].label},下一层却是 ${ENTRIES[next.eid].label}`});
+      out.push({warn:true, m:T("warnMis")(e.label, f.label, s.dispVal) + " → " + ENTRIES[target].label + T("warnTail") + ENTRIES[next.eid].label});
   }
   return out;
 }
@@ -684,10 +746,10 @@ function layerHTML(s, i, ti, extra){
   const e = ENTRIES[s.eid], drill = ti>=0 && i>ti;
   const body = e.fields.length
     ? gridHTML(s, i, e)
-    : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">自定义层无字段,作用是推进标尺</div>`;
+    : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">${T("noFields")}</div>`;
   return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${FAM[e.fam].color}" onclick="layerClick(${s.uid})">
     <div class="lhead"><b>${e.label}</b>
-      <span class="meta">${s.len}B · 累计偏移 ${prefix(i)}${drill?" · 钻取层":""}${e.tunnel?" · 隧道":""}</span>
+      <span class="meta">${s.len}B · ${T("offset")} ${prefix(i)}${drill?T("drillL"):""}${e.tunnel?T("tunnelL"):""}</span>
       <span class="del" onclick="event.stopPropagation(); delLayer(${s.uid})">×</span>
     </div>
     ${body}${extra||""}
@@ -710,9 +772,9 @@ function renderStack(){
       // The inner packet is the tunnel's PAYLOAD: nest it inside the tunnel's
       // own frame, like the textbook VXLAN figure (inner frame inside the envelope).
       const inner = stack.slice(ti+1).map((s,j)=>layerHTML(s, ti+1+j, ti)).join("")
-        || `<div style="padding:10px; color:var(--muted); font-size:12px">尚无内层报文 — 继续向上方添加积木,它们会成为隧道载荷</div>`;
+        || `<div style="padding:10px; color:var(--muted); font-size:12px">${T("innerEmpty")}</div>`;
       const wrap = `<div class="innerbox" style="--tc:${FAM[e.fam].color}">
-        <div class="innerlab">📦 内层报文 · ${e.label} 载荷（钻取:绝对偏移 + 守卫）</div>${inner}</div>`;
+        <div class="innerlab">${T("inner").replace("${label}", e.label)}</div>${inner}</div>`;
       html += layerHTML(stack[i], i, ti, wrap);
       return finish(html);
     }
@@ -721,45 +783,30 @@ function renderStack(){
   return finish(html);
 }
 function finish(html){
-  document.getElementById("stack").innerHTML = html || `<div style="padding:20px;color:var(--muted)">从上方积木添加层…</div>`;
-  document.getElementById("total").textContent = stack.length? `报文总长 ${prefix(stack.length)} 字节` : "";
+  document.getElementById("stack").innerHTML = html || `<div style="padding:20px;color:var(--muted)">${T("emptyStack")}</div>`;
+  document.getElementById("total").textContent = stack.length? T("total")(prefix(stack.length)) : "";
 }
 function renderChips(){
   const w = structWarnings().map(x=>`<span class="chip ${x.warn?"warn":"hint"}" title="${x.warn?"结构不符:按此封装,该条件永不匹配":"结构提示"}">${x.warn?"⚠":"💡"} ${x.m}</span>`);
-  const g = guards().map(x=>`<span class="chip guard" title="守卫子句:封装不符则整条安全不匹配">🛡 ${x.t}: <code>${x.e}</code></span>`);
+  const g = guards().map(x=>`<span class="chip guard">🛡 ${x.t}: <code>${x.e}</code></span>`);
   const c = sels.map((s,i)=>{
     const layer = stack.find(x=>x.uid===s.uid); if(!layer) return "";
     const e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===s.fid);
     return `<span class="chip field">${e.label}.${f.label} = ${s.dispVal} <span class="x" onclick="sels.splice(${i},1);renderAll()">×</span></span>`;
   }).join("");
-  document.getElementById("chips").innerHTML = (w.join("")+g.join("")+c) || `<span style="color:var(--muted);font-size:12px">尚未选择字段</span>`;
+  document.getElementById("chips").innerHTML = (w.join("")+g.join("")+c) || `<span style="color:var(--muted);font-size:12px">${T("noneYet")}</span>`;
 }
 function renderExpr(){
   const ex = compile();
-  document.getElementById("expr").textContent = ex ?? "尚未选择字段";
+  document.getElementById("expr").textContent = ex ?? T("noneYet");
   const ti = tunnelIdx();
   const drill = sels.some(s=>{const i=stack.findIndex(x=>x.uid===s.uid); return ti>=0 && i>ti;});
   const badge = document.getElementById("modeBadge");
   badge.className = "mode "+(drill?"drill":"native");
-  badge.textContent = drill?"钻取模式(绝对偏移+守卫)":"原生模式(关键字锚点)";
+  badge.textContent = drill?T("modeDrill"):T("modeNative");
   document.getElementById("exprNote").textContent = ex ? (ti>=0
-    ? "钻取模式:绝对偏移由累计标尺计算;守卫子句校验声明的封装,错配安全漏报、永不误匹配。"
-    : "原生模式:关键字锚点/原语,libpcap 自动处理外层 IHL/VLAN。") : "";
-}
-/* ---------- presets ---------- */
-function presetDrill(){
-  stack=[]; sels=[]; editing=null; uidSeq=0;
-  ["ether","ipv4","udp","vxlan","ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
-  sels.push({uid:stack[3].uid, fid:"vni", val:100, dispVal:"100"});
-  sels.push({uid:stack[6].uid, fid:"dport", val:443, dispVal:"443"});
-  selLayer = stack[6].uid; refreshFams(); renderAll();
-}
-function presetNative(){
-  stack=[]; sels=[]; editing=null; uidSeq=0;
-  ["ether","ipv4","tcp"].forEach(eid=>stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len}));
-  sels.push({uid:stack[1].uid, fid:"dst", val:0, dispVal:"192.0.2.2"});
-  sels.push({uid:stack[2].uid, fid:"flags", val:2, bitMask:2, dispVal:"SYN"});
-  selLayer = stack[2].uid; refreshFams(); renderAll();
+    ? T("noteDrill")
+    : T("noteNative")) : "";
 }
 renderAll();   // start empty: build from the palette
 </script>
