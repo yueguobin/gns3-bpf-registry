@@ -15,6 +15,8 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 - `vectors/golden.json`: generated input-to-expression vectors. The TypeScript compiler in `gns3-web-ui` must match these strings byte for byte.
 - `recipes/*.json`: hand-maintained per-protocol packet stacks and per-tool tables (probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `tools/pktspec.py` builds packets from them.
 - `tools/`: the Python reference compiler and the verification toolchain.
+- `prototype/index.html`: the BPF Expression Visual Calculator, a dependency-free single-file page described below.
+- `.github/workflows/pages.yml`: publishes the prototype to GitHub Pages on every push to `main` that touches it.
 
 ## Consumer flow
 
@@ -26,16 +28,32 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 
 The web UI uses the same entry files and the golden vectors as the cross-language contract.
 
+## Visual calculator
+
+**<https://yueguobin.github.io/gns3-bpf-registry/>** — the BPF Expression Visual Calculator, a live prototype of the layer-stack filter builder specified in [docs/ui-contract.md](docs/ui-contract.md):
+
+- protocol bricks are stacked like Lego from a palette grouped by encapsulation family (link / network / transport / tunnel / application);
+- every header renders as the textbook RFC diagram: a 32-bit word grid derived purely from each field's `offset`/`mask` (fields never wrap mid-field; wide fields get their own row);
+- double-click a field to type a value, pick an enum, or toggle flag letters (TCP F/S/R/P/A/U/E/C, EIGRP I/C/R/E, …); values that name the next protocol (EtherType, IP proto, UDP/TCP port) grow or replace the following brick;
+- the compiled libpcap/tcpdump expression appears live, including locator clauses (`ip proto 89`, `udp port 520`, …), guard pins and the VLAN slot — byte-identical to `tools/bpf_compile.py` and checked with `tcpdump -d`.
+
+The prototype is a single `prototype/index.html` with no build step (open it directly to run locally); its protocol table mirrors the registry entries by hand, so new registry entries need a matching prototype update. English by default, 中文可选.
+
 ## Protocols
+
+18 entries, 100 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
-| arp | RFC 826 | 1 | ipv6 | RFC 8200 | 6 |
-| esp | RFC 4303 | 2 | ospf | RFC 2328 | 7 |
+| arp | RFC 826 | 9 | ipv6 | RFC 8200 | 6 |
+| bgp | RFC 4271/2918 | 2 | lldp | IEEE 802.1AB | 2 |
+| dhcp | RFC 2131/2132 | 12 | ospf | RFC 2328 | 7 |
+| eigrp | RFC 7868 | 8 | rip | RFC 2453 | 3 |
+| esp | RFC 4303 | 2 | stp | IEEE 802.1D | 14 |
 | ethernet | IEEE 802.3 | 1 | tcp | RFC 9293 | 8 |
 | gre | RFC 2784/2890 | 5 | udp | RFC 768 | 2 |
 | icmp | RFC 792 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
-| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 2 |
+| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 3 |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -6,6 +6,11 @@ each header as colored field blocks (an interactive RFC diagram), and
 every field selection compiles to a tcpdump/libpcap expression without
 anyone counting bytes.
 
+A live prototype of this contract ships from this repository as the
+BPF Expression Visual Calculator:
+<https://yueguobin.github.io/gns3-bpf-registry/> (single-file
+`prototype/index.html`, deployed by `.github/workflows/pages.yml`).
+
 The rendering model is the textbook encapsulation anatomy: a vertical
 layer stack with a cumulative byte ruler on the side ("50 bytes of
 overhead"), Underlay/Overlay grouping, and per-layer detail panels in
