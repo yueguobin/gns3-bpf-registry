@@ -36,5 +36,19 @@
         }
       ]
     }
+  ],
+  "excluded": [
+    {
+      "id": "dst",
+      "offset": 0,
+      "length": 6,
+      "reason": "destination MAC; the ether dst primitive expresses it precisely"
+    },
+    {
+      "id": "src",
+      "offset": 6,
+      "length": 6,
+      "reason": "source MAC; the ether src primitive expresses it precisely"
+    }
   ]
 }

@@ -2,7 +2,7 @@
   "id": "arp",
   "label": "ARP",
   "rfc": ["826"],
-  "notes": "Ethernet/IPv4 ARP with the canonical 28-byte header (hardware length 6, protocol length 4). Only opcode is modelled: hardware/protocol type and the length fields are effectively constants with no filtering value, and the sender/target address fields fall under the registry's addresses invariant. Other link/network combinations and RARP (RFC 903) are out of scope.",
+  "notes": "Ethernet/IPv4 ARP with the canonical 28-byte header (hardware length 6, protocol length 4). All nine fields of the fixed header are modelled, byte for byte. The sender/target addresses are payload-embedded: host primitives do not reach them (libpcap's `host` special-cases ARP but cannot tell sender from target), so they are first-class ipv4/mac fields — a mac compiles to a 4+2 two-load conjunction, the same shape libpcap emits for `ether host`. Other link/network combinations and RARP (RFC 903) are out of scope.",
   "anchor": {
     "header": "arp",
     "base": 0
@@ -10,6 +10,50 @@
   "locator": [],
   "headerLength": 28,
   "fields": [
+    {
+      "id": "htype",
+      "label": "Hardware Type",
+      "offset": 0,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 826 §Packet Format",
+      "min": 0,
+      "max": 65535,
+      "description": "IANA ARP hardware type: 1 = 10Mb Ethernet, 6 = IEEE 802, 15 = Frame Relay, 16 = ATM, 17 = HDLC, 18 = Fibre Channel."
+    },
+    {
+      "id": "ptype",
+      "label": "Protocol Type",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 826 §Packet Format",
+      "min": 0,
+      "max": 65535,
+      "description": "Ethertype of the mapped protocol: 0x0800 = IPv4, 0x86dd = IPv6 (NDP is used instead in practice)."
+    },
+    {
+      "id": "hlen",
+      "label": "Hardware Address Length",
+      "offset": 4,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 826 §Packet Format",
+      "min": 0,
+      "max": 255,
+      "description": "Length of each hardware address in octets; 6 for Ethernet MAC."
+    },
+    {
+      "id": "plen",
+      "label": "Protocol Address Length",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 826 §Packet Format",
+      "min": 0,
+      "max": 255,
+      "description": "Length of each protocol address in octets; 4 for IPv4."
+    },
     {
       "id": "opcode",
       "label": "Opcode",
@@ -27,6 +71,39 @@
           "label": "Reply"
         }
       ]
+    },
+    {
+      "id": "sender_mac",
+      "label": "Sender Hardware Address",
+      "offset": 8,
+      "size": 6,
+      "kind": "mac",
+      "ref": "RFC 826 §Packet Format"
+    },
+    {
+      "id": "sender_ip",
+      "label": "Sender Protocol Address",
+      "offset": 14,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 826 §Packet Format"
+    },
+    {
+      "id": "target_mac",
+      "label": "Target Hardware Address",
+      "offset": 18,
+      "size": 6,
+      "kind": "mac",
+      "ref": "RFC 826 §Packet Format",
+      "description": "Zero in requests, the requester's MAC in replies."
+    },
+    {
+      "id": "target_ip",
+      "label": "Target Protocol Address",
+      "offset": 24,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 826 §Packet Format"
     }
   ]
 }
