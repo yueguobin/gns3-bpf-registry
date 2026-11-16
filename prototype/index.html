@@ -368,7 +368,7 @@ const ENTRIES = {
              {id:"ack", label:"Acknowledgment Number", off:12, len:4, kind:"number"},
              {id:"vrid", label:"Virtual Router ID", off:16, len:2, kind:"number", description:"0 = unicast address family, 1 = multicast"},
              {id:"asn", label:"AS Number", off:18, len:2, kind:"number", description:"16-bit AS of the sending system (config: router eigrp <asn>)"}]},
-  rip:    {label:"RIP", len:4, anchor:"udp", base:8, fam:"net", locator:"udp port 520",
+  rip:    {label:"RIP", len:4, anchor:"udp", base:8, fam:"app", locator:"udp port 520",
            tail:{label:{en:"Route Entries", zh:"路由表项"}, note:{en:"Variable-count 20-byte entries; the first RIPv2 entry may be an authentication record instead of a route, so nothing past the header is at a fixed offset.", zh:"变长 20 字节表项链;RIPv2 首个表项可能是认证记录而非路由,头部之后无固定偏移。"}},
            fields:[
              {id:"cmd", label:"Command", off:0, len:1, kind:"enum",
@@ -376,7 +376,7 @@ const ENTRIES = {
              {id:"ver", label:"Version", off:1, len:1, kind:"enum",
               values:[{v:1,l:"RIPv1"},{v:2,l:"RIPv2"}]},
              {id:"zero", label:"Must be Zero", off:2, len:2, kind:"number"}]},
-  bgp:    {label:"BGP", len:19, anchor:"tcp", base:20, fam:"net", locator:"tcp port 179",
+  bgp:    {label:"BGP", len:19, anchor:"tcp", base:20, fam:"app", locator:"tcp port 179",
            excluded:[{off:0, len:16, label:"Marker",
              reason:{en:"16-byte all-ones marker; wider than the 4-byte BPF load window", zh:"16 字节全 1 标记;超出 4 字节 BPF 载入窗口"}}],
            tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"OPEN / UPDATE / NOTIFICATION / KEEPALIVE body: variable length. Base 20 assumes a TCP header without options.", zh:"OPEN/UPDATE/NOTIFICATION/KEEPALIVE 报文体:变长。基准 20 假设 TCP 头部无选项。"}},
