@@ -1,0 +1,61 @@
+{
+  "id": "ripng",
+  "label": "RIPng",
+  "rfc": [
+    "2080"
+  ],
+  "notes": "RIP next generation over UDP port 521, the IPv6 counterpart of RIP (the two share the 4-byte header layout). Only that fixed header is modelled: Command, Version and the must-be-zero word. Route Table Entries are variable-count 20-byte chains (IPv6 prefix, route tag, prefix length, metric), and the first RTE of a datagram may instead be a next-hop RTE (RFC 2080 section 2.1.1), so no byte past the header sits at a trustworthy fixed offset.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 521"
+  ],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "cmd",
+      "label": "Command",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2080 §2.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "Request"
+        },
+        {
+          "value": 2,
+          "label": "Response"
+        }
+      ]
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2080 §2.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "RIPng version 1 (RFC 2080)"
+        }
+      ]
+    },
+    {
+      "id": "must_zero",
+      "label": "Must be Zero",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2080 §2.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Unused; senders set it to zero, receivers must not rely on it."
+    }
+  ]
+}
