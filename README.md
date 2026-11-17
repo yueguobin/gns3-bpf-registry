@@ -41,7 +41,7 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-38 entries, 233 fields.
+39 entries, 239 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
@@ -63,7 +63,8 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | icmp | RFC 792 | 5 | udp | RFC 768 | 2 |
 | icmp6 | RFC 4443/4861 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
 | igmp | RFC 1112/2236/3376 | 4 | vrrp | RFC 3768 | 8 |
-| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 3 |
+| ikev2 | RFC 7296/3948 | 6 | vxlan | RFC 7348 | 3 |
+| ipv4 | RFC 791 | 10 | | | |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
