@@ -2993,6 +2993,50 @@
       "expect": "udp port 520 and udp[10:2] == 0"
     },
     {
+      "name": "ripng-command-response",
+      "entry": "ripng",
+      "select": [
+        {
+          "field": "cmd",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 521 and udp[8:1] == 0x2"
+    },
+    {
+      "name": "ripng-command-request",
+      "entry": "ripng",
+      "select": [
+        {
+          "field": "cmd",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 521 and udp[8:1] == 0x1"
+    },
+    {
+      "name": "ripng-version-1",
+      "entry": "ripng",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 521 and udp[9:1] == 0x1"
+    },
+    {
+      "name": "ripng-must-be-zero",
+      "entry": "ripng",
+      "select": [
+        {
+          "field": "must_zero",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 521 and udp[10:2] == 0"
+    },
+    {
       "name": "sctp-src-port-5000",
       "entry": "sctp",
       "select": [
