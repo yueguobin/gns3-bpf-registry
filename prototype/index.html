@@ -181,6 +181,7 @@ const STR = {
     notFilterable:"not filterable", exclConst:"constant, not filterable",
     prim1:"native emits \"", prim2:"\", drill emits the byte window",
     varLen:"variable", value:"value",
+    loadFail:"Cannot load registry/*.json next to the page.\nServe the repository over HTTP and open the page from there:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
   },
   zh:{
     title:"BPF 表达式可视化计算器",
@@ -205,6 +206,7 @@ const STR = {
     notFilterable:"不可过滤", exclConst:"常量,不可过滤",
     prim1:"原生输出「", prim2:"」,钻取输出字节窗口",
     varLen:"变长", value:"数值",
+    loadFail:"无法加载页面旁的 registry/*.json。\n请通过 HTTP 提供本仓库后再打开页面:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
   },
 };
 function T(k){ const v = STR[LANG] && STR[LANG][k]; return v===undefined ? (STR.en[k] ?? k) : v; }
@@ -232,14 +234,68 @@ const FAM = {
   app:    {color:"#f59e0b", label:{en:"Application", zh:"应用层"}},
   custom: {color:"#94a3b8", label:{en:"Custom", zh:"自定义"}},
 };
-const ENTRIES = {
-  ether:  {label:"Ethernet", len:14, anchor:"ether", base:0, fam:"link",
-           fields:[
-             {id:"dst", label:"Destination MAC", off:0, len:6, kind:"mac", excl:{reason:{en:"encapsulation address; primitives are exact", zh:"封装层地址,原语精确表达"}, primitive:"ether dst"}},
-             {id:"src", label:"Source MAC", off:6, len:6, kind:"mac", excl:{reason:{en:"encapsulation address; primitives are exact", zh:"封装层地址,原语精确表达"}, primitive:"ether src"}},
-             {id:"type", label:"EtherType", off:12, len:2, kind:"enum",
-              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"},{v:34984,l:"802.1Q"},{v:35020,l:"LLDP"}],
-              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp", 34984:"vlan", 35020:"lldp"}}]},
+/* ---------- registry-driven protocol table ----------
+   The bricks are derived from registry/*.json at runtime: field ids, labels,
+   offsets, masks, kinds, enum values, bit labels, locators and exclusion rows
+   all come from the registry — there is no hand-maintained mirror to drift.
+   What the registry deliberately does not carry stays in the UI overlay
+   below: palette family, successor linkage, tail notes, clickable primitive
+   cells for excluded addresses/ports, the GRE presence pin, display-only
+   enum additions, and the two synthetic bricks (the 802.1Q tag layout — the
+   registry models VLAN as a primitive — and the custom layer). */
+const UI = {
+  ethernet: {fam:"link",
+    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp"}},
+    enumAdds:{ether_type:[{v:35020, l:"LLDP"}]},
+    primitives:{dst:{p:"ether dst", kind:"mac", label:"Destination MAC"},
+                src:{p:"ether src", kind:"mac", label:"Source MAC"}}},
+  ipv4: {fam:"net",
+    successors:{protocol:{1:"icmp", 6:"tcp", 17:"udp", 47:"gre", 50:"esp", 88:"eigrp", 89:"ospf"}},
+    enumAdds:{protocol:[{v:88, l:"EIGRP"}]},
+    primitives:{src:{p:"src", kind:"ipv4", label:"Source Address"},
+                dst:{p:"dst", kind:"ipv4", label:"Destination Address"}},
+    tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when IHL>5 (variable). The drill guard pins IHL=5, so the region is absent and following offsets stay exact.", zh:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"}}},
+  ipv6: {fam:"net",
+    successors:{next_header:{6:"tcp", 17:"udp"}},
+    primitives:{src:{p:"src", kind:"ipv6", label:"Source Address"},
+                dst:{p:"dst", kind:"ipv6", label:"Destination Address"}},
+    tail:{label:{en:"Extension Headers", zh:"扩展头"}, note:{en:"Hop-by-hop / routing / fragment chains shift every following header; only the fixed 40-byte base header is modelled.", zh:"逐跳/路由/分片等扩展头链会移动其后所有头部;仅建模固定 40 字节基本头。"}}},
+  udp: {fam:"trans",
+    successors:{dst_port:{67:"dhcp", 68:"dhcp", 4789:"vxlan", 520:"rip"}},
+    primitives:{src_port:{p:"src port", kind:"number", label:"Src Port"},
+                dst_port:{p:"dst port", kind:"number", label:"Dst Port"}}},
+  tcp: {fam:"trans",
+    successors:{dst_port:{179:"bgp"}},
+    primitives:{src_port:{p:"src port", kind:"number", label:"Src Port"},
+                dst_port:{p:"dst port", kind:"number", label:"Dst Port"}},
+    tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when Data Offset>5 (variable). Without a data-offset pin, drill offsets of later layers assume the 20-byte minimum header.", zh:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"}}},
+  vxlan: {fam:"tunnel", tunnel:true},
+  arp:  {fam:"link"},
+  icmp: {fam:"net"},
+  esp:  {fam:"net",
+    tail:{label:{en:"Encrypted Payload", zh:"加密载荷"}, note:{en:"Everything after SPI/Seq is encrypted (payload+padding+ICV); no filterable fixed fields.", zh:"SPI/Seq 之后全部加密(载荷+填充+ICV),无可过滤的固定字段。"}}},
+  gre:  {fam:"tunnel", tunnel:true,
+    pin:"(ip[20:2] & 0xb000) == 0", pinYield:["c_bit", "k_bit", "s_bit"],
+    successors:{protocol:{2048:"ipv4", 34525:"ipv6", 25944:"ethernet"}}},
+  ospf: {fam:"net", kindOverride:{router_id:"ipv4", area_id:"ipv4"},
+    exclLabels:{auth_data:"Auth Data"}},
+  stp:  {fam:"link"},
+  lldp: {fam:"link", exclLabels:{tail:"TLV Chain"}},
+  dhcp: {fam:"app",
+    exclLabels:{chaddr_tail:"chaddr pad", sname:"Server Name", file:"Boot File Name"},
+    tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"After the magic cookie (0x63825363): a variable TLV option chain; option 53 (message type) has no fixed offset.", zh:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"}}},
+  eigrp: {fam:"net",
+    tail:{label:{en:"TLV Chain", zh:"TLV 链"}, note:{en:"Variable TLVs (parameters, sequence, routes) follow the header; their offsets drift with each TLV length.", zh:"头部之后为变长 TLV(参数/序列/路由);偏移随各 TLV 长度漂移。"}}},
+  rip:  {fam:"app",
+    tail:{label:{en:"Route Entries", zh:"路由表项"}, note:{en:"Variable-count 20-byte entries; the first RIPv2 entry may be an authentication record instead of a route, so nothing past the header is at a fixed offset.", zh:"变长 20 字节表项链;RIPv2 首个表项可能是认证记录而非路由,头部之后无固定偏移。"}}},
+  bgp:  {fam:"app",
+    exclLabels:{marker:"Marker"},
+    tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"OPEN / UPDATE / NOTIFICATION / KEEPALIVE body: variable length. Base 20 assumes a TCP header without options.", zh:"OPEN/UPDATE/NOTIFICATION/KEEPALIVE 报文体:变长。基准 20 假设 TCP 头部无选项。"}}},
+};
+
+/* Synthetic bricks the registry does not describe: the 802.1Q tag layout
+   (registry VLAN is a primitive-only entry) and the custom byte range. */
+const SYN = {
   vlan:   {label:"VLAN (802.1Q)", len:4, anchor:"ether", base:14, fam:"link",
            fields:[
              {id:"pcp", label:"PCP", off:0, win:2, mask:0xe000, shift:13, kind:"number"},
@@ -249,188 +305,66 @@ const ENTRIES = {
              {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
               values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
               successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
-  ipv4:   {label:"IPv4", len:20, anchor:"ip", base:0, fam:"net",
-           tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when IHL>5 (variable). The drill guard pins IHL=5, so the region is absent and following offsets stay exact.", zh:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"}},
-           fields:[
-             {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
-             {id:"ihl", label:"IHL", off:0, len:1, mask:0x0f, kind:"number"},
-             {id:"dscp", label:"DSCP", off:1, len:1, mask:0xfc, kind:"number"},
-             {id:"ecn", label:"ECN", off:1, len:1, mask:0x03, kind:"enum", values:[{v:0,l:"Non-ECT"},{v:1,l:"ECT(1)"},{v:2,l:"ECT(0)"},{v:3,l:"CE"}]},
-             {id:"len", label:"Total Length", off:2, len:2, kind:"number"},
-             {id:"id", label:"Identification", off:4, len:2, kind:"number"},
-             {id:"flags", label:"Flags", off:6, len:1, mask:0xe0, kind:"bitset", bits:[{m:0x80,l:"Rsvd"},{m:0x40,l:"DF"},{m:0x20,l:"MF"}]},
-             {id:"frag", label:"Fragment Offset", off:6, len:2, mask:0x1fff, kind:"number"},
-             {id:"ttl", label:"TTL", off:8, len:1, kind:"number"},
-             {id:"proto", label:"Protocol", off:9, len:1, kind:"enum",
-              values:[{v:1,l:"ICMP"},{v:6,l:"TCP"},{v:17,l:"UDP"},{v:47,l:"GRE"},{v:50,l:"ESP"},{v:88,l:"EIGRP"},{v:89,l:"OSPF"}],
-              successor:{1:"icmp", 6:"tcp", 17:"udp", 47:"gre", 50:"esp", 88:"eigrp", 89:"ospf"}},
-             {id:"sum", label:"Header Checksum", off:10, len:2, kind:"number"},
-             {id:"src", label:"Source Address", off:12, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
-             {id:"dst", label:"Destination Address", off:16, len:4, kind:"ipv4", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
-  ipv6:   {label:"IPv6", len:40, anchor:"ip6", base:0, fam:"net",
-           fields:[
-             {id:"ver", label:"Version", off:0, len:1, mask:0xf0, shift:4, kind:"number"},
-             {id:"tc", label:"Traffic Class", off:0, len:2, mask:0x0ff0, shift:4, kind:"number"},
-             {id:"fl", label:"Flow Label", off:0, len:4, mask:0x000fffff, kind:"number"},
-             {id:"plen", label:"Payload Length", off:4, len:2, kind:"number"},
-             {id:"nh", label:"Next Header", off:6, len:1, kind:"number", successor:{6:"tcp", 17:"udp"}},
-             {id:"hlim", label:"Hop Limit", off:7, len:1, kind:"number"},
-             {id:"src", label:"Source Address", off:8, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"src"}},
-             {id:"dst", label:"Destination Address", off:24, len:16, kind:"ipv6", excl:{reason:"封装层地址,原语精确表达", primitive:"dst"}}]},
-  udp:    {label:"UDP", len:8, anchor:"udp", base:0, fam:"trans",
-           fields:[
-             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:{en:"port primitive", zh:"端口原语"}, primitive:"src port"}},
-             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:{en:"port primitive", zh:"端口原语"}, primitive:"dst port"},
-              successor:{67:"dhcp", 68:"dhcp", 4789:"vxlan", 520:"rip"}},
-             {id:"len", label:"Length", off:4, len:2, kind:"number"},
-             {id:"sum", label:"Checksum", off:6, len:2, kind:"number"}]},
-  tcp:    {label:"TCP", len:20, anchor:"tcp", base:0, fam:"trans",
-           tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when Data Offset>5 (variable). Without a data-offset pin, drill offsets of later layers assume the 20-byte minimum header.", zh:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"}},
-           fields:[
-             {id:"sport", label:"Src Port", off:0, len:2, kind:"number", excl:{reason:"端口原语", primitive:"src port"}},
-             {id:"dport", label:"Dst Port", off:2, len:2, kind:"number", excl:{reason:"端口原语", primitive:"dst port"},
-              successor:{179:"bgp"}},
-             {id:"seq", label:"Sequence Number", off:4, len:4, kind:"number"},
-             {id:"ack", label:"Acknowledgment Number", off:8, len:4, kind:"number"},
-             {id:"doff", label:"Data Offset", off:12, len:1, mask:0xf0, shift:4, kind:"number"},
-             {id:"resv", label:"Reserved", off:12, len:1, mask:0x0e, kind:"number"},
-             {id:"ns", label:"NS", off:12, len:1, mask:0x01, kind:"bitset", bits:[{m:1,l:"NS"}]},
-             {id:"flags", label:"Flags", off:13, len:1, kind:"bitset", bits:[{m:1,l:"FIN"},{m:2,l:"SYN"},{m:4,l:"RST"},{m:8,l:"PSH"},{m:16,l:"ACK"},{m:32,l:"URG"},{m:64,l:"ECE"},{m:128,l:"CWR"}]},
-             {id:"win", label:"Window", off:14, len:2, kind:"number"},
-             {id:"sum", label:"Checksum", off:16, len:2, kind:"number"},
-             {id:"urg", label:"Urgent Pointer", off:18, len:2, kind:"number"}]},
-  vxlan:  {label:"VXLAN", len:8, anchor:"udp", base:8, fam:"tunnel", tunnel:true, locator:"udp port 4789",
-           fields:[
-             {id:"flags", label:"Flags", off:0, len:1, mask:0x08, kind:"bitset", bits:[{m:0x08,l:"I (Valid VNI)"}]},
-             {id:"rsv", label:"Reserved", off:1, len:3, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}},
-             {id:"vni", label:"VNI", off:4, len:3, win:4, mask:0xffffff00, shift:8, kind:"number"},
-             {id:"rsv2", label:"Reserved", off:7, len:1, kind:"number", excl:{reason:{en:"constant zero; no build kwarg", zh:"常量零,无构建入口"}}}]},
-  arp:    {label:"ARP", len:28, anchor:"arp", base:0, fam:"link",
-           fields:[
-             {id:"htype", label:"Hardware Type", off:0, len:2, kind:"number"},
-             {id:"ptype", label:"Protocol Type", off:2, len:2, kind:"number"},
-             {id:"hlen", label:"HW Size", off:4, len:1, kind:"number"},
-             {id:"plen", label:"Proto Size", off:5, len:1, kind:"number"},
-             {id:"opcode", label:"Opcode", off:6, len:2, kind:"enum", values:[{v:1,l:"Request"},{v:2,l:"Reply"}]},
-             {id:"smac", label:"Sender MAC", off:8, len:6, kind:"mac"},
-             {id:"sip", label:"Sender IP", off:14, len:4, kind:"ipv4"},
-             {id:"tmac", label:"Target MAC", off:18, len:6, kind:"mac"},
-             {id:"tip", label:"Target IP", off:24, len:4, kind:"ipv4"}]},
-  icmp:   {label:"ICMP", len:8, anchor:"icmp", base:0, fam:"net",
-           fields:[
-             {id:"type", label:"Type", off:0, len:1, kind:"enum", values:[
-               {v:0,l:"Echo Reply"},{v:3,l:"Destination Unreachable"},{v:4,l:"Source Quench"},{v:5,l:"Redirect"},
-               {v:8,l:"Echo Request"},{v:11,l:"Time Exceeded"},{v:12,l:"Parameter Problem"},
-               {v:13,l:"Timestamp Request"},{v:14,l:"Timestamp Reply"},
-               {v:15,l:"Information Request"},{v:16,l:"Information Reply"}]},
-             {id:"code", label:"Code", off:1, len:1, kind:"number"},
-             {id:"sum", label:"Checksum", off:2, len:2, kind:"number"},
-             {id:"ident", label:"Identifier", off:4, len:2, kind:"number"},
-             {id:"seq", label:"Sequence Number", off:6, len:2, kind:"number"}]},
-  esp:    {label:"ESP", len:8, anchor:"ip", base:20, fam:"net", locator:"ip proto 50",
-           tail:{label:{en:"Encrypted Payload", zh:"加密载荷"}, note:{en:"Everything after SPI/Seq is encrypted (payload+padding+ICV); no filterable fixed fields.", zh:"SPI/Seq 之后全部加密(载荷+填充+ICV),无可过滤的固定字段。"}},
-           fields:[
-             {id:"spi", label:"Security Parameters Index", off:0, len:4, kind:"number"},
-             {id:"seq", label:"Sequence Number", off:4, len:4, kind:"number"}]},
-  gre:    {label:"GRE", len:4, anchor:"ip", base:20, fam:"tunnel", tunnel:true, locator:"ip proto 47",
-           pin:"(ip[20:2] & 0xb000) == 0", pinLabel:"GRE C/K/S = 0",
-           fields:[
-             {id:"flags", label:"Flags", off:0, len:2, mask:0xb000, kind:"bitset",
-              bits:[{m:0x8000,l:"C (Checksum Present)"},{m:0x2000,l:"K (Key Present)"},{m:0x1000,l:"S (Seq Present)"}]},
-             {id:"ver", label:"Version", off:0, len:2, mask:0x0007, kind:"number"},
-             {id:"proto", label:"Protocol Type", off:2, len:2, kind:"enum",
-              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:25944,l:"Transparent Ethernet Bridging"},{v:34887,l:"MPLS Unicast"}],
-              successor:{2048:"ipv4", 34525:"ipv6", 25944:"ether"}}]},
-  ospf:   {label:"OSPF", len:24, anchor:"ip", base:20, fam:"net", locator:"ip proto 89",
-           excluded:[{off:16, len:8, label:"Auth Data",
-             reason:{en:"64-bit authentication payload (password or digest); opaque bytes beyond the 4-byte BPF load window", zh:"64-bit 认证载荷(明文口令或密码学摘要);不透明字节,且超出 4 字节 BPF 载入窗口"}}],
-           fields:[
-             {id:"ver", label:"Version", off:0, len:1, kind:"number"},
-             {id:"type", label:"Type", off:1, len:1, kind:"enum", values:[
-               {v:1,l:"Hello"},{v:2,l:"Database Description"},{v:3,l:"Link State Request"},
-               {v:4,l:"Link State Update"},{v:5,l:"Link State Acknowledgment"}]},
-             {id:"plen", label:"Packet Length", off:2, len:2, kind:"number"},
-             {id:"rtrid", label:"Router ID", off:4, len:4, kind:"ipv4"},
-             {id:"areaid", label:"Area ID", off:8, len:4, kind:"ipv4"},
-             {id:"sum", label:"Checksum", off:12, len:2, kind:"number"},
-             {id:"autype", label:"Auth Type", off:14, len:2, kind:"enum",
-              values:[{v:0,l:"Null"},{v:1,l:"Simple Password"},{v:2,l:"Cryptographic"}]}]},
-  eigrp:  {label:"EIGRP", len:20, anchor:"ip", base:20, fam:"net", locator:"ip proto 88",
-           tail:{label:{en:"TLV Chain", zh:"TLV 链"}, note:{en:"Variable TLVs (parameters, sequence, routes) follow the header; their offsets drift with each TLV length.", zh:"头部之后为变长 TLV(参数/序列/路由);偏移随各 TLV 长度漂移。"}},
-           fields:[
-             {id:"ver", label:"Version", off:0, len:1, kind:"number", description:"Header format version; 2 in current deployments"},
-             {id:"opcode", label:"Opcode", off:1, len:1, kind:"enum", values:[
-               {v:1,l:"Update"},{v:2,l:"Request"},{v:3,l:"Query"},{v:4,l:"Reply"},{v:5,l:"Hello"},{v:10,l:"SIA-Query"},{v:11,l:"SIA-Reply"}]},
-             {id:"sum", label:"Checksum", off:2, len:2, kind:"number"},
-             {id:"flags", label:"Flags", off:4, len:4, kind:"bitset",
-              bits:[{m:1,l:"INIT"},{m:2,l:"CR"},{m:4,l:"RS"},{m:8,l:"EOT"}]},
-             {id:"seq", label:"Sequence Number", off:8, len:4, kind:"number"},
-             {id:"ack", label:"Acknowledgment Number", off:12, len:4, kind:"number"},
-             {id:"vrid", label:"Virtual Router ID", off:16, len:2, kind:"number", description:"0 = unicast address family, 1 = multicast"},
-             {id:"asn", label:"AS Number", off:18, len:2, kind:"number", description:"16-bit AS of the sending system (config: router eigrp <asn>)"}]},
-  rip:    {label:"RIP", len:4, anchor:"udp", base:8, fam:"app", locator:"udp port 520",
-           tail:{label:{en:"Route Entries", zh:"路由表项"}, note:{en:"Variable-count 20-byte entries; the first RIPv2 entry may be an authentication record instead of a route, so nothing past the header is at a fixed offset.", zh:"变长 20 字节表项链;RIPv2 首个表项可能是认证记录而非路由,头部之后无固定偏移。"}},
-           fields:[
-             {id:"cmd", label:"Command", off:0, len:1, kind:"enum",
-              values:[{v:1,l:"Request"},{v:2,l:"Response"}]},
-             {id:"ver", label:"Version", off:1, len:1, kind:"enum",
-              values:[{v:1,l:"RIPv1"},{v:2,l:"RIPv2"}]},
-             {id:"zero", label:"Must be Zero", off:2, len:2, kind:"number"}]},
-  bgp:    {label:"BGP", len:19, anchor:"tcp", base:20, fam:"app", locator:"tcp port 179",
-           excluded:[{off:0, len:16, label:"Marker",
-             reason:{en:"16-byte all-ones marker; wider than the 4-byte BPF load window", zh:"16 字节全 1 标记;超出 4 字节 BPF 载入窗口"}}],
-           tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"OPEN / UPDATE / NOTIFICATION / KEEPALIVE body: variable length. Base 20 assumes a TCP header without options.", zh:"OPEN/UPDATE/NOTIFICATION/KEEPALIVE 报文体:变长。基准 20 假设 TCP 头部无选项。"}},
-           fields:[
-             {id:"len", label:"Total Message Length", off:16, len:2, kind:"number", description:"Including the 19-byte header; 19 for a bare KEEPALIVE"},
-             {id:"type", label:"Message Type", off:18, len:1, kind:"enum",
-              values:[{v:1,l:"OPEN"},{v:2,l:"UPDATE"},{v:3,l:"NOTIFICATION"},{v:4,l:"KEEPALIVE"},{v:5,l:"ROUTE-REFRESH"}]}]},
-  stp:    {label:"STP", len:35, anchor:"ether", base:17, fam:"link", locator:"ether[14:2] = 0x4242",
-           fields:[
-             {id:"protoid", label:"Protocol ID", off:0, len:2, kind:"number"},
-             {id:"ver", label:"Version", off:2, len:1, kind:"enum", values:[{v:0,l:"STP"},{v:2,l:"RSTP"},{v:3,l:"MSTP"}]},
-             {id:"bpdutype", label:"BPDU Type", off:3, len:1, kind:"enum",
-              values:[{v:0,l:"Configuration"},{v:2,l:"Rapid"},{v:128,l:"TCN"}]},
-             {id:"flags", label:"Flags", off:4, len:1, kind:"bitset", bits:[
-               {m:1,l:"TC"},{m:2,l:"Proposal"},{m:4,l:"Learning"},{m:8,l:"Forwarding"},{m:64,l:"Agreement"},{m:128,l:"TCA"}]},
-             {id:"rootprio", label:"Root Bridge Priority", off:5, len:2, kind:"number"},
-             {id:"rootmac", label:"Root Mac", off:7, len:6, kind:"mac"},
-             {id:"rootcost", label:"Root Path Cost", off:13, len:4, kind:"number"},
-             {id:"brprio", label:"Bridge Priority", off:17, len:2, kind:"number"},
-             {id:"brmac", label:"Bridge Mac", off:19, len:6, kind:"mac"},
-             {id:"portid", label:"Port ID", off:25, len:2, kind:"number", description:"Port priority (high nibble; config 128 = wire 0x8) + port number"},
-             {id:"age", label:"Message Age", off:27, len:2, kind:"number"},
-             {id:"maxage", label:"Max Age", off:29, len:2, kind:"number"},
-             {id:"hello", label:"Hello Time", off:31, len:2, kind:"number"},
-             {id:"fwd", label:"Forward Delay", off:33, len:2, kind:"number"}]},
-  lldp:   {label:"LLDP", len:22, anchor:"ether", base:14, fam:"link", locator:"ether proto 35020",
-           excluded:[{off:3, len:19, label:"TLV chain",
-             reason:{en:"chassis ID value (variable) and the Port ID/TTL/End TLVs; offsets drift with the chassis length, only the first TLV header is fixed", zh:"chassis ID 值(变长)与其后的 Port ID/TTL/End TLV;偏移随 chassis 长度漂移,只有第一个 TLV 头固定"}}],
-           fields:[
-             {id:"chlen", label:"Chassis ID Length", off:0, len:2, mask:0x1ff, kind:"number"},
-             {id:"chsub", label:"Chassis ID Subtype", off:2, len:1, kind:"enum", values:[
-               {v:1,l:"Chassis Component"},{v:2,l:"Interface Alias"},{v:3,l:"Port Component"},
-               {v:4,l:"MAC Address"},{v:5,l:"Network Address"},{v:6,l:"Interface Name"},{v:7,l:"Locally Assigned"}]}]},
-  dhcp:   {label:"DHCP", len:236, anchor:"udp", base:8, fam:"app", locator:["udp port 67","udp port 68"],
-           excluded:[
-             {off:34, len:10, label:"chaddr pad", reason:{en:"zero padding after the 6-byte chaddr MAC", zh:"chaddr 6 字节 MAC 之后的补零"}},
-             {off:44, len:64, label:"Server Name", reason:{en:"64-byte server-name string; no field semantics", zh:"64 字节服务器名字符串,无字段语义"}},
-             {off:108, len:128, label:"Boot File Name", reason:{en:"128-byte boot-file-name string; no field semantics", zh:"128 字节引导文件名字符串,无字段语义"}}],
-           tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"After the magic cookie (0x63825363): a variable TLV option chain; option 53 (message type) has no fixed offset.", zh:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"}},
-           fields:[
-             {id:"op", label:"Op Code", off:0, len:1, kind:"enum", values:[{v:1,l:"BOOTREQUEST"},{v:2,l:"BOOTREPLY"}]},
-             {id:"htype", label:"HW Address Type", off:1, len:1, kind:"number"},
-             {id:"hlen", label:"HW Address Length", off:2, len:1, kind:"number"},
-             {id:"hops", label:"Hops", off:3, len:1, kind:"number"},
-             {id:"xid", label:"Transaction ID", off:4, len:4, kind:"number"},
-             {id:"secs", label:"Seconds", off:8, len:2, kind:"number"},
-             {id:"flags", label:"Flags", off:10, len:2, kind:"bitset", bits:[{m:32768,l:"Broadcast"}]},
-             {id:"ciaddr", label:"Client IP", off:12, len:4, kind:"ipv4"},
-             {id:"yiaddr", label:"Your IP", off:16, len:4, kind:"ipv4"},
-             {id:"siaddr", label:"Server IP", off:20, len:4, kind:"ipv4"},
-             {id:"giaddr", label:"Gateway IP", off:24, len:4, kind:"ipv4"},
-             {id:"chaddr", label:"Client HW Address", off:28, len:6, kind:"mac"}]},
-  custom: {label:"自定义层", len:12, anchor:null, fam:"custom", custom:true, fields:[]},
+  custom: {label:{en:"Custom", zh:"自定义层"}, len:12, anchor:null, fam:"custom", custom:true, fields:[]},
 };
+
+const hexInt = v => typeof v==="string" ? parseInt(v, 16) : v;
+
+function regToEntry(reg){
+  const ui = UI[reg.id] || {};
+  const fields = reg.fields.map(f=>{
+    const fo = {id:f.id, label:f.label, off:f.offset, len:f.size, kind:f.kind, emitKind:f.kind};
+    if(f.mask){ fo.mask = hexInt(f.mask); fo.win = f.size; fo.shift = f.shift || 0; }
+    if(f.min != null) fo.min = f.min;
+    if(f.max != null) fo.max = f.max;
+    if(ui.kindOverride && ui.kindOverride[f.id]) fo.kind = ui.kindOverride[f.id];  // input flavor only
+    if(f.values){
+      fo.values = f.values.map(v=>({v:v.value, l:v.label}));
+      if(ui.enumAdds && ui.enumAdds[f.id]) fo.values = fo.values.concat(ui.enumAdds[f.id]);
+    }
+    if(f.bits) fo.bits = f.bits.map(b=>({m:b.mask, l:b.label}));
+    if(f.emit) fo.emit = f.emit;
+    if(f.description) fo.description = f.description;
+    if(ui.successors && ui.successors[f.id]) fo.successor = ui.successors[f.id];
+    return fo;
+  });
+  const excluded = [];
+  for(const x of reg.excluded || []){
+    const p = ui.primitives && ui.primitives[x.id];
+    if(p){
+      // clickable primitive cell placed at the excluded bytes (port / host)
+      const pf = {id:x.id, label:p.label || x.id, off:x.offset, len:x.length,
+                  kind:p.kind, emitKind:p.kind,
+                  excl:{reason:x.reason, primitive:p.p}};
+      if(ui.successors && ui.successors[x.id]) pf.successor = ui.successors[x.id];
+      fields.push(pf);
+    }else{
+      const label = (ui.exclLabels && ui.exclLabels[x.id]) || x.id;
+      excluded.push({off:x.offset, len:x.length, label, reason:x.reason});
+    }
+  }
+  fields.sort((a,b)=>a.off-b.off);   // stable: registry declaration order wins offset ties
+  const e = {label:reg.label, len:reg.headerLength, anchor:reg.anchor.header, base:reg.anchor.base,
+             fam:ui.fam || "custom", fields, excluded};
+  if(reg.locator && reg.locator.length) e.locator = reg.locator;
+  if(ui.tail) e.tail = ui.tail;
+  if(ui.tunnel) e.tunnel = true;
+  if(ui.pin){ e.pin = ui.pin; e.pinYield = ui.pinYield || []; }
+  return e;
+}
+
+let ENTRIES = {};
+async function loadEntries(){
+  const manifest = await (await fetch("registry/manifest.json")).json();
+  const ids = Object.keys(manifest.files).sort();
+  for(const file of ids){
+    const reg = await (await fetch("registry/" + file)).json();
+    if(reg.id === "vlan") continue;             // primitive-only entry; the synthetic brick renders the tag
+    ENTRIES[reg.id] = regToEntry(reg);
+  }
+  ENTRIES.vlan = SYN.vlan;
+  ENTRIES.custom = SYN.custom;
+}
 /* One hue per brick: cells inherit the layer color (--lc, set on .lrow);
    field KIND no longer participates in coloring. */
 let stack = [], sels = [], editing = null;   // editing: {uid, fid}
@@ -484,16 +418,16 @@ function fieldClause(sel){
   else val = +sel.val;
   const kw = drill? "ether" : e.anchor;
   const o  = drill? prefix(li)+f.off : e.base+f.off;
-  if(f.mask){ const sh=f.shift||0; return `(${kw}[${o}:${win}] & ${hex(f.mask)}) == ${hex(val<<sh)}`; }
+  if(f.mask){ const sh=f.shift||0; return `(${kw}[${o}:${win}] & ${hex(f.mask)}) == ${hex(val*Math.pow(2,sh))}`; }
   if(f.kind==="bitset"){ const m=sel.bitMask; return `(${kw}[${o}:${win}] & ${hex(m)}) == ${hex(m)}`; }
-  return `${kw}[${o}:${win}] == ${f.kind==="number"?val:hex(val)}`;
+  return `${kw}[${o}:${win}] == ${(f.emitKind||f.kind)==="number"?val:hex(val)}`;
 }
 function guards(){
-  const ti = tunnelIdx(); if(ti<0) return [];
+  const ti = tunnelIdx(); if(ti<0 || stack.length<=ti+1) return [];   // guards protect inner layers only
   const g = [];
   const tun = ENTRIES[stack[ti].eid];
-  if(tun.locator) g.push({t:T("guard"), e:Array.isArray(tun.locator) ? "("+tun.locator.join(" or ")+")" : tun.locator});
-  if(tun.pin && !sels.some(s=>stack.findIndex(x=>x.uid===s.uid)===ti && s.fid==="flags"))
+  if(tun.locator) g.push({t:T("guard"), e:Array.isArray(tun.locator) ? (tun.locator.length===1 ? tun.locator[0] : "("+tun.locator.join(" or ")+")") : tun.locator});
+  if(tun.pin && !sels.some(s=>stack.findIndex(x=>x.uid===s.uid)===ti && tun.pinYield.includes(s.fid)))
     g.push({t:tun.pinLabel || T("optPin"), e:tun.pin});
   for(let i=ti+1;i<stack.length;i++)
     if(ENTRIES[stack[i].eid].anchor==="ip")
@@ -514,9 +448,10 @@ function compile(){
   // must carry their locator clause, or udp[N]/ip[N] would match ANY udp/ip
   // packet. Mirrors bpf_compile: single locator bare, several as (a or b).
   const locs = [];
+  const guarded = ti>=0 && stack.length>ti+1;       // inner layers: guards() carry the tunnel locator
   for(const s of sels){
     const li = stack.findIndex(x=>x.uid===s.uid);
-    if(li<0 || (ti>=0 && li>=ti)) continue;        // tunnel + payload: guards() carry the locator
+    if(li<0 || (ti>=0 && li>ti) || (guarded && li===ti)) continue;
     const e = ENTRIES[stack[li].eid];
     if(!e.locator) continue;
     const c = Array.isArray(e.locator)
@@ -524,9 +459,12 @@ function compile(){
       : e.locator;
     if(!locs.includes(c)) locs.push(c);
   }
-  for(const s of sels){
-    if(s===vsel) continue;                          // emitted below, in the VLAN slot
-    const c = fieldClause(s); if(c) clauses.push(c);
+  for(const sl of stack){                           // bpf_compile order: stack layers,
+    for(const f of ENTRIES[sl.eid].fields){         // registry declaration order within
+      const s = sels.find(x=>x.uid===sl.uid && x.fid===f.id);
+      if(!s || s===vsel) continue;                  // vsel is emitted below, in the VLAN slot
+      const c = fieldClause(s); if(c) clauses.push(c);
+    }
   }
   if(locs.length) clauses.unshift(...locs);
   if(vli>=0 && (clauses.length || vsel))
@@ -581,10 +519,10 @@ function renderPalette(){
         <div class="pbtns"><button style="--pc:${FAM.custom.color}" onclick="addCustom()">${T("customBtn")}</button></div></div>`;
     }
     const list = Object.entries(ENTRIES).filter(([,e])=>e.fam===fam && !e.custom);
-    const shown = list.filter(([,e])=>!q || e.label.toLowerCase().includes(q));
+    const shown = list.filter(([,e])=>!q || String(e.label).toLowerCase().includes(q));
     if(!shown.length) return "";
     const open = q ? true : famOpen.has(fam);
-    const btns = shown.map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${e.label}</button>`).join("");
+    const btns = shown.map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${L(e.label)}</button>`).join("");
     return `<div class="pgroup ${open?"open":""}">
       <div class="pgrouplab" style="color:${FAM[fam].color}" onclick="toggleFam('${fam}')"><span class="arr">${open?"▾":"▸"}</span>${L(FAM[fam].label)}<span class="cnt">${list.length}</span></div>
       <div class="pbtns">${btns}</div></div>`;
@@ -625,9 +563,11 @@ function cellHTML(layer, li, f, it, grid){
 
   const isEd = editing && editing.uid===layer.uid && editing.fid===f.id;
   const sel = sels.find(s=>s.uid===layer.uid && s.fid===f.id);
+  const tog = f.emitKind==="number" && f.mask && (f.mask & (f.mask-1))===0 && f.max<=1
+              && !f.excl;   // single-bit masked number (GRE C/K/S): letter toggle
   const tip = `${f.label} · 偏移 ${f.off}B · ${width}bit · ${f.kind}`
     + (f.excl && f.excl.primitive ? `; ${T("prim1")}${f.excl.primitive}${T("prim2")}` : "")
-    + (f.kind==="enum" ? T("clickDd") : f.kind==="bitset" ? T("letTgl") : T("dblIn"));
+    + (f.kind==="enum" ? T("clickDd") : (f.kind==="bitset"||tog) ? T("letTgl") : T("dblIn"));
   const pb = (f.excl && f.excl.primitive) ? `<span class="pb">原语</span>` : "";
 
   if(isEd && (f.kind==="number"||f.kind==="ipv4"||f.kind==="ipv6"||f.kind==="mac")){
@@ -648,13 +588,16 @@ function cellHTML(layer, li, f, it, grid){
   const mini = f.kind==="bitset" ? `<span class="mini">${f.bits.map(b=>
       `<i title="${b.l}" class="${sel&&sel.bitMask&b.m?"on":""}"
         onclick="event.stopPropagation(); toggleBit(${layer.uid},'${f.id}',${b.m})">${b.l[0]}</i>`).join("")}</span>` : "";
+  const tletter = (f.label.match(/\(([A-Za-z])\)/)||[null,"?"])[1];
+  const tmini = tog ? `<span class="mini"><i title="${f.label}" class="${sel&&sel.val===1?"on":""}"
+      onclick="event.stopPropagation(); toggleOne(${layer.uid},'${f.id}')">${tletter}</i></span>` : "";
   // value stays visible in the cell: the cell IS the "what am I filtering on" display
   const lbl = sel
-    ? `<span class="pv" title="${sel.dispVal}">${sel.dispVal}</span>${mini}<span class="pl">${pb?pb+" ":""}${f.label} · ${width}b</span>`
-    : `<span>${pb?pb+" ":""}${f.label}</span>${mini}<span class="bw">${width}b</span>`;
+    ? `<span class="pv" title="${sel.dispVal}">${sel.dispVal}</span>${mini}${tmini}<span class="pl">${pb?pb+" ":""}${f.label} · ${width}b</span>`
+    : `<span>${pb?pb+" ":""}${f.label}</span>${mini}${tmini}<span class="bw">${width}b</span>`;
   const act = f.kind==="enum"
     ? `onclick="pickField(${layer.uid},'${f.id}')"`
-    : (f.kind==="bitset" ? "" : `ondblclick="pickValue(${layer.uid},'${f.id}')"`);
+    : ((f.kind==="bitset"||tog) ? "" : `ondblclick="pickValue(${layer.uid},'${f.id}')"`);
   return `<div class="pc ${isEd?"editing":""} ${on?"on":""}" style="${style}" ${act} title="${tip}">${lbl}</div>`;
 }
 function gridHTML(layer, li, e){
@@ -739,8 +682,9 @@ function autoLink(uid, f){
 function structWarnings(){
   const out=[];
   const ti0 = tunnelIdx();
-  if(ti0>=0 && ENTRIES[stack[ti0].eid].pin
-     && sels.some(s=>s.uid===stack[ti0].uid && s.fid==="flags") && stack.length>ti0+1)
+  const tun0 = ti0>=0 ? ENTRIES[stack[ti0].eid] : null;
+  if(tun0 && tun0.pin && stack.length>ti0+1
+     && sels.some(s=>s.uid===stack[ti0].uid && tun0.pinYield.includes(s.fid)))
     out.push({warn:true, m:"GRE presence bits set: optional Checksum/Key/Seq fields shift the inner packet — offsets below assume the 4-byte base header"});
   for(const s of sels){
     const li = stack.findIndex(x=>x.uid===s.uid); if(li<0) continue;
@@ -751,7 +695,7 @@ function structWarnings(){
     if(!target || !ENTRIES[target]) continue;
     const next = stack[li+1];
     if(next && next.eid!==target)
-      out.push({warn:true, m:T("warnMis")(e.label, f.label, s.dispVal) + " → " + ENTRIES[target].label + T("warnTail") + ENTRIES[next.eid].label});
+      out.push({warn:true, m:T("warnMis")(L(e.label), f.label, s.dispVal) + " → " + L(ENTRIES[target].label) + T("warnTail") + L(ENTRIES[next.eid].label)});
   }
   return out;
 }
@@ -765,6 +709,15 @@ function toggleBit(uid, fid, m){    // letter boxes toggle directly: click = sel
     if(!nb) sels = sels.filter(s=>s!==sel);
     else{ sel.bitMask=nb; sel.val=nb; sel.dispVal=f.bits.filter(b=>nb&b.m).map(b=>b.l).join("+"); }
   }
+  renderAll();
+}
+function toggleOne(uid, fid){        // single-bit masked number (GRE C/K/S): click toggles the bit
+  const layer = stack.find(s=>s.uid===uid);
+  const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
+  const letter = (f.label.match(/\(([A-Za-z])\)/)||[null,"?"])[1];
+  let sel = sels.find(s=>s.uid===uid && s.fid===fid);
+  if(sel) sels = sels.filter(s=>s!==sel);
+  else sels.push({uid, fid, val:1, dispVal:letter});
   renderAll();
 }
 function cellKey(e){
@@ -783,7 +736,7 @@ function layerHTML(s, i, ti, extra){
     ? gridHTML(s, i, e)
     : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">${T("noFields")}</div>`;
   return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${FAM[e.fam].color}" onclick="layerClick(${s.uid})">
-    <div class="lhead"><b>${e.label}</b>
+    <div class="lhead"><b>${L(e.label)}</b>
       <span class="meta">${s.len}B · ${T("offset")} ${prefix(i)}${drill?T("drillL"):""}${e.tunnel?T("tunnelL"):""}</span>
       <span class="del" onclick="event.stopPropagation(); delLayer(${s.uid})">×</span>
     </div>
@@ -809,7 +762,7 @@ function renderStack(){
       const inner = stack.slice(ti+1).map((s,j)=>layerHTML(s, ti+1+j, ti)).join("")
         || `<div style="padding:10px; color:var(--muted); font-size:12px">${T("innerEmpty")}</div>`;
       const wrap = `<div class="innerbox" style="--tc:${FAM[e.fam].color}">
-        <div class="innerlab">${T("inner").replace("${label}", e.label)}</div>${inner}</div>`;
+        <div class="innerlab">${T("inner").replace("${label}", L(e.label))}</div>${inner}</div>`;
       html += layerHTML(stack[i], i, ti, wrap);
       return finish(html);
     }
@@ -827,7 +780,7 @@ function renderChips(){
   const c = sels.map((s,i)=>{
     const layer = stack.find(x=>x.uid===s.uid); if(!layer) return "";
     const e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===s.fid);
-    return `<span class="chip field">${e.label}.${f.label} = ${s.dispVal} <span class="x" onclick="sels.splice(${i},1);renderAll()">×</span></span>`;
+    return `<span class="chip field">${L(e.label)}.${f.label} = ${s.dispVal} <span class="x" onclick="sels.splice(${i},1);renderAll()">×</span></span>`;
   }).join("");
   document.getElementById("chips").innerHTML = (w.join("")+g.join("")+c) || `<span style="color:var(--muted);font-size:12px">${T("noneYet")}</span>`;
 }
@@ -843,7 +796,11 @@ function renderExpr(){
     ? T("noteDrill")
     : T("noteNative")) : "";
 }
-renderAll();   // start empty: build from the palette
+loadEntries().then(()=>renderAll()).catch(()=>{
+  // fetch needs HTTP (file:// refuses): tell the user how to serve the repo
+  document.getElementById("stack").innerHTML =
+    `<div style="padding:20px;color:#b91c1c;font-size:13px;white-space:pre-line">${T("loadFail")}</div>`;
+});
 </script>
 </body>
 </html>

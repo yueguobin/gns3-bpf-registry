@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Assemble site from the single-file prototype
-        run: mkdir -p _site && cp prototype/index.html _site/
+        run: mkdir -p _site && cp prototype/index.html _site/ && cp -r registry _site/registry
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

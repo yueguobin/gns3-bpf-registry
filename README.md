@@ -16,7 +16,7 @@ GNS3 users build packet filters from protocol fields such as TTL, TCP flags or t
 - `recipes/*.json`: hand-maintained per-protocol packet stacks and per-tool tables (probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `tools/pktspec.py` builds packets from them.
 - `tools/`: the Python reference compiler and the verification toolchain.
 - `prototype/index.html`: the BPF Expression Visual Calculator, a dependency-free single-file page described below.
-- `.github/workflows/pages.yml`: publishes the prototype to GitHub Pages on every push to `main` that touches it.
+- `.github/workflows/pages.yml`: publishes the prototype plus the registry JSON it loads to GitHub Pages on every push to `main` that touches them.
 
 ## Consumer flow
 
@@ -37,7 +37,7 @@ The web UI uses the same entry files and the golden vectors as the cross-languag
 - double-click a field to type a value, pick an enum, or toggle flag letters (TCP F/S/R/P/A/U/E/C, EIGRP I/C/R/E, …); values that name the next protocol (EtherType, IP proto, UDP/TCP port) grow or replace the following brick;
 - the compiled libpcap/tcpdump expression appears live, including locator clauses (`ip proto 89`, `udp port 520`, …), guard pins and the VLAN slot — byte-identical to `tools/bpf_compile.py` and checked with `tcpdump -d`.
 
-The prototype is a single `prototype/index.html` with no build step (open it directly to run locally); its protocol table mirrors the registry entries by hand, so new registry entries need a matching prototype update. English by default, 中文可选.
+The prototype is a single `prototype/index.html` with no build step; it loads `registry/*.json` at runtime, so the bricks always mirror the registry — a new entry appears on the page as soon as it is merged, with no hand-maintained copy to drift. Its compiled output is byte-identical to `tools/bpf_compile.py`, checked against every vector in `vectors/golden.json`. To run locally, serve the repository over HTTP (`python3 -m http.server`, then open `http://localhost:8000/prototype/`) — opening the file directly cannot fetch the registry. English by default, 中文可选.
 
 ## Protocols
 
