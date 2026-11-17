@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.21",
+  "registryVersion": "2026.11.22",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
@@ -20,6 +20,7 @@
     "icmp.json": "sha256:d5cafd6d4f0bbd86ef722c3504989aa99377f4c50e3fc030d9b9aca41d07b03a",
     "icmp6.json": "sha256:a2ee390a17f06d62e5e9d0e0fcd5a1406a473bed81ca02fa46c423b828496231",
     "igmp.json": "sha256:847d8a940d368715eb8bf606d563a357058903ba818749fa31cc6d4f42ea8bed",
+    "ikev2.json": "sha256:4ba4537449486576f92e451f35c48bb467fb4eee369f5f2d2a1916cefaaa1473",
     "ipv4.json": "sha256:2fc8f34f2f1abfebf99d096ea700eb5038b9d8d3662f3afa1a972761d6aaefaa",
     "ipv6.json": "sha256:6778da7a164ade0925a6f22361b115ba558225e9d07af2864b37891c0cf5d4be",
     "isis.json": "sha256:769b672fe73698dac9885740107d370191bb62c72016134b48edafefacc6bbcc",

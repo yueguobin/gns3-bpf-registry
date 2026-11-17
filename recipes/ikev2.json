@@ -1,0 +1,51 @@
+{
+  "id": "ikev2",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 500, "chksum": "$PIN"}},
+    {"layer": "IKEv2", "fields": {"init_SPI": "", "resp_SPI": "", "next_payload": 33, "version": 32, "exch_type": 34, "flags": 8, "id": 0, "length": 28}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 28,
+  "fieldMap": {"message_id": "id", "exchange_type": "exch_type"},
+  "probe": {
+    "next_payload": ["0xf", "0xf0"],
+    "version": ["0xf", "0xf0"],
+    "exchange_type": ["0xf", "0xf0"],
+    "flags": ["0xf", "0xf0"],
+    "message_id": ["0xf0f0f0f", "0xf0f0f0f0"],
+    "length": ["0xf0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "next_payload": "0x5a",
+    "version": "0x5a",
+    "exchange_type": "0x5a",
+    "flags": "0x5a",
+    "message_id": "0x5a5a5a5a",
+    "length": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "next_payload": [34, 33],
+    "version": [32, 16],
+    "exchange_type": [34, 35],
+    "flags": [8, 32],
+    "message_id": [0, 1],
+    "length": [28, 56]
+  },
+  "vectors": [
+    {"name": "ikev2-sa-init", "select": [{"field": "exchange_type", "value": 34}]},
+    {"name": "ikev2-ike-auth", "select": [{"field": "exchange_type", "value": 35}]},
+    {"name": "ikev2-create-child-sa", "select": [{"field": "exchange_type", "value": 36}]},
+    {"name": "ikev2-informational", "select": [{"field": "exchange_type", "value": 37}]},
+    {"name": "ikev2-next-payload-ke", "select": [{"field": "next_payload", "value": 34}]},
+    {"name": "ikev2-next-payload-sk", "select": [{"field": "next_payload", "value": 46}]},
+    {"name": "ikev2-next-payload-none", "select": [{"field": "next_payload", "value": 0}]},
+    {"name": "ikev2-version-2-0", "select": [{"field": "version", "value": 32}]},
+    {"name": "ikev2-version-1-0", "select": [{"field": "version", "value": 16}]},
+    {"name": "ikev2-flags-initiator", "select": [{"field": "flags", "flags": ["Initiator"]}]},
+    {"name": "ikev2-flags-response", "select": [{"field": "flags", "flags": ["Response"]}]},
+    {"name": "ikev2-message-id-0", "select": [{"field": "message_id", "value": 0}]},
+    {"name": "ikev2-length-28", "select": [{"field": "length", "value": 28}]}
+  ]
+}

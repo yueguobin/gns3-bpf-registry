@@ -1866,6 +1866,153 @@
       "expect": "ip proto 2 and ip[26:2] == 4660"
     },
     {
+      "name": "ikev2-sa-init",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 34
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x22"
+    },
+    {
+      "name": "ikev2-ike-auth",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 35
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x23"
+    },
+    {
+      "name": "ikev2-create-child-sa",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 36
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x24"
+    },
+    {
+      "name": "ikev2-informational",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 37
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x25"
+    },
+    {
+      "name": "ikev2-next-payload-ke",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 34
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x22"
+    },
+    {
+      "name": "ikev2-next-payload-sk",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 46
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x2e"
+    },
+    {
+      "name": "ikev2-next-payload-none",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x0"
+    },
+    {
+      "name": "ikev2-version-2-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "version",
+          "value": 32
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[25:1] == 0x20"
+    },
+    {
+      "name": "ikev2-version-1-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "version",
+          "value": 16
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[25:1] == 0x10"
+    },
+    {
+      "name": "ikev2-flags-initiator",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Initiator"
+          ]
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and (udp[27:1] & 0x8) == 0x8"
+    },
+    {
+      "name": "ikev2-flags-response",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Response"
+          ]
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and (udp[27:1] & 0x20) == 0x20"
+    },
+    {
+      "name": "ikev2-message-id-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "message_id",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[28:4] == 0"
+    },
+    {
+      "name": "ikev2-length-28",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "length",
+          "value": 28
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[32:4] == 28"
+    },
+    {
       "name": "ipv4-version-4",
       "entry": "ipv4",
       "select": [
