@@ -81,6 +81,7 @@ from scapy.fields import (
     IPField,
     IntField,
     MACField,
+    PacketListField,
     ShortField,
     StrFixedLenField,
     XShortField,
@@ -90,7 +91,13 @@ from scapy.layers.dhcp import BOOTP
 from scapy.layers.dhcp6 import DHCP6
 from scapy.layers.eap import EAPOL
 from scapy.layers.igmp import IGMP
-from scapy.layers.inet6 import ICMPv6EchoRequest
+from scapy.layers.inet6 import (
+    ICMPv6EchoRequest,
+    IP6ListField,
+    IPv6ExtHdrSegmentRouting,
+    IPv6ExtHdrSegmentRoutingTLV,
+    ipv6nh,
+)
 from scapy.layers.ipsec import AH
 from scapy.layers.ppp import PPPoED
 from scapy.layers.rip import RIP
@@ -302,6 +309,37 @@ class ISISHeader(Packet):
     ]
 
 
+class SRH(IPv6ExtHdrSegmentRouting):
+    """SRH fixed header per RFC 8754 section 2.
+
+    scapy models the Flags byte as six draft-ietf-spring-srh-06 bit
+    fields (Protected/OAM/Alert/HMAC and two reserved runs); RFC 8754
+    final leaves all 8 flag bits unused (its section 8.1 only creates
+    the registry), so this class exposes the byte as a single
+    ``flags`` field. The Segment List (16 bytes per segment) and the
+    TLV objects are variable-length and stay outside the field tables.
+    """
+
+    fields_desc = [
+        ByteEnumField("nh", 59, ipv6nh),
+        ByteField("len", None),
+        ByteField("type", 4),
+        ByteField("segleft", None),
+        ByteField("lastentry", None),
+        ByteField("flags", 0),
+        ShortField("tag", 0),
+        IP6ListField(
+            "addresses", ["::1"], count_from=lambda pkt: pkt.lastentry + 1
+        ),
+        PacketListField(
+            "tlv_objects",
+            [],
+            IPv6ExtHdrSegmentRoutingTLV,
+            length_from=lambda pkt: 8 * pkt.len - 16 * (pkt.lastentry + 1),
+        ),
+    ]
+
+
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
@@ -352,6 +390,7 @@ LAYERS = {
         RSVP,
         Raw,
         SCTP,
+        SRH,
         STP,
         TCP,
         UDP,
