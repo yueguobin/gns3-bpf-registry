@@ -1,0 +1,145 @@
+{
+  "id": "rsvp",
+  "label": "RSVP",
+  "rfc": [
+    "2205"
+  ],
+  "notes": "RSVP common header (8 bytes) directly over IP protocol 46, the signalling plane of IntServ and MPLS-TE (RSVP-TE, RFC 3209). Only the fixed common header is modelled: everything after byte 8 is a variable-count sequence of objects (Length/Class-Num/C-Type TLVs, RFC 2205 §3.1.2), so no byte past the header sits at a trustworthy fixed offset. The header flags nibble has no bits defined (reserved). Message types beyond RFC 2205's 1-7 are included from IANA: Bundle/ACK/Srefresh (RFC 2961 refresh reduction), Hello (RFC 3209) and Notify (RFC 3473); both are common in MPLS-TE captures.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": [
+    "ip proto 46"
+  ],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 15,
+      "description": "Protocol version number; this is version 1."
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x0f",
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 15,
+      "description": "No flag bits are defined; the nibble is reserved and senders set it to zero."
+    },
+    {
+      "id": "msg_type",
+      "label": "Message Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2205 §3.1.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "Path"
+        },
+        {
+          "value": 2,
+          "label": "Resv"
+        },
+        {
+          "value": 3,
+          "label": "PathErr"
+        },
+        {
+          "value": 4,
+          "label": "ResvErr"
+        },
+        {
+          "value": 5,
+          "label": "PathTear"
+        },
+        {
+          "value": 6,
+          "label": "ResvTear"
+        },
+        {
+          "value": 7,
+          "label": "ResvConf"
+        },
+        {
+          "value": 12,
+          "label": "Bundle"
+        },
+        {
+          "value": 13,
+          "label": "ACK"
+        },
+        {
+          "value": 15,
+          "label": "Srefresh"
+        },
+        {
+          "value": 20,
+          "label": "Hello"
+        },
+        {
+          "value": 21,
+          "label": "Notify"
+        }
+      ]
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "One's complement of the one's complement sum of the message, computed with the checksum field zeroed; an all-zero value means no checksum was transmitted."
+    },
+    {
+      "id": "send_ttl",
+      "label": "Send TTL",
+      "offset": 4,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 255,
+      "description": "The IP TTL value with which the message was sent."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved byte of the common header; zero on the wire."
+    },
+    {
+      "id": "length",
+      "label": "Length",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2205 §3.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Total length of the RSVP message in bytes, including the common header and the objects that follow."
+    }
+  ]
+}

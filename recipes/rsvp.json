@@ -1,0 +1,60 @@
+{
+  "id": "rsvp",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "proto": 46}},
+    {"layer": "RSVP", "fields": {"Version": 1, "Flags": 0, "Class": 1, "chksum": "$PIN", "TTL": 64, "dataofs": 0, "Length": 8}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 8,
+  "fieldMap": {
+    "version": "Version",
+    "flags": "Flags",
+    "msg_type": "Class",
+    "checksum": "RSVP.chksum",
+    "send_ttl": "TTL",
+    "reserved": "dataofs",
+    "length": "Length"
+  },
+  "probe": {
+    "msg_type": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "send_ttl": ["0x0f", "0xf0"],
+    "reserved": ["0x0f", "0xf0"],
+    "length": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "version": "the high nibble of byte 0; only leading-aligned sub-byte layouts are auto-drafted, fixed offset confirmed against RFC 2205 §3.1.1",
+    "flags": "the low nibble of byte 0; a 4-bit probe sentinel cannot exercise its top logical bit, fixed offset confirmed against RFC 2205 §3.1.1"
+  },
+  "crosscheck": {
+    "version": "0x5",
+    "flags": "0xa",
+    "msg_type": "0x5a",
+    "checksum": "0x5a5a",
+    "send_ttl": "0x5a",
+    "reserved": "0x5a",
+    "length": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [1, 2],
+    "flags": [0, 1],
+    "msg_type": [1, 2],
+    "checksum": ["0x1234", "0x1235"],
+    "send_ttl": [64, 255],
+    "reserved": [0, 1],
+    "length": [36, 24]
+  },
+  "vectors": [
+    {"name": "rsvp-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "rsvp-flags-0", "select": [{"field": "flags", "value": 0}]},
+    {"name": "rsvp-msg-type-path", "select": [{"field": "msg_type", "value": 1}]},
+    {"name": "rsvp-msg-type-resv", "select": [{"field": "msg_type", "value": 2}]},
+    {"name": "rsvp-msg-type-hello", "select": [{"field": "msg_type", "value": 20}]},
+    {"name": "rsvp-checksum-0x1234", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "rsvp-send-ttl-64", "select": [{"field": "send_ttl", "value": 64}]},
+    {"name": "rsvp-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "rsvp-length-36", "select": [{"field": "length", "value": 36}]},
+    {"name": "rsvp-path-and-send-ttl-64", "select": [{"field": "msg_type", "value": 1}, {"field": "send_ttl", "value": 64}]}
+  ]
+}
