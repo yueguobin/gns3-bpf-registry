@@ -1,0 +1,108 @@
+{
+  "id": "vrrp",
+  "label": "VRRP",
+  "rfc": ["3768"],
+  "notes": "VRRPv2 over IPv4 (protocol 112), the open first-hop redundancy protocol. Only the 8-byte fixed prefix sits at fixed offsets: the virtual router's IP address list (RFC 3768 §5.3.9) follows with a count-dependent length, and the RFC 2338-era authentication data words (§5.3.10) follow the addresses, so neither is modelled. VRRPv3 (RFC 5798) reuses protocol 112 with a different layout after byte 4 and is not covered by this entry.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 112"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.1",
+      "min": 0,
+      "max": 15,
+      "description": "VRRP protocol version; 2 in every VRRPv2 advertisement."
+    },
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "RFC 3768 §5.3.2",
+      "values": [
+        {
+          "value": 1,
+          "label": "Advertisement"
+        }
+      ]
+    },
+    {
+      "id": "vrid",
+      "label": "Virtual Router ID",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.3",
+      "min": 1,
+      "max": 255,
+      "description": "Identifies the virtual router on this LAN."
+    },
+    {
+      "id": "priority",
+      "label": "Priority",
+      "offset": 2,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.4",
+      "min": 0,
+      "max": 255,
+      "description": "255 = IP address owner, 100 = default backup priority, 0 = master releasing the virtual router."
+    },
+    {
+      "id": "ip_count",
+      "label": "Count IP Addrs",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.5",
+      "min": 0,
+      "max": 255,
+      "description": "Number of IP addresses carried after the fixed header."
+    },
+    {
+      "id": "auth_type",
+      "label": "Auth Type",
+      "offset": 4,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.6",
+      "min": 0,
+      "max": 255,
+      "description": "0 = No Authentication; 1 and 2 are reserved for RFC 2338 compatibility."
+    },
+    {
+      "id": "adver_int",
+      "label": "Advertisement Interval",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.7",
+      "min": 0,
+      "max": 255,
+      "description": "Seconds between advertisements; the default is 1."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 3768 §5.3.8",
+      "min": 0,
+      "max": 65535
+    }
+  ]
+}

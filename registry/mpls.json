@@ -1,0 +1,64 @@
+{
+  "id": "mpls",
+  "label": "MPLS",
+  "rfc": ["3032"],
+  "notes": "MPLS label stack entry over the unicast EtherType 0x8847. One 4-byte entry is modelled: the outermost label, the one a GNS3 filter sees at a fixed offset. Deeper entries sit behind a variable label-stack depth and are not modelled. The Traffic Class field was originally the EXP field and was renamed by RFC 5462; the multicast EtherType 0x8848 carries the same 4-byte entry.",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": ["ether proto 34871"],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "label",
+      "label": "Label",
+      "offset": 0,
+      "size": 4,
+      "mask": "0xfffff000",
+      "shift": 12,
+      "kind": "number",
+      "ref": "RFC 3032 §2.1",
+      "min": 0,
+      "max": 1048575,
+      "description": "20-bit label value; 0-15 are reserved (0 explicit null, 1 router alert, 3 implicit null)."
+    },
+    {
+      "id": "traffic_class",
+      "label": "Traffic Class",
+      "offset": 2,
+      "size": 1,
+      "mask": "0xe",
+      "shift": 1,
+      "kind": "number",
+      "ref": "RFC 3032 §2.1 (EXP field, renamed Traffic Class by RFC 5462)",
+      "min": 0,
+      "max": 7,
+      "description": "3-bit class of service; values 0-7 map to the IP precedence/DCS qdiscs."
+    },
+    {
+      "id": "bottom_of_stack",
+      "label": "Bottom of Stack",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x1",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 3032 §2.1",
+      "min": 0,
+      "max": 1,
+      "description": "1 when this entry is the last label in the stack."
+    },
+    {
+      "id": "ttl",
+      "label": "TTL",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 3032 §2.4",
+      "min": 0,
+      "max": 255,
+      "description": "Hop count, decremented at each label-switch hop like an IP TTL."
+    }
+  ]
+}

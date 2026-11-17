@@ -1,0 +1,357 @@
+{
+  "id": "lacp",
+  "label": "LACP",
+  "rfc": [],
+  "notes": "Link Aggregation Control Protocol (IEEE 802.1AX) over the Slow Protocols EtherType 0x8809, sent to 01:80:c2:00:00:02. The Actor, Partner, Collector and Terminator TLVs are mandatory with fixed lengths, so the first 60 bytes of an LACPDU sit at fixed offsets and every field is modelled; the reserved runs inside the TLVs and the trailing 50 bytes of the 110-byte LACPDU are zero padding, modelled as exclusions. The Marker PDU shares the EtherType with subtype 2 and is not covered. PAgP, the Cisco counterpart, runs on a different EtherType and is out of scope.",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": ["ether proto 34889"],
+  "headerLength": 60,
+  "fields": [
+    {
+      "id": "subtype",
+      "label": "Subtype",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "LACP"
+        },
+        {
+          "value": 2,
+          "label": "Marker"
+        }
+      ]
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 255,
+      "description": "LACP version number; 1."
+    },
+    {
+      "id": "actor_tlv_type",
+      "label": "Actor TLV Type",
+      "offset": 2,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "values": [
+        {
+          "value": 1,
+          "label": "Actor Information"
+        }
+      ]
+    },
+    {
+      "id": "actor_tlv_length",
+      "label": "Actor TLV Length",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the Actor Information TLV in bytes; 20."
+    },
+    {
+      "id": "actor_system_priority",
+      "label": "Actor System Priority",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "actor_system",
+      "label": "Actor System",
+      "offset": 6,
+      "size": 6,
+      "kind": "mac",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "description": "MAC address of the sending system."
+    },
+    {
+      "id": "actor_key",
+      "label": "Actor Key",
+      "offset": 12,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Identifies the aggregation the port belongs to."
+    },
+    {
+      "id": "actor_port_priority",
+      "label": "Actor Port Priority",
+      "offset": 14,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "actor_port_number",
+      "label": "Actor Port Number",
+      "offset": 16,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "actor_state",
+      "label": "Actor State",
+      "offset": 18,
+      "size": 1,
+      "kind": "bitset",
+      "ref": "IEEE 802.1AX-2020 §21.3.2 (Table 21-4)",
+      "bits": [
+        {
+          "mask": 1,
+          "label": "LACP_Activity"
+        },
+        {
+          "mask": 2,
+          "label": "LACP_Timeout"
+        },
+        {
+          "mask": 4,
+          "label": "Aggregation"
+        },
+        {
+          "mask": 8,
+          "label": "Synchronization"
+        },
+        {
+          "mask": 16,
+          "label": "Collecting"
+        },
+        {
+          "mask": 32,
+          "label": "Distributing"
+        },
+        {
+          "mask": 64,
+          "label": "Defaulted"
+        },
+        {
+          "mask": 128,
+          "label": "Expired"
+        }
+      ]
+    },
+    {
+      "id": "partner_tlv_type",
+      "label": "Partner TLV Type",
+      "offset": 22,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "values": [
+        {
+          "value": 2,
+          "label": "Partner Information"
+        }
+      ]
+    },
+    {
+      "id": "partner_tlv_length",
+      "label": "Partner TLV Length",
+      "offset": 23,
+      "size": 1,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the Partner Information TLV in bytes; 20."
+    },
+    {
+      "id": "partner_system_priority",
+      "label": "Partner System Priority",
+      "offset": 24,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "partner_system",
+      "label": "Partner System",
+      "offset": 26,
+      "size": 6,
+      "kind": "mac",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "description": "MAC address the partner reported for its system."
+    },
+    {
+      "id": "partner_key",
+      "label": "Partner Key",
+      "offset": 32,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "partner_port_priority",
+      "label": "Partner Port Priority",
+      "offset": 34,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "partner_port_number",
+      "label": "Partner Port Number",
+      "offset": 36,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "partner_state",
+      "label": "Partner State",
+      "offset": 38,
+      "size": 1,
+      "kind": "bitset",
+      "ref": "IEEE 802.1AX-2020 §21.3.2 (Table 21-4)",
+      "bits": [
+        {
+          "mask": 1,
+          "label": "LACP_Activity"
+        },
+        {
+          "mask": 2,
+          "label": "LACP_Timeout"
+        },
+        {
+          "mask": 4,
+          "label": "Aggregation"
+        },
+        {
+          "mask": 8,
+          "label": "Synchronization"
+        },
+        {
+          "mask": 16,
+          "label": "Collecting"
+        },
+        {
+          "mask": 32,
+          "label": "Distributing"
+        },
+        {
+          "mask": 64,
+          "label": "Defaulted"
+        },
+        {
+          "mask": 128,
+          "label": "Expired"
+        }
+      ]
+    },
+    {
+      "id": "collector_tlv_type",
+      "label": "Collector TLV Type",
+      "offset": 42,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-5)",
+      "values": [
+        {
+          "value": 3,
+          "label": "Collector Information"
+        }
+      ]
+    },
+    {
+      "id": "collector_tlv_length",
+      "label": "Collector TLV Length",
+      "offset": 43,
+      "size": 1,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-5)",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the Collector Information TLV in bytes; 16."
+    },
+    {
+      "id": "collector_max_delay",
+      "label": "Collector Max Delay",
+      "offset": 44,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Maximum delay the collector may introduce, in tens of microseconds."
+    },
+    {
+      "id": "terminator_tlv_type",
+      "label": "Terminator TLV Type",
+      "offset": 58,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "values": [
+        {
+          "value": 0,
+          "label": "Terminator"
+        }
+      ]
+    },
+    {
+      "id": "terminator_tlv_length",
+      "label": "Terminator TLV Length",
+      "offset": 59,
+      "size": 1,
+      "kind": "number",
+      "ref": "IEEE 802.1AX-2020 §21.3.1 (Figure 21-4)",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the Terminator TLV; 0."
+    }
+  ],
+  "excluded": [
+    {
+      "id": "actor_reserved",
+      "offset": 19,
+      "length": 3,
+      "reason": "zero padding at the end of the Actor Information TLV"
+    },
+    {
+      "id": "partner_reserved",
+      "offset": 39,
+      "length": 3,
+      "reason": "zero padding at the end of the Partner Information TLV"
+    },
+    {
+      "id": "collector_reserved",
+      "offset": 46,
+      "length": 12,
+      "reason": "zero padding at the end of the Collector Information TLV"
+    }
+  ]
+}

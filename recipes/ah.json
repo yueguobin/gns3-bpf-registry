@@ -1,0 +1,43 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN", "proto": 51}},
+    {"layer": "AH", "fields": {"nh": 4, "payloadlen": 2, "reserved": 0, "spi": "0x12345678", "seq": 1}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 12,
+  "fieldMap": {
+    "next_header": "nh",
+    "payload_length": "payloadlen"
+  },
+  "probe": {
+    "next_header": ["0x0f", "0xf0"],
+    "payload_length": ["0x0f", "0xf0"],
+    "reserved": ["0x0f0f", "0xf0f0"],
+    "spi": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "seq": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "next_header": "0x5a",
+    "payload_length": "0x5a",
+    "reserved": "0x5a5a",
+    "spi": "0x5a5a5a5a",
+    "seq": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "next_header": [4, 6],
+    "payload_length": [2, 4],
+    "reserved": [0, 1],
+    "spi": ["0x12345678", "0x12345679"],
+    "seq": [1, 2]
+  },
+  "vectors": [
+    {"name": "ah-spi-0x12345678", "select": [{"field": "spi", "value": 305419896}]},
+    {"name": "ah-seq-1", "select": [{"field": "seq", "value": 1}]},
+    {"name": "ah-next-header-ipv4", "select": [{"field": "next_header", "value": 4}]},
+    {"name": "ah-next-header-tcp", "select": [{"field": "next_header", "value": 6}]},
+    {"name": "ah-payload-length-2", "select": [{"field": "payload_length", "value": 2}]},
+    {"name": "ah-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "ah-spi-and-seq", "select": [{"field": "spi", "value": 305419896}, {"field": "seq", "value": 1}]}
+  ]
+}
