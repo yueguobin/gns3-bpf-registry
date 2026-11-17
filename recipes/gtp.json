@@ -1,0 +1,67 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 2152, "chksum": "$PIN"}},
+    {"layer": "GTPHeader", "fields": {"version": 1, "PT": 1, "reserved": 0, "E": 0, "S": 0, "PN": 0, "gtp_type": 255, "length": 0, "teid": 0}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 8,
+  "fieldMap": {
+    "pt": "PT",
+    "e_flag": "E",
+    "s_flag": "S",
+    "pn_flag": "PN",
+    "msg_type": "gtp_type"
+  },
+  "probe": {
+    "msg_type": ["0x0f", "0xf0"],
+    "length": ["0x0f0f", "0xf0f0"],
+    "teid": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "manual": {
+    "version": "3 bits share byte 0 with PT/reserved/E/S/PN; the mask/shift view is hand-declared per 3GPP TS 29.060 §9.2 and crosscheck-verified",
+    "pt": "1 bit shares byte 0 with the other GTP flags; the mask/shift view is hand-declared per 3GPP TS 29.060 §9.2 and crosscheck-verified",
+    "reserved": "1 bit shares byte 0 with the other GTP flags; the mask/shift view is hand-declared per 3GPP TS 29.060 §9.2 and crosscheck-verified",
+    "e_flag": "toggling E also appends the conditional sequence/N-PDU/next-extension bytes (probe: variable-length); the 1-bit view is hand-declared per 3GPP TS 29.060 §9.2/§9.4 and crosscheck-verified",
+    "s_flag": "toggling S also appends the conditional sequence-number bytes (probe: variable-length); the 1-bit view is hand-declared per 3GPP TS 29.060 §9.2/§9.3 and crosscheck-verified",
+    "pn_flag": "toggling PN also appends the conditional N-PDU-number bytes (probe: variable-length); the 1-bit view is hand-declared per 3GPP TS 29.060 §9.2/§9.5 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "version": "0x1",
+    "pt": "0x1",
+    "reserved": "0x1",
+    "e_flag": "0x1",
+    "s_flag": "0x1",
+    "pn_flag": "0x1",
+    "msg_type": "0x5a",
+    "length": "0x5a5a",
+    "teid": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "version": [1, 0],
+    "pt": [1, 0],
+    "reserved": [0, 1],
+    "e_flag": [0, 1],
+    "s_flag": [0, 1],
+    "pn_flag": [0, 1],
+    "msg_type": [255, 1],
+    "length": [0, 4],
+    "teid": ["0x11223344", "0x11223345"]
+  },
+  "vectors": [
+    {"name": "gtp-gpdu", "select": [{"field": "msg_type", "value": 255}]},
+    {"name": "gtp-echo-request", "select": [{"field": "msg_type", "value": 1}]},
+    {"name": "gtp-echo-response", "select": [{"field": "msg_type", "value": 2}]},
+    {"name": "gtp-create-pdp-context-request", "select": [{"field": "msg_type", "value": 16}]},
+    {"name": "gtp-create-pdp-context-response", "select": [{"field": "msg_type", "value": 17}]},
+    {"name": "gtp-delete-pdp-context-request", "select": [{"field": "msg_type", "value": 25}]},
+    {"name": "gtp-delete-pdp-context-response", "select": [{"field": "msg_type", "value": 26}]},
+    {"name": "gtp-teid", "select": [{"field": "teid", "value": 287454020}]},
+    {"name": "gtp-length-0", "select": [{"field": "length", "value": 0}]},
+    {"name": "gtp-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "gtp-pt-gtp", "select": [{"field": "pt", "value": 1}]},
+    {"name": "gtp-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "gtp-flags-clear", "select": [{"field": "e_flag", "value": 0}, {"field": "s_flag", "value": 0}, {"field": "pn_flag", "value": 0}]}
+  ]
+}

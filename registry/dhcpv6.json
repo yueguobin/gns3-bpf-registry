@@ -1,0 +1,90 @@
+{
+  "id": "dhcpv6",
+  "label": "DHCPv6",
+  "rfc": ["8415"],
+  "notes": "DHCPv6 client/server message header (RFC 8415 §16, formerly RFC 3315 §5.1) over UDP ports 546 (client) and 547 (server/relay agent). The 4-byte header is modelled in full: the message-type byte and the 24-bit transaction-id, which spans bytes 1-3 and is read through a single masked 4-byte window at offset 0 (a 3-byte read is not a BPF load width; the mask isolates the transaction bytes). Options (client/server DUID, IA_NA, status codes, ...) follow at byte 4 as a variable TLV chain with no fixed offsets. Relay messages (types 12/13) carry hop-count and link/peer addresses instead of a transaction-id — a different layout not covered by this entry beyond the type byte itself.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 546", "udp port 547"],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "msg_type",
+      "label": "Message Type",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8415 §7.3",
+      "values": [
+        {
+          "value": 1,
+          "label": "Solicit"
+        },
+        {
+          "value": 2,
+          "label": "Advertise"
+        },
+        {
+          "value": 3,
+          "label": "Request"
+        },
+        {
+          "value": 4,
+          "label": "Confirm"
+        },
+        {
+          "value": 5,
+          "label": "Renew"
+        },
+        {
+          "value": 6,
+          "label": "Rebind"
+        },
+        {
+          "value": 7,
+          "label": "Reply"
+        },
+        {
+          "value": 8,
+          "label": "Release"
+        },
+        {
+          "value": 9,
+          "label": "Decline"
+        },
+        {
+          "value": 10,
+          "label": "Reconfigure"
+        },
+        {
+          "value": 11,
+          "label": "Information-Request"
+        },
+        {
+          "value": 12,
+          "label": "Relay-Forward"
+        },
+        {
+          "value": 13,
+          "label": "Relay-Reply"
+        }
+      ],
+      "description": "DHCPv6 message type; 12/13 identify relay messages whose body carries no transaction-id (different layout)."
+    },
+    {
+      "id": "transaction_id",
+      "label": "Transaction Id",
+      "offset": 0,
+      "size": 4,
+      "mask": "0xffffff",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 8415 §16",
+      "min": 0,
+      "max": 16777215,
+      "description": "24-bit id chosen by the client and echoed by the server; groups the messages of one lease transaction."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 6081, "chksum": "$PIN"}},
+    {"layer": "GENEVE", "fields": {"version": 0, "optionlen": 0, "oam": 0, "critical": 0, "reserved": 0, "proto": "0x6558", "vni": 100, "reserved2": 0, "options": []}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 8,
+  "fieldMap": {
+    "option_length": "optionlen",
+    "protocol": "proto"
+  },
+  "probe": {
+    "protocol": ["0x0f0f", "0xf0f0"],
+    "vni": ["0x0f0f0f", "0xf0f0f0"],
+    "reserved2": ["0x0f", "0xf0"]
+  },
+  "manual": {
+    "version": "2 bits share byte 0 with the 6-bit option length; scapy's 2-bit BitField clamps the logical bits so the probe cannot isolate them, and the mask/shift view is hand-declared per RFC 8926 §3.1 and crosscheck-verified",
+    "option_length": "6 bits share byte 0 with the version; the mask/shift view is hand-declared per RFC 8926 §3.1 and crosscheck-verified",
+    "oam": "1 bit shares byte 1 with critical/reserved; the mask/shift view is hand-declared per RFC 8926 §3.1 and crosscheck-verified",
+    "critical": "1 bit shares byte 1 with oam/reserved; the mask/shift view is hand-declared per RFC 8926 §3.1 and crosscheck-verified",
+    "reserved": "6 bits share byte 1 with oam and critical; the mask/shift view is hand-declared per RFC 8926 §3.1 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "version": "0x1",
+    "option_length": "0x1",
+    "oam": "0x1",
+    "critical": "0x1",
+    "reserved": "0x15",
+    "protocol": "0x5a5a",
+    "vni": "0x5a5a5a",
+    "reserved2": "0x5a"
+  },
+  "fixtures": {
+    "version": [0, 1],
+    "option_length": [0, 1],
+    "oam": [0, 1],
+    "critical": [0, 1],
+    "reserved": [0, 1],
+    "protocol": ["0x6558", "0x0800"],
+    "vni": [100, 101],
+    "reserved2": [0, 1]
+  },
+  "vectors": [
+    {"name": "geneve-vni-100", "select": [{"field": "vni", "value": 100}]},
+    {"name": "geneve-vni-0", "select": [{"field": "vni", "value": 0}]},
+    {"name": "geneve-transparent-ethernet", "select": [{"field": "protocol", "value": 25944}]},
+    {"name": "geneve-inner-ipv4", "select": [{"field": "protocol", "value": 2048}]},
+    {"name": "geneve-inner-ipv6", "select": [{"field": "protocol", "value": 34525}]},
+    {"name": "geneve-oam", "select": [{"field": "oam", "value": 1}]},
+    {"name": "geneve-critical", "select": [{"field": "critical", "value": 1}]},
+    {"name": "geneve-version-0", "select": [{"field": "version", "value": 0}]},
+    {"name": "geneve-option-length-0", "select": [{"field": "option_length", "value": 0}]},
+    {"name": "geneve-reserved", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "geneve-reserved2", "select": [{"field": "reserved2", "value": 0}]}
+  ]
+}

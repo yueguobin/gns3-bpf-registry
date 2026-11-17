@@ -1,0 +1,82 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "ttl": 255, "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 49152, "dport": 3784, "chksum": "$PIN"}},
+    {"layer": "BFD", "fields": {"version": 1, "diag": 0, "sta": 2, "flags": 0, "detect_mult": 3, "len": 24, "my_discriminator": 305419896, "your_discriminator": 3735928559, "min_tx_interval": 100000, "min_rx_interval": 100000, "echo_rx_interval": 50000}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 24,
+  "fieldMap": {
+    "state": "sta",
+    "length": "len",
+    "my_discriminator": "my_discriminator",
+    "your_discriminator": "your_discriminator",
+    "min_tx_interval": "min_tx_interval",
+    "min_rx_interval": "min_rx_interval",
+    "echo_rx_interval": "echo_rx_interval"
+  },
+  "probe": {
+    "detect_mult": ["0x0f", "0xf0"],
+    "length": ["0x0f", "0xf0"],
+    "my_discriminator": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "your_discriminator": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "min_tx_interval": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "min_rx_interval": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "echo_rx_interval": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "manual": {
+    "version": "3 bits share byte 0 with the 5-bit diag; scapy's 3-bit BitField clamps the logical bits so the probe cannot isolate them, and the mask/shift view is hand-declared per RFC 5880 §4.1 and crosscheck-verified",
+    "diag": "5 bits share byte 0 with the version; the mask/shift view is hand-declared per RFC 5880 §4.1 and crosscheck-verified",
+    "state": "2 bits share byte 1 with the flag bits; the mask/shift view is hand-declared per RFC 5880 §4.1 and crosscheck-verified",
+    "flags": "6 bits share byte 1 with the state; single-bit views are hand-declared per RFC 5880 §4.1 and crosscheck-verified as a bitset"
+  },
+  "crosscheck": {
+    "version": "0x1",
+    "diag": "0x15",
+    "state": "0x2",
+    "flags": [21, "0x95"],
+    "detect_mult": "0x5a",
+    "length": "0x5a",
+    "my_discriminator": "0x5a5a5a5a",
+    "your_discriminator": "0x5a5a5a5a",
+    "min_tx_interval": "0x5a5a5a5a",
+    "min_rx_interval": "0x5a5a5a5a",
+    "echo_rx_interval": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "version": [1, 0],
+    "diag": [0, 5],
+    "state": [2, 3],
+    "flags": [33, 18],
+    "detect_mult": [3, 5],
+    "length": [24, 26],
+    "my_discriminator": ["0x12345678", "0x12345679"],
+    "your_discriminator": ["0xdeadbeef", "0xdeadbef0"],
+    "min_tx_interval": [100000, 200000],
+    "min_rx_interval": [100000, 200000],
+    "echo_rx_interval": [50000, 0]
+  },
+  "vectors": [
+    {"name": "bfd-init", "select": [{"field": "state", "value": 2}]},
+    {"name": "bfd-up", "select": [{"field": "state", "value": 3}]},
+    {"name": "bfd-down", "select": [{"field": "state", "value": 1}]},
+    {"name": "bfd-admin-down", "select": [{"field": "state", "value": 0}]},
+    {"name": "bfd-poll", "select": [{"field": "flags", "flags": ["Poll"]}]},
+    {"name": "bfd-final", "select": [{"field": "flags", "flags": ["Final"]}]},
+    {"name": "bfd-demand", "select": [{"field": "flags", "flags": ["Demand"]}]},
+    {"name": "bfd-auth-present", "select": [{"field": "flags", "flags": ["Auth Present"]}]},
+    {"name": "bfd-poll-final", "select": [{"field": "flags", "flags": ["Poll", "Final"]}]},
+    {"name": "bfd-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "bfd-diag-control-time-expired", "select": [{"field": "diag", "value": 1}]},
+    {"name": "bfd-diag-path-down", "select": [{"field": "diag", "value": 5}]},
+    {"name": "bfd-detect-mult-3", "select": [{"field": "detect_mult", "value": 3}]},
+    {"name": "bfd-length-24", "select": [{"field": "length", "value": 24}]},
+    {"name": "bfd-my-discriminator", "select": [{"field": "my_discriminator", "value": 305419896}]},
+    {"name": "bfd-your-discriminator", "select": [{"field": "your_discriminator", "value": 3735928559}]},
+    {"name": "bfd-min-tx-100ms", "select": [{"field": "min_tx_interval", "value": 100000}]},
+    {"name": "bfd-min-rx-100ms", "select": [{"field": "min_rx_interval", "value": 100000}]},
+    {"name": "bfd-echo-rx-50ms", "select": [{"field": "echo_rx_interval", "value": 50000}]},
+    {"name": "bfd-init-my-discr", "select": [{"field": "state", "value": 2}, {"field": "my_discriminator", "value": 305419896}]}
+  ]
+}

@@ -212,6 +212,241 @@
       "expect": "arp[6:2] == 0x1 and arp[14:4] == 0xc000020a and arp[24:4] == 0xc000020a"
     },
     {
+      "name": "bfd-init",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "state",
+          "value": 2
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0xc0) == 0x80"
+    },
+    {
+      "name": "bfd-up",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "state",
+          "value": 3
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0xc0) == 0xc0"
+    },
+    {
+      "name": "bfd-down",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "state",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0xc0) == 0x40"
+    },
+    {
+      "name": "bfd-admin-down",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "state",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0xc0) == 0x0"
+    },
+    {
+      "name": "bfd-poll",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Poll"
+          ]
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0x20) == 0x20"
+    },
+    {
+      "name": "bfd-final",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Final"
+          ]
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0x10) == 0x10"
+    },
+    {
+      "name": "bfd-demand",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Demand"
+          ]
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0x2) == 0x2"
+    },
+    {
+      "name": "bfd-auth-present",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Auth Present"
+          ]
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0x4) == 0x4"
+    },
+    {
+      "name": "bfd-poll-final",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Poll",
+            "Final"
+          ]
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0x30) == 0x30"
+    },
+    {
+      "name": "bfd-version-1",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[8:1] & 0xe0) == 0x20"
+    },
+    {
+      "name": "bfd-diag-control-time-expired",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "diag",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[8:1] & 0x1f) == 0x1"
+    },
+    {
+      "name": "bfd-diag-path-down",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "diag",
+          "value": 5
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[8:1] & 0x1f) == 0x5"
+    },
+    {
+      "name": "bfd-detect-mult-3",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "detect_mult",
+          "value": 3
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[10:1] == 3"
+    },
+    {
+      "name": "bfd-length-24",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "length",
+          "value": 24
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[11:1] == 24"
+    },
+    {
+      "name": "bfd-my-discriminator",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "my_discriminator",
+          "value": 305419896
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[12:4] == 305419896"
+    },
+    {
+      "name": "bfd-your-discriminator",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "your_discriminator",
+          "value": 3735928559
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[16:4] == 3735928559"
+    },
+    {
+      "name": "bfd-min-tx-100ms",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "min_tx_interval",
+          "value": 100000
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[20:4] == 100000"
+    },
+    {
+      "name": "bfd-min-rx-100ms",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "min_rx_interval",
+          "value": 100000
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[24:4] == 100000"
+    },
+    {
+      "name": "bfd-echo-rx-50ms",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "echo_rx_interval",
+          "value": 50000
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and udp[28:4] == 50000"
+    },
+    {
+      "name": "bfd-init-my-discr",
+      "entry": "bfd",
+      "select": [
+        {
+          "field": "state",
+          "value": 2
+        },
+        {
+          "field": "my_discriminator",
+          "value": 305419896
+        }
+      ],
+      "expect": "(udp port 3784 or udp port 4784) and (udp[9:1] & 0xc0) == 0x80 and udp[12:4] == 305419896"
+    },
+    {
       "name": "bgp-length-keepalive",
       "entry": "bgp",
       "select": [
@@ -478,6 +713,109 @@
       "expect": "(udp port 67 or udp port 68) and (udp[36:4] == 0x2000000 and udp[40:2] == 0x1)"
     },
     {
+      "name": "dhcpv6-solicit",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x1"
+    },
+    {
+      "name": "dhcpv6-advertise",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 2
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x2"
+    },
+    {
+      "name": "dhcpv6-request",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 3
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x3"
+    },
+    {
+      "name": "dhcpv6-renew",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 5
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x5"
+    },
+    {
+      "name": "dhcpv6-reply",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 7
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x7"
+    },
+    {
+      "name": "dhcpv6-release",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 8
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x8"
+    },
+    {
+      "name": "dhcpv6-information-request",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 11
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0xb"
+    },
+    {
+      "name": "dhcpv6-transaction-id",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "transaction_id",
+          "value": 1193046
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and (udp[8:4] & 0xffffff) == 0x123456"
+    },
+    {
+      "name": "dhcpv6-solicit-trid",
+      "entry": "dhcpv6",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 1
+        },
+        {
+          "field": "transaction_id",
+          "value": 1193046
+        }
+      ],
+      "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x1 and (udp[8:4] & 0xffffff) == 0x123456"
+    },
+    {
       "name": "eigrp-version-2",
       "entry": "eigrp",
       "select": [
@@ -612,6 +950,127 @@
       "expect": "ether[12:2] == 0x806"
     },
     {
+      "name": "geneve-vni-100",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        }
+      ],
+      "expect": "udp port 6081 and (udp[12:4] & 0xffffff00) == 0x6400"
+    },
+    {
+      "name": "geneve-vni-0",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "vni",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 6081 and (udp[12:4] & 0xffffff00) == 0x0"
+    },
+    {
+      "name": "geneve-transparent-ethernet",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 25944
+        }
+      ],
+      "expect": "udp port 6081 and udp[10:2] == 0x6558"
+    },
+    {
+      "name": "geneve-inner-ipv4",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 2048
+        }
+      ],
+      "expect": "udp port 6081 and udp[10:2] == 0x800"
+    },
+    {
+      "name": "geneve-inner-ipv6",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "protocol",
+          "value": 34525
+        }
+      ],
+      "expect": "udp port 6081 and udp[10:2] == 0x86dd"
+    },
+    {
+      "name": "geneve-oam",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "oam",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 6081 and (udp[9:1] & 0x80) == 0x80"
+    },
+    {
+      "name": "geneve-critical",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "critical",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 6081 and (udp[9:1] & 0x40) == 0x40"
+    },
+    {
+      "name": "geneve-version-0",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "version",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 6081 and (udp[8:1] & 0xc0) == 0x0"
+    },
+    {
+      "name": "geneve-option-length-0",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "option_length",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 6081 and (udp[8:1] & 0x3f) == 0x0"
+    },
+    {
+      "name": "geneve-reserved",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 6081 and (udp[9:1] & 0x3f) == 0x0"
+    },
+    {
+      "name": "geneve-reserved2",
+      "entry": "geneve",
+      "select": [
+        {
+          "field": "reserved2",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 6081 and udp[15:1] == 0"
+    },
+    {
       "name": "gre-protocol-ipv4",
       "entry": "gre",
       "select": [
@@ -676,6 +1135,157 @@
         }
       ],
       "expect": "ip proto 47 and (ip[20:2] & 0x7) == 0x1"
+    },
+    {
+      "name": "gtp-gpdu",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 255
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0xff"
+    },
+    {
+      "name": "gtp-echo-request",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x1"
+    },
+    {
+      "name": "gtp-echo-response",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 2
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x2"
+    },
+    {
+      "name": "gtp-create-pdp-context-request",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 16
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x10"
+    },
+    {
+      "name": "gtp-create-pdp-context-response",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 17
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x11"
+    },
+    {
+      "name": "gtp-delete-pdp-context-request",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 25
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x19"
+    },
+    {
+      "name": "gtp-delete-pdp-context-response",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 26
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[9:1] == 0x1a"
+    },
+    {
+      "name": "gtp-teid",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "teid",
+          "value": 287454020
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[12:4] == 287454020"
+    },
+    {
+      "name": "gtp-length-0",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "length",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and udp[10:2] == 0"
+    },
+    {
+      "name": "gtp-version-1",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and (udp[8:1] & 0xe0) == 0x20"
+    },
+    {
+      "name": "gtp-pt-gtp",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "pt",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and (udp[8:1] & 0x10) == 0x10"
+    },
+    {
+      "name": "gtp-reserved-0",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and (udp[8:1] & 0x8) == 0x0"
+    },
+    {
+      "name": "gtp-flags-clear",
+      "entry": "gtp",
+      "select": [
+        {
+          "field": "e_flag",
+          "value": 0
+        },
+        {
+          "field": "s_flag",
+          "value": 0
+        },
+        {
+          "field": "pn_flag",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 2123 or udp port 2152) and (udp[8:1] & 0x4) == 0x0 and (udp[8:1] & 0x2) == 0x0 and (udp[8:1] & 0x1) == 0x0"
     },
     {
       "name": "hsrp-group-1",
@@ -1069,6 +1679,105 @@
       "expect": "ip6 proto 58 and ip6[40:1] == 0x80 and ip6[42:2] == 4660"
     },
     {
+      "name": "igmp-membership-query",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 17
+        }
+      ],
+      "expect": "ip proto 2 and ip[24:1] == 0x11"
+    },
+    {
+      "name": "igmp-v1-membership-report",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 18
+        }
+      ],
+      "expect": "ip proto 2 and ip[24:1] == 0x12"
+    },
+    {
+      "name": "igmp-v2-membership-report",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 22
+        }
+      ],
+      "expect": "ip proto 2 and ip[24:1] == 0x16"
+    },
+    {
+      "name": "igmp-v2-leave-group",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 23
+        }
+      ],
+      "expect": "ip proto 2 and ip[24:1] == 0x17"
+    },
+    {
+      "name": "igmp-v3-membership-report",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "type",
+          "value": 34
+        }
+      ],
+      "expect": "ip proto 2 and ip[24:1] == 0x22"
+    },
+    {
+      "name": "igmp-max-resp-time-10",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "max_resp_time",
+          "value": 10
+        }
+      ],
+      "expect": "ip proto 2 and ip[25:1] == 10"
+    },
+    {
+      "name": "igmp-general-query",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "group_address",
+          "value": "0.0.0.0"
+        }
+      ],
+      "expect": "ip proto 2 and ip[28:4] == 0x0"
+    },
+    {
+      "name": "igmp-group-224-0-2-10",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "group_address",
+          "value": "224.0.2.10"
+        }
+      ],
+      "expect": "ip proto 2 and ip[28:4] == 0xe000020a"
+    },
+    {
+      "name": "igmp-checksum",
+      "entry": "igmp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 2 and ip[26:2] == 4660"
+    },
+    {
       "name": "ipv4-version-4",
       "entry": "ipv4",
       "select": [
@@ -1270,6 +1979,193 @@
         }
       ],
       "expect": "ip6[7:1] == 64"
+    },
+    {
+      "name": "isis-nlpid-isis",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "nlpid",
+          "value": 131
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[17:1] == 0x83"
+    },
+    {
+      "name": "isis-header-length-27",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "header_length",
+          "value": 27
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[18:1] == 27"
+    },
+    {
+      "name": "isis-version-1",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[19:1] == 1"
+    },
+    {
+      "name": "isis-id-length-6",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "id_length",
+          "value": 6
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[20:1] == 6"
+    },
+    {
+      "name": "isis-l1-lan-hello",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 15
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0xf"
+    },
+    {
+      "name": "isis-l2-lan-hello",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 16
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x10"
+    },
+    {
+      "name": "isis-p2p-hello",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 17
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x11"
+    },
+    {
+      "name": "isis-l1-lsp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 18
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x12"
+    },
+    {
+      "name": "isis-l2-lsp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 20
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x14"
+    },
+    {
+      "name": "isis-l1-csnp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 24
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x18"
+    },
+    {
+      "name": "isis-l2-csnp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 25
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x19"
+    },
+    {
+      "name": "isis-l1-psnp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 26
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x1a"
+    },
+    {
+      "name": "isis-l2-psnp",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_type",
+          "value": 27
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0x1f) == 0x1b"
+    },
+    {
+      "name": "isis-type-reserved-0",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "type_reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and (ether[21:1] & 0xe0) == 0x0"
+    },
+    {
+      "name": "isis-pdu-version-1",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "pdu_version",
+          "value": 1
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[22:1] == 1"
+    },
+    {
+      "name": "isis-reserved-0",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[23:1] == 0"
+    },
+    {
+      "name": "isis-max-area-addresses-3",
+      "entry": "isis",
+      "select": [
+        {
+          "field": "max_area_addresses",
+          "value": 3
+        }
+      ],
+      "expect": "ether[14:2] = 0xfefe and ether[24:1] == 3"
     },
     {
       "name": "lacp-subtype-lacp",
@@ -1546,6 +2442,65 @@
       "expect": "ether proto 34825 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3) and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
     },
     {
+      "name": "ldp-version-1",
+      "entry": "ldp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "tcp port 646 and tcp[20:2] == 1"
+    },
+    {
+      "name": "ldp-pdu-length-14",
+      "entry": "ldp",
+      "select": [
+        {
+          "field": "pdu_length",
+          "value": 14
+        }
+      ],
+      "expect": "tcp port 646 and tcp[22:2] == 14"
+    },
+    {
+      "name": "ldp-lsr-id",
+      "entry": "ldp",
+      "select": [
+        {
+          "field": "lsr_id",
+          "value": "192.0.2.1"
+        }
+      ],
+      "expect": "tcp port 646 and tcp[24:4] == 0xc0000201"
+    },
+    {
+      "name": "ldp-label-space-0",
+      "entry": "ldp",
+      "select": [
+        {
+          "field": "label_space_id",
+          "value": 0
+        }
+      ],
+      "expect": "tcp port 646 and tcp[28:2] == 0"
+    },
+    {
+      "name": "ldp-platform-label-space",
+      "entry": "ldp",
+      "select": [
+        {
+          "field": "lsr_id",
+          "value": "192.0.2.1"
+        },
+        {
+          "field": "label_space_id",
+          "value": 0
+        }
+      ],
+      "expect": "tcp port 646 and tcp[24:4] == 0xc0000201 and tcp[28:2] == 0"
+    },
+    {
       "name": "lldp-chassis-subtype-mac",
       "entry": "lldp",
       "select": [
@@ -1752,6 +2707,259 @@
       "expect": "ip proto 89 and ip[34:2] == 0x0"
     },
     {
+      "name": "ospfv3-hello",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[41:1] == 0x1"
+    },
+    {
+      "name": "ospfv3-database-description",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "type",
+          "value": 2
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[41:1] == 0x2"
+    },
+    {
+      "name": "ospfv3-link-state-request",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "type",
+          "value": 3
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[41:1] == 0x3"
+    },
+    {
+      "name": "ospfv3-link-state-update",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "type",
+          "value": 4
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[41:1] == 0x4"
+    },
+    {
+      "name": "ospfv3-link-state-ack",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "type",
+          "value": 5
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[41:1] == 0x5"
+    },
+    {
+      "name": "ospfv3-router-id",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "router_id",
+          "value": "1.1.1.1"
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[44:4] == 0x1010101"
+    },
+    {
+      "name": "ospfv3-area-0",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "area_id",
+          "value": "0.0.0.0"
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[48:4] == 0x0"
+    },
+    {
+      "name": "ospfv3-instance-0",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "instance_id",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[54:1] == 0"
+    },
+    {
+      "name": "ospfv3-instance-1",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "instance_id",
+          "value": 1
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[54:1] == 1"
+    },
+    {
+      "name": "ospfv3-length-16",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "packet_length",
+          "value": 16
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[42:2] == 16"
+    },
+    {
+      "name": "ospfv3-checksum",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[52:2] == 4660"
+    },
+    {
+      "name": "ospfv3-version-3",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "version",
+          "value": 3
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[40:1] == 3"
+    },
+    {
+      "name": "ospfv3-reserved",
+      "entry": "ospfv3",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 89 and ip6[55:1] == 0"
+    },
+    {
+      "name": "pim-version-2",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf0) == 0x20"
+    },
+    {
+      "name": "pim-hello",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x0"
+    },
+    {
+      "name": "pim-register",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x1"
+    },
+    {
+      "name": "pim-register-stop",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x2"
+    },
+    {
+      "name": "pim-join-prune",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 3
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x3"
+    },
+    {
+      "name": "pim-bootstrap",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x4"
+    },
+    {
+      "name": "pim-assert",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 5
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x5"
+    },
+    {
+      "name": "pim-candidate-rp-advertisement",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "type",
+          "value": 8
+        }
+      ],
+      "expect": "ip proto 103 and (ip[20:1] & 0xf) == 0x8"
+    },
+    {
+      "name": "pim-reserved-0",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 103 and ip[21:1] == 0"
+    },
+    {
+      "name": "pim-checksum",
+      "entry": "pim",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 103 and ip[22:2] == 4660"
+    },
+    {
       "name": "rip-command-response",
       "entry": "rip",
       "select": [
@@ -1783,6 +2991,87 @@
         }
       ],
       "expect": "udp port 520 and udp[10:2] == 0"
+    },
+    {
+      "name": "sctp-src-port-5000",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "src_port",
+          "value": 5000
+        }
+      ],
+      "expect": "ip proto 132 and ip[20:2] == 5000"
+    },
+    {
+      "name": "sctp-dst-port-5001",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "dst_port",
+          "value": 5001
+        }
+      ],
+      "expect": "ip proto 132 and ip[22:2] == 5001"
+    },
+    {
+      "name": "sctp-dst-port-2905-m3ua",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "dst_port",
+          "value": 2905
+        }
+      ],
+      "expect": "ip proto 132 and ip[22:2] == 2905"
+    },
+    {
+      "name": "sctp-verification-tag",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "verification_tag",
+          "value": 305419896
+        }
+      ],
+      "expect": "ip proto 132 and ip[24:4] == 305419896"
+    },
+    {
+      "name": "sctp-verification-tag-0",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "verification_tag",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 132 and ip[24:4] == 0"
+    },
+    {
+      "name": "sctp-checksum",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 305419896
+        }
+      ],
+      "expect": "ip proto 132 and ip[28:4] == 305419896"
+    },
+    {
+      "name": "sctp-signaling-association",
+      "entry": "sctp",
+      "select": [
+        {
+          "field": "src_port",
+          "value": 5000
+        },
+        {
+          "field": "dst_port",
+          "value": 5001
+        }
+      ],
+      "expect": "ip proto 132 and ip[20:2] == 5000 and ip[22:2] == 5001"
     },
     {
       "name": "stp-protocol-id-0",

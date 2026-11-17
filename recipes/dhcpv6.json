@@ -1,0 +1,39 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "33:33:00:01:00:02"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 49152, "dport": 547, "chksum": "$PIN"}},
+    {"layer": "DHCP6", "fields": {"msgtype": 1, "trid": 0}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 4,
+  "fieldMap": {
+    "msg_type": "msgtype",
+    "transaction_id": "trid"
+  },
+  "probe": {
+    "msg_type": ["0x0f", "0xf0"]
+  },
+  "manual": {
+    "transaction_id": "the 24-bit field spans bytes 1-3, and the probe's 4-byte read at offset 1 overruns the 4-byte header (word-overrun); the view is hand-declared as one masked 4-byte window at offset 0 per RFC 8415 §16 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "msg_type": "0x1",
+    "transaction_id": "0x5a5a5a"
+  },
+  "fixtures": {
+    "msg_type": [1, 2],
+    "transaction_id": ["0x123456", "0x123457"]
+  },
+  "vectors": [
+    {"name": "dhcpv6-solicit", "select": [{"field": "msg_type", "value": 1}]},
+    {"name": "dhcpv6-advertise", "select": [{"field": "msg_type", "value": 2}]},
+    {"name": "dhcpv6-request", "select": [{"field": "msg_type", "value": 3}]},
+    {"name": "dhcpv6-renew", "select": [{"field": "msg_type", "value": 5}]},
+    {"name": "dhcpv6-reply", "select": [{"field": "msg_type", "value": 7}]},
+    {"name": "dhcpv6-release", "select": [{"field": "msg_type", "value": 8}]},
+    {"name": "dhcpv6-information-request", "select": [{"field": "msg_type", "value": 11}]},
+    {"name": "dhcpv6-transaction-id", "select": [{"field": "transaction_id", "value": 1193046}]},
+    {"name": "dhcpv6-solicit-trid", "select": [{"field": "msg_type", "value": 1}, {"field": "transaction_id", "value": 1193046}]}
+  ]
+}

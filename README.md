@@ -41,22 +41,27 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-25 entries, 159 fields.
+35 entries, 222 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
 | ah | RFC 4302 | 5 | ipv6 | RFC 8200 | 6 |
-| arp | RFC 826 | 9 | lacp | IEEE 802.1AX | 22 |
-| bgp | RFC 4271/2918 | 2 | lldp | IEEE 802.1AB | 2 |
-| cdp | Cisco CDP Spec 2.02 | 3 | mpls | RFC 3032/5462 | 4 |
-| dhcp | RFC 2131/2132 | 12 | ospf | RFC 2328 | 7 |
-| eigrp | RFC 7868 | 8 | rip | RFC 2453 | 3 |
-| esp | RFC 4303 | 2 | stp | IEEE 802.1D | 14 |
-| ethernet | IEEE 802.3 | 1 | tcp | RFC 9293 | 8 |
-| gre | RFC 2784/2890 | 5 | udp | RFC 768 | 2 |
-| hsrp | RFC 2281 | 11 | vlan | IEEE 802.1Q | 1 (primitive) |
-| icmp | RFC 792 | 5 | vrrp | RFC 3768 | 8 |
-| icmp6 | RFC 4443/4861 | 5 | vxlan | RFC 7348 | 3 |
+| arp | RFC 826 | 9 | isis | ISO/IEC 10589; RFC 1195 | 9 |
+| bfd | RFC 5880/5881 | 11 | lacp | IEEE 802.1AX | 23 |
+| bgp | RFC 4271/2918 | 2 | ldp | RFC 5036 | 4 |
+| cdp | Cisco CDP Spec 2.02 | 3 | lldp | IEEE 802.1AB | 2 |
+| dhcp | RFC 2131/2132 | 12 | mpls | RFC 3032/5462 | 4 |
+| dhcpv6 | RFC 8415 | 2 | ospf | RFC 2328 | 7 |
+| eigrp | RFC 7868 | 8 | ospfv3 | RFC 5340 | 8 |
+| esp | RFC 4303 | 2 | pim | RFC 7761 | 4 |
+| ethernet | IEEE 802.3 | 1 | rip | RFC 2453 | 3 |
+| geneve | RFC 8926 | 8 | sctp | RFC 9260 | 4 |
+| gre | RFC 2784/2890 | 5 | stp | IEEE 802.1D | 14 |
+| gtp | 3GPP TS 29.060 | 9 | tcp | RFC 9293 | 8 |
+| hsrp | RFC 2281 | 11 | udp | RFC 768 | 2 |
+| icmp | RFC 792 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
+| icmp6 | RFC 4443/4861 | 5 | vrrp | RFC 3768 | 8 |
+| igmp | RFC 1112/2236/3376 | 4 | vxlan | RFC 7348 | 3 |
 | ipv4 | RFC 791 | 10 | | | |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).

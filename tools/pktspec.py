@@ -53,18 +53,24 @@ from scapy.all import (
     TCP,
     UDP,
 )
+from scapy.contrib.bfd import BFD
 from scapy.contrib.bgp import BGPHeader
 from scapy.contrib.cdp import CDPv2_HDR
 from scapy.contrib.eigrp import EIGRP as _ScapyEIGRP
 from scapy.contrib.eigrp import _EIGRP_FLAGS, _EIGRP_OPCODES
+from scapy.contrib.geneve import GENEVE
+from scapy.contrib.gtp import GTPHeader
+from scapy.contrib.ldp import LDP
 from scapy.contrib.lldp import (
     LLDPDUChassisID,
     LLDPDUEndOfLLDPDU,
     LLDPDUPortID,
     LLDPDUTimeToLive,
 )
-from scapy.contrib.ospf import OSPF_Hdr
+from scapy.contrib.ospf import OSPF_Hdr, OSPFv3_Hdr
+from scapy.contrib.pim import PIMv2Hdr
 from scapy.fields import (
+    BitEnumField,
     BitField,
     ByteEnumField,
     ByteField,
@@ -78,9 +84,12 @@ from scapy.fields import (
     XStrFixedLenField,
 )
 from scapy.layers.dhcp import BOOTP
+from scapy.layers.dhcp6 import DHCP6
+from scapy.layers.igmp import IGMP
 from scapy.layers.inet6 import ICMPv6EchoRequest
 from scapy.layers.ipsec import AH
 from scapy.layers.rip import RIP
+from scapy.layers.sctp import SCTP
 from scapy.layers.vxlan import VXLAN
 
 
@@ -247,6 +256,47 @@ class VRRPHeader(Packet):
     ]
 
 
+class ISISHeader(Packet):
+    """IS-IS common header per ISO/IEC 10589 section 7.3.9.
+
+    scapy 2.8's ISIS_CommonHdr delegates the Fletcher checksum of the
+    trailing PDU to ``self[1].checksum_info`` and cannot build without a
+    PDU payload layer; the fixed-offset surface of IS-IS is exactly the
+    8-byte common header (no checksum lives in it), so this class models
+    only that. The PDU body (hello/LSP/SNP TLV chains) is variable and
+    stays outside the filter window. Byte 4 carries three reserved high
+    bits above the 5-bit PDU type, exposed as two separate kwargs so the
+    registry's masked views each map to their own scapy field.
+    """
+
+    fields_desc = [
+        ByteEnumField("nlpid", 0x83, {0x83: "IS-IS"}),
+        ByteField("hdrlen", 0x1B),
+        ByteField("version", 1),
+        ByteField("idlen", 0),
+        BitField("reserved3", 0, 3),
+        BitEnumField(
+            "pdutype",
+            16,
+            5,
+            {
+                15: "L1 LAN Hello",
+                16: "L2 LAN Hello",
+                17: "P2P Hello",
+                18: "L1 LSP",
+                20: "L2 LSP",
+                24: "L1 CSNP",
+                25: "L2 CSNP",
+                26: "L1 PSNP",
+                27: "L2 PSNP",
+            },
+        ),
+        ByteField("pduversion", 1),
+        ByteField("hdrreserved", 0),
+        ByteField("maxareaaddr", 0),
+    ]
+
+
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
@@ -259,20 +309,27 @@ LAYERS = {
     for cls in (
         AH,
         ARP,
+        BFD,
         BGPHeader,
         BOOTP,
         CDPv2_HDR,
+        DHCP6,
         Dot1Q,
         EIGRPHeader,
         ESP,
         Ether,
+        GENEVE,
         GRE,
+        GTPHeader,
         HSRPHeader,
         ICMP,
         ICMPv6EchoRequest,
+        IGMP,
         IP,
         IPv6,
+        ISISHeader,
         LACPHeader,
+        LDP,
         LLC,
         LLDPDUChassisID,
         LLDPDUEndOfLLDPDU,
@@ -280,8 +337,11 @@ LAYERS = {
         LLDPDUTimeToLive,
         MPLSHeader,
         OSPF_Hdr,
+        OSPFv3_Hdr,
+        PIMv2Hdr,
         RIP,
         Raw,
+        SCTP,
         STP,
         TCP,
         UDP,

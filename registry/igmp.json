@@ -1,0 +1,76 @@
+{
+  "id": "igmp",
+  "label": "IGMP",
+  "rfc": ["3376", "2236", "1112"],
+  "notes": "IGMP over IP protocol 2. The IP header of a real IGMP message carries the Router Alert option (RFC 2113; recommended by RFC 2236 §2 and RFC 3376 §2), so IHL=6 and the anchor base is 24, not 20 — scapy's IGMP layer appends exactly that option, and the fixtures keep it. The 8-byte header of Membership Query, Report and Leave messages is modelled in full; the group address is payload-embedded, so it is a first-class ipv4 field (host primitives do not reach IP payload bytes). IGMPv3 Membership Reports (type 0x22, RFC 3376 §4.2) replace the group address with a variable-length group-record list, so nothing past the type byte is fixed for them; IGMPv1 (RFC 1112) reuses the layout with the Max Resp Time byte unused.",
+  "anchor": {
+    "header": "ip",
+    "base": 24
+  },
+  "locator": ["ip proto 2"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 3376 §4.1",
+      "values": [
+        {
+          "value": 17,
+          "label": "Membership Query"
+        },
+        {
+          "value": 18,
+          "label": "IGMPv1 Membership Report"
+        },
+        {
+          "value": 22,
+          "label": "IGMPv2 Membership Report"
+        },
+        {
+          "value": 23,
+          "label": "IGMPv2 Leave Group"
+        },
+        {
+          "value": 34,
+          "label": "IGMPv3 Membership Report"
+        }
+      ],
+      "description": "Message type; 0x11 query is shared by all versions."
+    },
+    {
+      "id": "max_resp_time",
+      "label": "Max Resp Time",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2236 §2.2",
+      "min": 0,
+      "max": 255,
+      "description": "In a query: tenths of a second a host may wait before replying. IGMPv1 leaves it 0; IGMPv3 values ≥128 are a floating-point max resp code (RFC 3376 §4.1.1)."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2236 §2.2",
+      "min": 0,
+      "max": 65535,
+      "description": "Internet checksum over the IGMP message."
+    },
+    {
+      "id": "group_address",
+      "label": "Group Address",
+      "offset": 4,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2236 §2.2",
+      "description": "0.0.0.0 in a general query; the reported or left multicast group otherwise."
+    }
+  ]
+}

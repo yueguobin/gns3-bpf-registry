@@ -1,0 +1,58 @@
+{
+  "id": "sctp",
+  "label": "SCTP",
+  "rfc": ["9260"],
+  "notes": "SCTP common header (RFC 9260 §3, formerly RFC 4960 §3.1) over IP protocol 132. The ports stay first-class number fields: libpcap's port primitives reach only TCP and UDP, so there is no sctp port primitive to emit (unlike the tcp/udp entries, where the encapsulation ports stay out). The 4-byte verification tag shields every chunk exchange against blind insertion, and the CRC32c checksum covers the whole packet including the pseudo-header. Chunks (DATA, INIT, INIT-ACK, HEARTBEAT...) follow as variable type-length-value structures at no fixed offset.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 132"],
+  "headerLength": 12,
+  "fields": [
+    {
+      "id": "src_port",
+      "label": "Source Port",
+      "offset": 0,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 9260 §3.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Sending SCTP port; no sctp port primitive exists, so the port is a byte field."
+    },
+    {
+      "id": "dst_port",
+      "label": "Destination Port",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 9260 §3.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Receiving SCTP port (common signalling points: 2905 M3UA, 3868 M2PA/SCTP)."
+    },
+    {
+      "id": "verification_tag",
+      "label": "Verification Tag",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 9260 §3.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Tag the peer chose in its INIT/INIT-ACK; packets carrying a wrong tag are discarded. 0 for INIT chunks."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 9260 §3.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "CRC32c over the packet and the IPv4/IPv6 pseudo-header."
+    }
+  ]
+}

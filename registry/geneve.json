@@ -1,0 +1,130 @@
+{
+  "id": "geneve",
+  "label": "GENEVE",
+  "rfc": ["8926"],
+  "notes": "Geneve tunnel header (RFC 8926 §3.1) over UDP port 6081. The fixed 8-byte header is modelled in full: bytes 0 and 1 are bit-packed (version + option length, then OAM/critical + reserved) and split into masked views, followed by the EtherType protocol field, the 24-bit VNI read through one masked 4-byte window, and the reserved tail byte. Options (option_length × 4 bytes of variable TLVs) and the inner frame follow after byte 8 and sit at no fixed offset.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 6081"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xc0",
+      "shift": 6,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 3,
+      "description": "Geneve version; 0."
+    },
+    {
+      "id": "option_length",
+      "label": "Option Length",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x3f",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 63,
+      "description": "Length of the options region in 4-byte units; 0 when there are no options."
+    },
+    {
+      "id": "oam",
+      "label": "OAM",
+      "offset": 1,
+      "size": 1,
+      "mask": "0x80",
+      "shift": 7,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 1,
+      "description": "The inner frame is an OAM packet, not user data."
+    },
+    {
+      "id": "critical",
+      "label": "Critical",
+      "offset": 1,
+      "size": 1,
+      "mask": "0x40",
+      "shift": 6,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 1,
+      "description": "Critical options are present (RFC 8926 §3.1.1)."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 1,
+      "size": 1,
+      "mask": "0x3f",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 63,
+      "description": "Six reserved bits; zero."
+    },
+    {
+      "id": "protocol",
+      "label": "Protocol Type",
+      "offset": 2,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 8926 §3.2",
+      "values": [
+        {
+          "value": 2048,
+          "label": "IPv4"
+        },
+        {
+          "value": 2054,
+          "label": "ARP"
+        },
+        {
+          "value": 34525,
+          "label": "IPv6"
+        },
+        {
+          "value": 25944,
+          "label": "Transparent Ethernet Bridging"
+        }
+      ],
+      "description": "EtherType of the inner frame."
+    },
+    {
+      "id": "vni",
+      "label": "VNI",
+      "offset": 4,
+      "size": 4,
+      "mask": "0xffffff00",
+      "shift": 8,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 16777215,
+      "description": "24-bit Virtual Network Identifier, read through a masked 4-byte window."
+    },
+    {
+      "id": "reserved2",
+      "label": "Reserved (tail)",
+      "offset": 7,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8926 §3.1",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved byte after the VNI; zero."
+    }
+  ]
+}
