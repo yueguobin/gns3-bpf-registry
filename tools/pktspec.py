@@ -86,6 +86,7 @@ from scapy.fields import (
 )
 from scapy.layers.dhcp import BOOTP
 from scapy.layers.dhcp6 import DHCP6
+from scapy.layers.eap import EAPOL
 from scapy.layers.igmp import IGMP
 from scapy.layers.inet6 import ICMPv6EchoRequest
 from scapy.layers.ipsec import AH
@@ -316,6 +317,7 @@ LAYERS = {
         CDPv2_HDR,
         DHCP6,
         Dot1Q,
+        EAPOL,
         EIGRPHeader,
         ESP,
         Ether,
