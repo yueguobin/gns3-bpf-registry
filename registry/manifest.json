@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.19",
+  "registryVersion": "2026.11.20",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
@@ -9,6 +9,7 @@
     "cdp.json": "sha256:89542fa820e297fca979cde812a964a2465e0d023889e88a8269903e67ba8579",
     "dhcp.json": "sha256:33de3a53720be7a9d2351e0301017c38544793cd5b19070810f459d792a8decf",
     "dhcpv6.json": "sha256:289579f3e49a78c0035eeefba45eef1a09a7fe4095876a850785698aa6a5aabe",
+    "eapol.json": "sha256:c6e098bec093cfaa1cfcfcdaace1339e217cf3f7a64041c0f1287629c8b54a96",
     "eigrp.json": "sha256:aeac37a1dbb8d140782a6f9ce09051b600eeab1f91b0ad35eb9f1f6d0794ab8d",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
     "ethernet.json": "sha256:335501e617e26a8e5b5f964c2a3573ad4bdd6240b36d9802176cf2c3c46f6ec6",

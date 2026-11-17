@@ -816,6 +816,94 @@
       "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x1 and (udp[8:4] & 0xffffff) == 0x123456"
     },
     {
+      "name": "eapol-start",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x1"
+    },
+    {
+      "name": "eapol-logoff",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x2"
+    },
+    {
+      "name": "eapol-key",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 3
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x3"
+    },
+    {
+      "name": "eapol-eap-packet",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x0"
+    },
+    {
+      "name": "eapol-mka",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 5
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x5"
+    },
+    {
+      "name": "eapol-announcement-generic",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 6
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x6"
+    },
+    {
+      "name": "eapol-version-2004",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34958 and ether[14:1] == 0x2"
+    },
+    {
+      "name": "eapol-body-length-0",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "body_length",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34958 and ether[16:2] == 0"
+    },
+    {
       "name": "eigrp-version-2",
       "entry": "eigrp",
       "select": [

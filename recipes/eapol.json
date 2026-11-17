@@ -1,0 +1,34 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "EAPOL", "fields": {"version": 2, "type": 1, "len": 0}}
+  ],
+  "anchor": {"header": "ether", "base": 14},
+  "headerLength": 4,
+  "fieldMap": {"body_length": "len"},
+  "probe": {
+    "version": ["0xf", "0xf0"],
+    "type": ["0xf", "0xf0"],
+    "body_length": ["0xf0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "type": "0x5a",
+    "body_length": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [2, 1],
+    "type": [1, 2],
+    "body_length": [0, 5]
+  },
+  "vectors": [
+    {"name": "eapol-start", "select": [{"field": "type", "value": 1}]},
+    {"name": "eapol-logoff", "select": [{"field": "type", "value": 2}]},
+    {"name": "eapol-key", "select": [{"field": "type", "value": 3}]},
+    {"name": "eapol-eap-packet", "select": [{"field": "type", "value": 0}]},
+    {"name": "eapol-mka", "select": [{"field": "type", "value": 5}]},
+    {"name": "eapol-announcement-generic", "select": [{"field": "type", "value": 6}]},
+    {"name": "eapol-version-2004", "select": [{"field": "version", "value": 2}]},
+    {"name": "eapol-body-length-0", "select": [{"field": "body_length", "value": 0}]}
+  ]
+}
