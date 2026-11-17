@@ -1,0 +1,43 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:00:5e:00:00:01"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "224.0.0.1", "ttl": 1, "chksum": "$PIN", "proto": 2}},
+    {"layer": "IGMP", "fields": {"type": 17, "mrcode": 10, "chksum": "$PIN", "gaddr": "0.0.0.0"}}
+  ],
+  "anchor": {"header": "ip", "base": 24},
+  "headerLength": 8,
+  "fieldMap": {
+    "checksum": "IGMP.chksum",
+    "max_resp_time": "mrcode",
+    "group_address": "gaddr"
+  },
+  "probe": {
+    "type": ["0x0f", "0xf0"],
+    "max_resp_time": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "group_address": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "type": "0x11",
+    "max_resp_time": "0x0a",
+    "checksum": "0x5a5a",
+    "group_address": "224.0.2.10"
+  },
+  "fixtures": {
+    "type": [17, 22],
+    "max_resp_time": [10, 20],
+    "checksum": ["0x1234", "0x1235"],
+    "group_address": ["0.0.0.0", "224.0.2.11"]
+  },
+  "vectors": [
+    {"name": "igmp-membership-query", "select": [{"field": "type", "value": 17}]},
+    {"name": "igmp-v1-membership-report", "select": [{"field": "type", "value": 18}]},
+    {"name": "igmp-v2-membership-report", "select": [{"field": "type", "value": 22}]},
+    {"name": "igmp-v2-leave-group", "select": [{"field": "type", "value": 23}]},
+    {"name": "igmp-v3-membership-report", "select": [{"field": "type", "value": 34}]},
+    {"name": "igmp-max-resp-time-10", "select": [{"field": "max_resp_time", "value": 10}]},
+    {"name": "igmp-general-query", "select": [{"field": "group_address", "value": "0.0.0.0"}]},
+    {"name": "igmp-group-224-0-2-10", "select": [{"field": "group_address", "value": "224.0.2.10"}]},
+    {"name": "igmp-checksum", "select": [{"field": "checksum", "value": 4660}]}
+  ]
+}

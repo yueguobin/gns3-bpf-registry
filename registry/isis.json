@@ -1,0 +1,157 @@
+{
+  "id": "isis",
+  "label": "IS-IS",
+  "rfc": ["1142", "1195"],
+  "notes": "IS-IS common header (ISO/IEC 10589 §7.3.9, republished as RFC 1142) over 802.2 LLC on Ethernet: DSAP/SSAP 0xFE with UI control 0x03, sent to 01:80:c2:00:00:14 (allL1ISs) or 01:80:c2:00:00:15 (allL2ISs). The anchor base is 17 (14-byte Ethernet + 3-byte LLC) and the locator matches the LLC DSAP/SSAP bytes. All eight fixed bytes are modelled; the PDU type byte splits into a 5-bit type view and the three reserved high bits. Everything after byte 8 is PDU-type-dependent TLV territory (hello parameters, LSP entries, SNP records) with no fixed offsets, and no checksum lives in the common header — authentication and checksum TLVs ride in the variable body. ES-IS (NLPID 0x82) and CLNP (0x81) share the LLC framing but are separate protocols.",
+  "anchor": {
+    "header": "ether",
+    "base": 17
+  },
+  "locator": ["ether[14:2] = 0xfefe"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "nlpid",
+      "label": "NLPID",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "ISO TR 9577; ISO/IEC 10589 §7.3.9",
+      "values": [
+        {
+          "value": 131,
+          "label": "IS-IS"
+        }
+      ],
+      "description": "Intradomain Routing Protocol Discriminator; 0x83 identifies IS-IS (0x81 CLNP and 0x82 ES-IS share the LLC framing)."
+    },
+    {
+      "id": "header_length",
+      "label": "Header Length",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the fixed part of the PDU header in bytes; 27 for LAN hellos, PDU-type dependent."
+    },
+    {
+      "id": "version",
+      "label": "Version / Protocol ID Extension",
+      "offset": 2,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "Version/Protocol ID Extension; 1."
+    },
+    {
+      "id": "id_length",
+      "label": "ID Length",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "System-ID length in bytes; 0 means 6."
+    },
+    {
+      "id": "pdu_type",
+      "label": "PDU Type",
+      "offset": 4,
+      "size": 1,
+      "mask": "0x1f",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "ISO/IEC 10589 §9.3",
+      "values": [
+        {
+          "value": 15,
+          "label": "L1 LAN Hello"
+        },
+        {
+          "value": 16,
+          "label": "L2 LAN Hello"
+        },
+        {
+          "value": 17,
+          "label": "P2P Hello"
+        },
+        {
+          "value": 18,
+          "label": "L1 LSP"
+        },
+        {
+          "value": 20,
+          "label": "L2 LSP"
+        },
+        {
+          "value": 24,
+          "label": "L1 CSNP"
+        },
+        {
+          "value": 25,
+          "label": "L2 CSNP"
+        },
+        {
+          "value": 26,
+          "label": "L1 PSNP"
+        },
+        {
+          "value": 27,
+          "label": "L2 PSNP"
+        }
+      ],
+      "description": "Low 5 bits of byte 4 identify the PDU type."
+    },
+    {
+      "id": "type_reserved",
+      "label": "Reserved Bits",
+      "offset": 4,
+      "size": 1,
+      "mask": "0xe0",
+      "shift": 5,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 7,
+      "description": "Three reserved bits above the PDU type; zero."
+    },
+    {
+      "id": "pdu_version",
+      "label": "PDU Version",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "PDU version; 1."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 6,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved; zero."
+    },
+    {
+      "id": "max_area_addresses",
+      "label": "Max Area Addresses",
+      "offset": 7,
+      "size": 1,
+      "kind": "number",
+      "ref": "ISO/IEC 10589 §7.3.9",
+      "min": 0,
+      "max": 255,
+      "description": "Number of manual area addresses configured for this router; 0 means 3."
+    }
+  ]
+}

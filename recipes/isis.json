@@ -1,0 +1,72 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:80:c2:00:00:15"}},
+    {"layer": "LLC", "fields": {"dsap": 254, "ssap": 254, "ctrl": 3}},
+    {"layer": "ISISHeader", "fields": {"nlpid": 131, "hdrlen": 27, "version": 1, "idlen": 0, "reserved3": 0, "pdutype": 16, "pduversion": 1, "hdrreserved": 0, "maxareaaddr": 0}}
+  ],
+  "anchor": {"header": "ether", "base": 17},
+  "headerLength": 8,
+  "fieldMap": {
+    "header_length": "hdrlen",
+    "id_length": "idlen",
+    "pdu_type": "pdutype",
+    "type_reserved": "reserved3",
+    "pdu_version": "pduversion",
+    "reserved": "hdrreserved",
+    "max_area_addresses": "maxareaaddr"
+  },
+  "probe": {
+    "nlpid": ["0x0f", "0xf0"],
+    "header_length": ["0x0f", "0xf0"],
+    "version": ["0x0f", "0xf0"],
+    "id_length": ["0x0f", "0xf0"],
+    "pdu_version": ["0x0f", "0xf0"],
+    "reserved": ["0x0f", "0xf0"],
+    "max_area_addresses": ["0x0f", "0xf0"]
+  },
+  "manual": {
+    "pdu_type": "5 bits share byte 4 with the reserved high bits; scapy's 5-bit BitEnumField clamps the logical bits so the probe cannot isolate them, and the mask/shift view is hand-declared per ISO/IEC 10589 §9.3 and crosscheck-verified",
+    "type_reserved": "3 bits share byte 4 with the PDU type; the mask/shift view is hand-declared per ISO/IEC 10589 §7.3.9 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "nlpid": "0x5a",
+    "header_length": "0x5a",
+    "version": "0x5a",
+    "id_length": "0x5a",
+    "pdu_type": "0x15",
+    "type_reserved": "0x7",
+    "pdu_version": "0x5a",
+    "reserved": "0x5a",
+    "max_area_addresses": "0x5a"
+  },
+  "fixtures": {
+    "nlpid": [131, 130],
+    "header_length": [27, 20],
+    "version": [1, 2],
+    "id_length": [0, 6],
+    "pdu_type": [16, 18],
+    "type_reserved": [0, 7],
+    "pdu_version": [1, 2],
+    "reserved": [0, 1],
+    "max_area_addresses": [0, 3]
+  },
+  "vectors": [
+    {"name": "isis-nlpid-isis", "select": [{"field": "nlpid", "value": 131}]},
+    {"name": "isis-header-length-27", "select": [{"field": "header_length", "value": 27}]},
+    {"name": "isis-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "isis-id-length-6", "select": [{"field": "id_length", "value": 6}]},
+    {"name": "isis-l1-lan-hello", "select": [{"field": "pdu_type", "value": 15}]},
+    {"name": "isis-l2-lan-hello", "select": [{"field": "pdu_type", "value": 16}]},
+    {"name": "isis-p2p-hello", "select": [{"field": "pdu_type", "value": 17}]},
+    {"name": "isis-l1-lsp", "select": [{"field": "pdu_type", "value": 18}]},
+    {"name": "isis-l2-lsp", "select": [{"field": "pdu_type", "value": 20}]},
+    {"name": "isis-l1-csnp", "select": [{"field": "pdu_type", "value": 24}]},
+    {"name": "isis-l2-csnp", "select": [{"field": "pdu_type", "value": 25}]},
+    {"name": "isis-l1-psnp", "select": [{"field": "pdu_type", "value": 26}]},
+    {"name": "isis-l2-psnp", "select": [{"field": "pdu_type", "value": 27}]},
+    {"name": "isis-type-reserved-0", "select": [{"field": "type_reserved", "value": 0}]},
+    {"name": "isis-pdu-version-1", "select": [{"field": "pdu_version", "value": 1}]},
+    {"name": "isis-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "isis-max-area-addresses-3", "select": [{"field": "max_area_addresses", "value": 3}]}
+  ]
+}

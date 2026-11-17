@@ -1,0 +1,40 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "ttl": 64, "chksum": "$PIN"}},
+    {"layer": "TCP", "fields": {"sport": 646, "dport": 646, "flags": "0x10", "chksum": "$PIN"}},
+    {"layer": "LDP", "fields": {"version": 1, "len": 14, "id": "192.0.2.1", "space": 0}}
+  ],
+  "anchor": {"header": "tcp", "base": 20},
+  "headerLength": 10,
+  "fieldMap": {
+    "pdu_length": "len",
+    "lsr_id": "id",
+    "label_space_id": "space"
+  },
+  "probe": {
+    "version": ["0x0f0f", "0xf0f0"],
+    "pdu_length": ["0x0f0f", "0xf0f0"],
+    "lsr_id": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "label_space_id": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "version": "0x5a5a",
+    "pdu_length": "0x5a5a",
+    "lsr_id": "192.0.2.10",
+    "label_space_id": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [1, 2],
+    "pdu_length": [14, 20],
+    "lsr_id": ["192.0.2.1", "192.0.2.9"],
+    "label_space_id": [0, 1]
+  },
+  "vectors": [
+    {"name": "ldp-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "ldp-pdu-length-14", "select": [{"field": "pdu_length", "value": 14}]},
+    {"name": "ldp-lsr-id", "select": [{"field": "lsr_id", "value": "192.0.2.1"}]},
+    {"name": "ldp-label-space-0", "select": [{"field": "label_space_id", "value": 0}]},
+    {"name": "ldp-platform-label-space", "select": [{"field": "lsr_id", "value": "192.0.2.1"}, {"field": "label_space_id", "value": 0}]}
+  ]
+}

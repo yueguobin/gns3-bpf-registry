@@ -1,0 +1,56 @@
+{
+  "id": "ldp",
+  "label": "LDP",
+  "rfc": ["5036"],
+  "notes": "LDP PDU header (RFC 5036 §3.1.1) over TCP port 646, the LDP session channel; base 20 assumes a TCP header without options. Discovery hellos ride the same PDU inside UDP port 646 multicasts, but their byte offsets hang off a UDP header, so this entry anchors at TCP only. The 10-byte PDU header is modelled in full: version, PDU length, and the LDP Identifier split into the 4-byte LSR Id — an address-like identifier carried in the payload, where host primitives cannot reach it, so it is a first-class ipv4 field — and the 2-byte label space number. Messages (message id plus typed TLVs: hello, initialisation, keepalive, address and label mappings) follow with variable length and offsets.",
+  "anchor": {
+    "header": "tcp",
+    "base": 20
+  },
+  "locator": ["tcp port 646"],
+  "headerLength": 10,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 5036 §3.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "LDP protocol version; 1."
+    },
+    {
+      "id": "pdu_length",
+      "label": "PDU Length",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 5036 §3.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Total length of this PDU excluding the version and PDU length fields."
+    },
+    {
+      "id": "lsr_id",
+      "label": "LSR Id",
+      "offset": 4,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 5036 §2.1.1",
+      "description": "First 4 bytes of the LDP Identifier: the LSR Id of the router sending the PDU."
+    },
+    {
+      "id": "label_space_id",
+      "label": "Label Space",
+      "offset": 8,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 5036 §2.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Second half of the LDP Identifier; 0 identifies the per-platform label space."
+    }
+  ]
+}

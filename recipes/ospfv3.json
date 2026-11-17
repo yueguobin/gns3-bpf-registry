@@ -1,0 +1,61 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "33:33:00:00:00:05"}},
+    {"layer": "IPv6", "fields": {"src": "2001:db8::1", "dst": "ff02::5", "hlim": 1, "nh": 89}},
+    {"layer": "OSPFv3_Hdr", "fields": {"version": 3, "type": 1, "len": 16, "src": "1.1.1.1", "area": "0.0.0.0", "chksum": "$PIN", "instance": 0, "reserved": 0}}
+  ],
+  "anchor": {"header": "ip6", "base": 40},
+  "headerLength": 16,
+  "fieldMap": {
+    "packet_length": "len",
+    "router_id": "OSPFv3_Hdr.src",
+    "area_id": "area",
+    "checksum": "OSPFv3_Hdr.chksum",
+    "instance_id": "instance"
+  },
+  "probe": {
+    "version": ["0x0f", "0xf0"],
+    "type": ["0x0f", "0xf0"],
+    "packet_length": ["0x0f0f", "0xf0f0"],
+    "router_id": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "area_id": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "instance_id": ["0x0f", "0xf0"],
+    "reserved": ["0x0f", "0xf0"]
+  },
+  "crosscheck": {
+    "version": "0x3",
+    "type": "0x1",
+    "packet_length": "0x5a5a",
+    "router_id": "192.0.2.10",
+    "area_id": "0.0.0.2",
+    "checksum": "0x5a5a",
+    "instance_id": "0x5a",
+    "reserved": "0x5a"
+  },
+  "fixtures": {
+    "version": [3, 2],
+    "type": [1, 2],
+    "packet_length": [16, 32],
+    "router_id": ["1.1.1.1", "1.1.1.2"],
+    "area_id": ["0.0.0.0", "0.0.0.1"],
+    "checksum": ["0x1234", "0x1235"],
+    "instance_id": [0, 1],
+    "reserved": [0, 1]
+  },
+  "vectors": [
+    {"name": "ospfv3-hello", "select": [{"field": "type", "value": 1}]},
+    {"name": "ospfv3-database-description", "select": [{"field": "type", "value": 2}]},
+    {"name": "ospfv3-link-state-request", "select": [{"field": "type", "value": 3}]},
+    {"name": "ospfv3-link-state-update", "select": [{"field": "type", "value": 4}]},
+    {"name": "ospfv3-link-state-ack", "select": [{"field": "type", "value": 5}]},
+    {"name": "ospfv3-router-id", "select": [{"field": "router_id", "value": "1.1.1.1"}]},
+    {"name": "ospfv3-area-0", "select": [{"field": "area_id", "value": "0.0.0.0"}]},
+    {"name": "ospfv3-instance-0", "select": [{"field": "instance_id", "value": 0}]},
+    {"name": "ospfv3-instance-1", "select": [{"field": "instance_id", "value": 1}]},
+    {"name": "ospfv3-length-16", "select": [{"field": "packet_length", "value": 16}]},
+    {"name": "ospfv3-checksum", "select": [{"field": "checksum", "value": 4660}]},
+    {"name": "ospfv3-version-3", "select": [{"field": "version", "value": 3}]},
+    {"name": "ospfv3-reserved", "select": [{"field": "reserved", "value": 0}]}
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:00:5e:00:00:0d"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "224.0.0.13", "ttl": 1, "chksum": "$PIN", "proto": 103}},
+    {"layer": "PIMv2Hdr", "fields": {"version": 2, "type": 0, "reserved": 0, "chksum": "$PIN"}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 4,
+  "fieldMap": {
+    "checksum": "PIMv2Hdr.chksum"
+  },
+  "probe": {
+    "reserved": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "version": "4 bits share byte 0 with the type nibble; scapy's 4-bit BitField clamps the logical bits so the probe cannot isolate them, and the mask/shift view is hand-declared per RFC 7761 §4.1 and crosscheck-verified",
+    "type": "4 bits share byte 0 with the version nibble; the mask/shift view is hand-declared per RFC 7761 §4.9 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "version": "0x2",
+    "type": "0x3",
+    "reserved": "0x5a",
+    "checksum": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [2, 3],
+    "type": [0, 3],
+    "reserved": [0, 1],
+    "checksum": ["0x1234", "0x1235"]
+  },
+  "vectors": [
+    {"name": "pim-version-2", "select": [{"field": "version", "value": 2}]},
+    {"name": "pim-hello", "select": [{"field": "type", "value": 0}]},
+    {"name": "pim-register", "select": [{"field": "type", "value": 1}]},
+    {"name": "pim-register-stop", "select": [{"field": "type", "value": 2}]},
+    {"name": "pim-join-prune", "select": [{"field": "type", "value": 3}]},
+    {"name": "pim-bootstrap", "select": [{"field": "type", "value": 4}]},
+    {"name": "pim-assert", "select": [{"field": "type", "value": 5}]},
+    {"name": "pim-candidate-rp-advertisement", "select": [{"field": "type", "value": 8}]},
+    {"name": "pim-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "pim-checksum", "select": [{"field": "checksum", "value": 4660}]}
+  ]
+}

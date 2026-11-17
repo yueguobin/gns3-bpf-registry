@@ -1,0 +1,153 @@
+{
+  "id": "gtp",
+  "label": "GTPv1",
+  "rfc": [],
+  "notes": "GTPv1 tunneling header (3GPP TS 29.060 §9.2) over UDP: GTP-C on port 2123 (signalling) and GTP-U on port 2152 (user plane); both share the mandatory 8-byte header modelled here, and scapy's GTPHeader builds exactly that prefix. The first byte splits into seven masked views: version, protocol type, a reserved bit and the E/S/PN flags. When E, S or PN is set, the 8-byte prefix is followed by a sequence number, an N-PDU number and/or extension headers before the payload, so those conditional bytes and everything past them sit at no fixed offset — with the flags clear, a GTP-U T-PDU (message type 255) starts directly at offset 8. GTPv2 (3GPP TS 29.274, sharing port 2123 for GTP-C) has a different layout and is out of scope, as are GTPv0 (port 3386) and GTP' charging.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 2123", "udp port 2152"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xe0",
+      "shift": 5,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 7,
+      "description": "GTP version; 1."
+    },
+    {
+      "id": "pt",
+      "label": "Protocol Type",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x10",
+      "shift": 4,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 1,
+      "description": "1 = GTP (this header); 0 = GTP' charging."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x8",
+      "shift": 3,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 1,
+      "description": "Reserved bit; zero."
+    },
+    {
+      "id": "e_flag",
+      "label": "E Flag",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x4",
+      "shift": 2,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 1,
+      "description": "Extension header present after the conditional fields."
+    },
+    {
+      "id": "s_flag",
+      "label": "S Flag",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x2",
+      "shift": 1,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 1,
+      "description": "Sequence number present."
+    },
+    {
+      "id": "pn_flag",
+      "label": "PN Flag",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x1",
+      "shift": 0,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 1,
+      "description": "N-PDU number present."
+    },
+    {
+      "id": "msg_type",
+      "label": "Message Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "3GPP TS 29.060 §7",
+      "values": [
+        {
+          "value": 1,
+          "label": "Echo Request"
+        },
+        {
+          "value": 2,
+          "label": "Echo Response"
+        },
+        {
+          "value": 16,
+          "label": "Create PDP Context Request"
+        },
+        {
+          "value": 17,
+          "label": "Create PDP Context Response"
+        },
+        {
+          "value": 25,
+          "label": "Delete PDP Context Request"
+        },
+        {
+          "value": 26,
+          "label": "Delete PDP Context Response"
+        },
+        {
+          "value": 255,
+          "label": "G-PDU (T-PDU)"
+        }
+      ],
+      "description": "GTP-C message type, or 255 for a GTP-U tunnelled T-PDU."
+    },
+    {
+      "id": "length",
+      "label": "Length",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 65535,
+      "description": "Length of the payload after the mandatory 8-byte header."
+    },
+    {
+      "id": "teid",
+      "label": "TEID",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "3GPP TS 29.060 §9.2",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Tunnel Endpoint Identifier; the natural match key for a specific bearer."
+    }
+  ]
+}

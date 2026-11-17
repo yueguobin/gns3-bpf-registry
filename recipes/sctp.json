@@ -1,0 +1,42 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "ttl": 64, "chksum": "$PIN", "proto": 132}},
+    {"layer": "SCTP", "fields": {"sport": 5000, "dport": 5001, "tag": "0x12345678", "chksum": "$PIN"}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 12,
+  "fieldMap": {
+    "src_port": "sport",
+    "dst_port": "dport",
+    "verification_tag": "tag",
+    "checksum": "SCTP.chksum"
+  },
+  "probe": {
+    "src_port": ["0x0f0f", "0xf0f0"],
+    "dst_port": ["0x0f0f", "0xf0f0"],
+    "verification_tag": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "checksum": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "src_port": "0x5a5a",
+    "dst_port": "0x5a5a",
+    "verification_tag": "0x5a5a5a5a",
+    "checksum": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "src_port": [5000, 5002],
+    "dst_port": [5001, 5003],
+    "verification_tag": ["0x12345678", "0x12345679"],
+    "checksum": ["0x12345678", "0x12345679"]
+  },
+  "vectors": [
+    {"name": "sctp-src-port-5000", "select": [{"field": "src_port", "value": 5000}]},
+    {"name": "sctp-dst-port-5001", "select": [{"field": "dst_port", "value": 5001}]},
+    {"name": "sctp-dst-port-2905-m3ua", "select": [{"field": "dst_port", "value": 2905}]},
+    {"name": "sctp-verification-tag", "select": [{"field": "verification_tag", "value": 305419896}]},
+    {"name": "sctp-verification-tag-0", "select": [{"field": "verification_tag", "value": 0}]},
+    {"name": "sctp-checksum", "select": [{"field": "checksum", "value": 305419896}]},
+    {"name": "sctp-signaling-association", "select": [{"field": "src_port", "value": 5000}, {"field": "dst_port", "value": 5001}]}
+  ]
+}

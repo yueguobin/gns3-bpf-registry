@@ -1,0 +1,102 @@
+{
+  "id": "pim",
+  "label": "PIM",
+  "rfc": ["7761"],
+  "notes": "PIM Version 2 message header (RFC 7761 §4.1, PIM-SM) over IP protocol 103. The 4-byte fixed header is modelled in full: version and type share byte 0 as masked views, then the reserved byte and the 16-bit checksum (the RFC 1071 internet checksum over the whole PIM message; no IPv4 pseudo-header). Everything after byte 4 is message-specific and variable: Hello options, Join/Prune encoded group and source lists and Register payloads have no fixed offsets. PIM-DM (RFC 3973) reuses this header and adds the Graft, Graft-Ack and State Refresh types. PIM over IPv6 shares protocol number 103 but computes the checksum over the IPv6 pseudo-header, so this IPv4-anchored entry does not cover it.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 103"],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 7761 §4.1",
+      "min": 0,
+      "max": 15,
+      "description": "PIM version; 2 in every PIMv2 message."
+    },
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "RFC 7761 §4.9",
+      "values": [
+        {
+          "value": 0,
+          "label": "Hello"
+        },
+        {
+          "value": 1,
+          "label": "Register"
+        },
+        {
+          "value": 2,
+          "label": "Register-Stop"
+        },
+        {
+          "value": 3,
+          "label": "Join/Prune"
+        },
+        {
+          "value": 4,
+          "label": "Bootstrap"
+        },
+        {
+          "value": 5,
+          "label": "Assert"
+        },
+        {
+          "value": 6,
+          "label": "Graft (PIM-DM)"
+        },
+        {
+          "value": 7,
+          "label": "Graft-Ack (PIM-DM)"
+        },
+        {
+          "value": 8,
+          "label": "Candidate-RP-Advertisement"
+        },
+        {
+          "value": 9,
+          "label": "State Refresh (PIM-DM)"
+        }
+      ],
+      "description": "Message type; 0-5 per RFC 7761 §4.9, 6-9 are PIM-DM per RFC 3973."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 7761 §4.1",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved; set to zero on transmission and ignored on receipt."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 7761 §4.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Standard internet checksum over the whole PIM message."
+    }
+  ]
+}
