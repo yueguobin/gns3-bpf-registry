@@ -242,6 +242,8 @@ def _build_probe_recipe(recipe_data: dict) -> auto_draft.Recipe:
     reverse = {v: k for k, v in spec.field_map.items()}
 
     def build(_spec=spec, _reverse=reverse, **kw):
+        if not kw:
+            return bytes(pktspec.build_packet(_spec))
         ((scapy_name, value),) = kw.items()
         field_id = _reverse.get(scapy_name, scapy_name)
         return bytes(pktspec.build_packet(_spec, field_id, value))

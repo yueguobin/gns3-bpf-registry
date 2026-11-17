@@ -104,6 +104,8 @@ def _recipes_from_specs() -> dict[str, Recipe]:
         reverse = {v: k for k, v in spec.field_map.items()}
 
         def build(_spec=spec, _reverse=reverse, **kw):
+            if not kw:
+                return bytes(build_packet(_spec))
             ((scapy_name, value),) = kw.items()
             field_id = _reverse.get(scapy_name, scapy_name)
             return bytes(build_packet(_spec, field_id, value))
@@ -179,6 +181,28 @@ def probe_field(recipe: Recipe, fr: FieldRecipe) -> Probe:
         return fail(
             f"variable-length: {name}=0 changes the header size "
             f"({len(pa)} -> {len(reference)} bytes)"
+        )
+
+    # A sentinel can silently resize the target layer itself (scapy's
+    # FieldListField wraps a bare int into a one-element list, so both
+    # sentinels AND zero grow the layer by the same bytes). The resized
+    # packet then shifts every layer offset and the window below points
+    # past the real layer start, fabricating a layout. The recipe's
+    # canonical build is the independent measure: assigning any value,
+    # including 0, must keep the layer at its declared size.
+    try:
+        canonical = recipe.build()
+    except (AttributeError, TypeError) as exc:
+        raise ProbeError(
+            f"{fr.registry_id}: recipe builder rejected a canonical "
+            f"no-override build: {exc}"
+        ) from exc
+    if len(canonical) != len(reference):
+        return fail(
+            "value-invariant: the recipe's canonical build is "
+            f"{len(canonical)} bytes but {name}=0 builds {len(reference)}; "
+            "the sentinel silently resizes the layer (list-wrapping or "
+            "length-coupled field?), so no layout can be trusted"
         )
 
     layer_start = len(reference) - recipe.layer_len
