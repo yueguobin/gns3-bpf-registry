@@ -1,0 +1,44 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "PPPoED", "fields": {"version": 1, "type": 1, "code": 9, "sessionid": 0, "len": 0}}
+  ],
+  "anchor": {"header": "ether", "base": 14},
+  "headerLength": 6,
+  "fieldMap": {"session_id": "sessionid", "payload_length": "len"},
+  "probe": {
+    "code": ["0xf", "0xf0"],
+    "session_id": ["0xf0f", "0xf0f0"],
+    "payload_length": ["0xf0f", "0xf0f0"]
+  },
+  "manual": {
+    "version": "high nibble of byte 0; sub-byte field the leading-aligned probe model cannot map",
+    "type": "low nibble of byte 0; sub-byte field the leading-aligned probe model cannot map"
+  },
+  "crosscheck": {
+    "version": "0x2",
+    "type": "0x3",
+    "code": "0x5a",
+    "session_id": "0x5a5a",
+    "payload_length": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [1, 2],
+    "type": [1, 2],
+    "code": [9, 167],
+    "session_id": [0, 4660],
+    "payload_length": [0, 4]
+  },
+  "vectors": [
+    {"name": "pppoe-padi", "select": [{"field": "code", "value": 9}]},
+    {"name": "pppoe-pado", "select": [{"field": "code", "value": 7}]},
+    {"name": "pppoe-padr", "select": [{"field": "code", "value": 25}]},
+    {"name": "pppoe-pads", "select": [{"field": "code", "value": 101}]},
+    {"name": "pppoe-padt", "select": [{"field": "code", "value": 167}]},
+    {"name": "pppoe-session-data", "select": [{"field": "code", "value": 0}]},
+    {"name": "pppoe-session-id-1234", "select": [{"field": "session_id", "value": 4660}]},
+    {"name": "pppoe-payload-length-4", "select": [{"field": "payload_length", "value": 4}]},
+    {"name": "pppoe-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "pppoe-type-1", "select": [{"field": "type", "value": 1}]}
+  ]
+}

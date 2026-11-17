@@ -3048,6 +3048,116 @@
       "expect": "ip proto 103 and ip[22:2] == 4660"
     },
     {
+      "name": "pppoe-padi",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 9
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x9"
+    },
+    {
+      "name": "pppoe-pado",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 7
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x7"
+    },
+    {
+      "name": "pppoe-padr",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 25
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x19"
+    },
+    {
+      "name": "pppoe-pads",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 101
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x65"
+    },
+    {
+      "name": "pppoe-padt",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 167
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0xa7"
+    },
+    {
+      "name": "pppoe-session-data",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 0
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x0"
+    },
+    {
+      "name": "pppoe-session-id-1234",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "session_id",
+          "value": 4660
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[16:2] == 4660"
+    },
+    {
+      "name": "pppoe-payload-length-4",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "payload_length",
+          "value": 4
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[18:2] == 4"
+    },
+    {
+      "name": "pppoe-version-1",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and (ether[14:1] & 0xf0) == 0x10"
+    },
+    {
+      "name": "pppoe-type-1",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and (ether[14:1] & 0xf) == 0x1"
+    },
+    {
       "name": "rip-command-response",
       "entry": "rip",
       "select": [
