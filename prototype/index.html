@@ -245,8 +245,8 @@ const FAM = {
    registry models VLAN as a primitive — and the custom layer). */
 const UI = {
   ethernet: {fam:"link",
-    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp"}},
-    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"}]},
+    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp", 34958:"eapol"}},
+    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"},{v:34958, l:"EAPOL"}]},
     primitives:{dst:{p:"ether dst", kind:"mac", label:"Destination MAC"},
                 src:{p:"ether src", kind:"mac", label:"Source MAC"}}},
   ipv4: {fam:"net",
@@ -295,6 +295,8 @@ const UI = {
     exclLabels:{auth_data:"Auth Data"}},
   stp:  {fam:"link"},
   lldp: {fam:"link", exclLabels:{tail:"TLV Chain"}},
+  eapol: {fam:"link",
+    tail:{label:{en:"Packet Body", zh:"包体"}, note:{en:"Layout depends on the Packet Type: EAP packet (0), key descriptor (3), MKA (5) or announcements (6-8); Start/Logoff carry none, so no byte past the 4-byte header is fixed.", zh:"布局取决于 Packet Type:EAP 报文(0)、密钥描述符(3)、MKA(5)或通告(6-8);Start/Logoff 无包体,4 字节头部之后无固定偏移。"}}},
   dhcp: {fam:"app",
     exclLabels:{chaddr_tail:"chaddr pad", sname:"Server Name", file:"Boot File Name"},
     tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"After the magic cookie (0x63825363): a variable TLV option chain; option 53 (message type) has no fixed offset.", zh:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"}}},
