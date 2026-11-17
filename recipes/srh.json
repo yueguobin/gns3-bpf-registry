@@ -1,0 +1,55 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IPv6", "fields": {"src": "2001:db8::1", "dst": "2001:db8:f::1", "nh": 43, "hlim": 64}},
+    {"layer": "SRH", "fields": {"nh": 59, "len": 0, "type": 4, "segleft": 0, "lastentry": 0, "flags": 0, "tag": 0, "addresses": [], "tlv_objects": []}}
+  ],
+  "anchor": {"header": "ip6", "base": 40},
+  "headerLength": 8,
+  "fieldMap": {
+    "next_header": "SRH.nh",
+    "hdr_ext_len": "len",
+    "routing_type": "type",
+    "segments_left": "segleft",
+    "last_entry": "lastentry",
+    "flags": "flags",
+    "tag": "tag"
+  },
+  "probe": {
+    "next_header": ["0x0f", "0xf0"],
+    "hdr_ext_len": ["0x0f", "0xf0"],
+    "routing_type": ["0x0f", "0xf0"],
+    "segments_left": ["0x0f", "0xf0"],
+    "last_entry": ["0x0f", "0xf0"],
+    "flags": ["0x0f", "0xf0"],
+    "tag": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "next_header": "0x5a",
+    "hdr_ext_len": "0x5a",
+    "routing_type": "0x5a",
+    "segments_left": "0x5a",
+    "last_entry": "0x5a",
+    "flags": "0x5a",
+    "tag": "0x5a5a"
+  },
+  "fixtures": {
+    "next_header": [59, 6],
+    "hdr_ext_len": [0, 2],
+    "routing_type": [4, 0],
+    "segments_left": [2, 0],
+    "last_entry": [0, 1],
+    "flags": [0, 1],
+    "tag": [0, 42]
+  },
+  "vectors": [
+    {"name": "srh-routing-type-4", "select": [{"field": "routing_type", "value": 4}]},
+    {"name": "srh-segments-left-2", "select": [{"field": "segments_left", "value": 2}]},
+    {"name": "srh-segments-left-0", "select": [{"field": "segments_left", "value": 0}]},
+    {"name": "srh-last-entry-0", "select": [{"field": "last_entry", "value": 0}]},
+    {"name": "srh-hdr-ext-len-0", "select": [{"field": "hdr_ext_len", "value": 0}]},
+    {"name": "srh-next-header-none", "select": [{"field": "next_header", "value": 59}]},
+    {"name": "srh-flags-0", "select": [{"field": "flags", "value": 0}]},
+    {"name": "srh-tag-42", "select": [{"field": "tag", "value": 42}]}
+  ]
+}

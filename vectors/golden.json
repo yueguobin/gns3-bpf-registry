@@ -3577,6 +3577,94 @@
       "expect": "ip proto 132 and ip[20:2] == 5000 and ip[22:2] == 5001"
     },
     {
+      "name": "srh-routing-type-4",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "routing_type",
+          "value": 4
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[42:1] == 0x4"
+    },
+    {
+      "name": "srh-segments-left-2",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "segments_left",
+          "value": 2
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[43:1] == 2"
+    },
+    {
+      "name": "srh-segments-left-0",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "segments_left",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[43:1] == 0"
+    },
+    {
+      "name": "srh-last-entry-0",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "last_entry",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[44:1] == 0"
+    },
+    {
+      "name": "srh-hdr-ext-len-0",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "hdr_ext_len",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[41:1] == 0"
+    },
+    {
+      "name": "srh-next-header-none",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "next_header",
+          "value": 59
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[40:1] == 0x3b"
+    },
+    {
+      "name": "srh-flags-0",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "flags",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[45:1] == 0"
+    },
+    {
+      "name": "srh-tag-42",
+      "entry": "srh",
+      "select": [
+        {
+          "field": "tag",
+          "value": 42
+        }
+      ],
+      "expect": "ip6 proto 43 and ip6[42:1] = 4 and ip6[46:2] == 42"
+    },
+    {
       "name": "stp-protocol-id-0",
       "entry": "stp",
       "select": [
