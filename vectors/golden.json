@@ -3382,6 +3382,120 @@
       "expect": "udp port 521 and udp[10:2] == 0"
     },
     {
+      "name": "rsvp-version-1",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 46 and (ip[20:1] & 0xf0) == 0x10"
+    },
+    {
+      "name": "rsvp-flags-0",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "flags",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 46 and (ip[20:1] & 0xf) == 0x0"
+    },
+    {
+      "name": "rsvp-msg-type-path",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 46 and ip[21:1] == 0x1"
+    },
+    {
+      "name": "rsvp-msg-type-resv",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 46 and ip[21:1] == 0x2"
+    },
+    {
+      "name": "rsvp-msg-type-hello",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 20
+        }
+      ],
+      "expect": "ip proto 46 and ip[21:1] == 0x14"
+    },
+    {
+      "name": "rsvp-checksum-0x1234",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 46 and ip[22:2] == 4660"
+    },
+    {
+      "name": "rsvp-send-ttl-64",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "send_ttl",
+          "value": 64
+        }
+      ],
+      "expect": "ip proto 46 and ip[24:1] == 64"
+    },
+    {
+      "name": "rsvp-reserved-0",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 46 and ip[25:1] == 0"
+    },
+    {
+      "name": "rsvp-length-36",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "length",
+          "value": 36
+        }
+      ],
+      "expect": "ip proto 46 and ip[26:2] == 36"
+    },
+    {
+      "name": "rsvp-path-and-send-ttl-64",
+      "entry": "rsvp",
+      "select": [
+        {
+          "field": "msg_type",
+          "value": 1
+        },
+        {
+          "field": "send_ttl",
+          "value": 64
+        }
+      ],
+      "expect": "ip proto 46 and ip[21:1] == 0x1 and ip[24:1] == 64"
+    },
+    {
       "name": "sctp-src-port-5000",
       "entry": "sctp",
       "select": [

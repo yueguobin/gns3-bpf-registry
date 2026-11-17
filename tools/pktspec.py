@@ -71,6 +71,7 @@ from scapy.contrib.lldp import (
 from scapy.contrib.ospf import OSPF_Hdr, OSPFv3_Hdr
 from scapy.contrib.pim import PIMv2Hdr
 from scapy.contrib.ripng import RIPng
+from scapy.contrib.rsvp import RSVP
 from scapy.fields import (
     BitEnumField,
     BitField,
@@ -348,6 +349,7 @@ LAYERS = {
         PPPoED,
         RIP,
         RIPng,
+        RSVP,
         Raw,
         SCTP,
         STP,
