@@ -60,6 +60,7 @@ from scapy.contrib.eigrp import EIGRP as _ScapyEIGRP
 from scapy.contrib.eigrp import _EIGRP_FLAGS, _EIGRP_OPCODES
 from scapy.contrib.geneve import GENEVE
 from scapy.contrib.gtp import GTPHeader
+from scapy.contrib.ikev2 import IKEv2
 from scapy.contrib.ldp import LDP
 from scapy.contrib.lldp import (
     LLDPDUChassisID,
@@ -329,6 +330,7 @@ LAYERS = {
         ICMP,
         ICMPv6EchoRequest,
         IGMP,
+        IKEv2,
         IP,
         IPv6,
         ISISHeader,
