@@ -90,6 +90,7 @@ from scapy.layers.eap import EAPOL
 from scapy.layers.igmp import IGMP
 from scapy.layers.inet6 import ICMPv6EchoRequest
 from scapy.layers.ipsec import AH
+from scapy.layers.ppp import PPPoED
 from scapy.layers.rip import RIP
 from scapy.layers.sctp import SCTP
 from scapy.layers.vxlan import VXLAN
@@ -342,6 +343,7 @@ LAYERS = {
         OSPF_Hdr,
         OSPFv3_Hdr,
         PIMv2Hdr,
+        PPPoED,
         RIP,
         RIPng,
         Raw,
