@@ -47,12 +47,14 @@ from scapy.all import (
     IP,
     IPv6,
     LLC,
+    Packet,
     Raw,
     STP,
     TCP,
     UDP,
 )
 from scapy.contrib.bgp import BGPHeader
+from scapy.contrib.cdp import CDPv2_HDR
 from scapy.contrib.eigrp import EIGRP as _ScapyEIGRP
 from scapy.contrib.eigrp import _EIGRP_FLAGS, _EIGRP_OPCODES
 from scapy.contrib.lldp import (
@@ -63,14 +65,21 @@ from scapy.contrib.lldp import (
 )
 from scapy.contrib.ospf import OSPF_Hdr
 from scapy.fields import (
+    BitField,
     ByteEnumField,
     ByteField,
     FlagsField,
+    IPField,
     IntField,
+    MACField,
     ShortField,
+    StrFixedLenField,
     XShortField,
+    XStrFixedLenField,
 )
 from scapy.layers.dhcp import BOOTP
+from scapy.layers.inet6 import ICMPv6EchoRequest
+from scapy.layers.ipsec import AH
 from scapy.layers.rip import RIP
 from scapy.layers.vxlan import VXLAN
 
@@ -95,6 +104,149 @@ class EIGRPHeader(_ScapyEIGRP):
         ShortField("asn", 100),
     ]
 
+
+class LACPHeader(Packet):
+    """LACPDU per IEEE 802.1AX-2020 clause 21.3.1 (Figure 21-4).
+
+    scapy 2.8's contrib.lacp.LACP drops the Subtype byte (109-byte
+    DUs); this class restores the real wire format. The Actor, Partner,
+    Collector and Terminator TLVs are always present with their fixed
+    layouts, so every field sits at a fixed offset within the first 60
+    bytes; the trailing 50 bytes of the 110-byte LACPDU are zero
+    padding and stay outside the filter window.
+    """
+
+    fields_desc = [
+        ByteField("subtype", 1),
+        ByteField("version", 1),
+        ByteField("actor_type", 1),
+        ByteField("actor_length", 20),
+        ShortField("actor_system_priority", 0),
+        MACField("actor_system", None),
+        ShortField("actor_key", 0),
+        ShortField("actor_port_priority", 0),
+        ShortField("actor_port_number", 0),
+        FlagsField(
+            "actor_state",
+            0,
+            8,
+            [
+                "LACP_Activity",
+                "LACP_Timeout",
+                "Aggregation",
+                "Synchronization",
+                "Collecting",
+                "Distributing",
+                "Defaulted",
+                "Expired",
+            ],
+        ),
+        StrFixedLenField("actor_reserved", b"", 3),
+        ByteField("partner_type", 2),
+        ByteField("partner_length", 20),
+        ShortField("partner_system_priority", 0),
+        MACField("partner_system", None),
+        ShortField("partner_key", 0),
+        ShortField("partner_port_priority", 0),
+        ShortField("partner_port_number", 0),
+        FlagsField(
+            "partner_state",
+            0,
+            8,
+            [
+                "LACP_Activity",
+                "LACP_Timeout",
+                "Aggregation",
+                "Synchronization",
+                "Collecting",
+                "Distributing",
+                "Defaulted",
+                "Expired",
+            ],
+        ),
+        StrFixedLenField("partner_reserved", b"", 3),
+        ByteField("collector_type", 3),
+        ByteField("collector_length", 16),
+        ShortField("collector_max_delay", 0),
+        StrFixedLenField("collector_reserved", b"", 12),
+        ByteField("terminator_type", 0),
+        ByteField("terminator_length", 0),
+    ]
+
+
+class HSRPHeader(Packet):
+    """HSRPv1 header per RFC 2281 section 5.1.
+
+    scapy 2.8 ships no HSRP layer. The 20-byte header: version, op code,
+    state, timers, priority, group, a reserved byte, 8 bytes of
+    clear-text authentication data and the virtual IP address. HSRPv2
+    (a different layout on the same UDP port 1985) is out of scope.
+    """
+
+    fields_desc = [
+        ByteField("version", 0),
+        ByteEnumField("opcode", 0, {0: "Hello", 1: "Coup", 2: "Resign"}),
+        ByteEnumField(
+            "state",
+            16,
+            {
+                0: "Initial",
+                1: "Learn",
+                2: "Listen",
+                4: "Speak",
+                8: "Standby",
+                16: "Active",
+            },
+        ),
+        ByteField("hellotime", 3),
+        ByteField("holdtime", 10),
+        ByteField("priority", 100),
+        ByteField("group", 1),
+        ByteField("reserved", 0),
+        IntField("auth1", 0x63697363),  # "cisc" of the default password
+        IntField("auth2", 0x6F000000),  # "o\0\0\0" tail of "cisco\0\0\0"
+        IPField("vip", "192.0.2.254"),
+    ]
+
+
+class MPLSHeader(Packet):
+    """MPLS label stack entry per RFC 3032 section 2.1.
+
+    scapy 2.8 ships no MPLS layer. One 4-byte entry: a 20-bit label,
+    the 3-bit Traffic Class (formerly EXP), the bottom-of-stack bit and
+    an 8-bit TTL, MSB-first as on the wire.
+    """
+
+    fields_desc = [
+        BitField("label", 16, 20),
+        BitField("tc", 0, 3),
+        BitField("s", 1, 1),
+        ByteField("ttl", 64),
+    ]
+
+
+class VRRPHeader(Packet):
+    """VRRP fixed header per RFC 3768 sections 5.1 and 5.3.
+
+    scapy 2.8's VRRP always serializes the RFC 2338-era authentication
+    words after the address list, so its layout only matches the wire
+    when the list is empty. Real advertisements carry at least one
+    address, which shifts the authentication data, so only the 8-byte
+    prefix sits at fixed offsets, and that is all this class models.
+    """
+
+    fields_desc = [
+        BitField("version", 2, 4),
+        BitField("type", 1, 4),
+        ByteField("vrid", 1),
+        ByteField("priority", 100),
+        ByteField("ipcount", 1),
+        ByteField("authtype", 0),
+        ByteField("adv", 1),
+        XShortField("chksum", None),
+    ]
+
+
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
@@ -105,28 +257,35 @@ RECIPES_DIR = ROOT / "recipes"
 LAYERS = {
     cls.__name__: cls
     for cls in (
+        AH,
         ARP,
         BGPHeader,
         BOOTP,
+        CDPv2_HDR,
         Dot1Q,
         EIGRPHeader,
         ESP,
         Ether,
         GRE,
+        HSRPHeader,
         ICMP,
+        ICMPv6EchoRequest,
         IP,
         IPv6,
+        LACPHeader,
         LLC,
         LLDPDUChassisID,
         LLDPDUEndOfLLDPDU,
         LLDPDUPortID,
         LLDPDUTimeToLive,
+        MPLSHeader,
         OSPF_Hdr,
         RIP,
         Raw,
         STP,
         TCP,
         UDP,
+        VRRPHeader,
         VXLAN,
     )
 }

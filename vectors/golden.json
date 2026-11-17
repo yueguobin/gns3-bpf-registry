@@ -2,6 +2,87 @@
   "vectorVersion": 1,
   "vectors": [
     {
+      "name": "ah-spi-0x12345678",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "spi",
+          "value": 305419896
+        }
+      ],
+      "expect": "ip proto 51 and ip[24:4] == 305419896"
+    },
+    {
+      "name": "ah-seq-1",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "seq",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 51 and ip[28:4] == 1"
+    },
+    {
+      "name": "ah-next-header-ipv4",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "next_header",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 51 and ip[20:1] == 4"
+    },
+    {
+      "name": "ah-next-header-tcp",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "next_header",
+          "value": 6
+        }
+      ],
+      "expect": "ip proto 51 and ip[20:1] == 6"
+    },
+    {
+      "name": "ah-payload-length-2",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "payload_length",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 51 and ip[21:1] == 2"
+    },
+    {
+      "name": "ah-reserved-0",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 51 and ip[22:2] == 0"
+    },
+    {
+      "name": "ah-spi-and-seq",
+      "entry": "ah",
+      "select": [
+        {
+          "field": "spi",
+          "value": 305419896
+        },
+        {
+          "field": "seq",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 51 and ip[24:4] == 305419896 and ip[28:4] == 1"
+    },
+    {
       "name": "arp-opcode-request",
       "entry": "arp",
       "select": [
@@ -162,6 +243,65 @@
         }
       ],
       "expect": "tcp port 179 and tcp[38:1] == 0x2"
+    },
+    {
+      "name": "cdp-version-2",
+      "entry": "cdp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 8192 and ether[14:1] == 2"
+    },
+    {
+      "name": "cdp-ttl-180",
+      "entry": "cdp",
+      "select": [
+        {
+          "field": "ttl",
+          "value": 180
+        }
+      ],
+      "expect": "ether proto 8192 and ether[15:1] == 180"
+    },
+    {
+      "name": "cdp-ttl-120",
+      "entry": "cdp",
+      "select": [
+        {
+          "field": "ttl",
+          "value": 120
+        }
+      ],
+      "expect": "ether proto 8192 and ether[15:1] == 120"
+    },
+    {
+      "name": "cdp-checksum",
+      "entry": "cdp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ether proto 8192 and ether[16:2] == 4660"
+    },
+    {
+      "name": "cdp-v2-ttl-180",
+      "entry": "cdp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        },
+        {
+          "field": "ttl",
+          "value": 180
+        }
+      ],
+      "expect": "ether proto 8192 and ether[14:1] == 2 and ether[15:1] == 180"
     },
     {
       "name": "dhcp-op-bootrequest",
@@ -538,6 +678,190 @@
       "expect": "ip proto 47 and (ip[20:2] & 0x7) == 0x1"
     },
     {
+      "name": "hsrp-group-1",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "group",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 1985 and udp[14:1] == 1"
+    },
+    {
+      "name": "hsrp-group-2",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "group",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 1985 and udp[14:1] == 2"
+    },
+    {
+      "name": "hsrp-hello",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 1985 and udp[9:1] == 0x0"
+    },
+    {
+      "name": "hsrp-coup",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 1985 and udp[9:1] == 0x1"
+    },
+    {
+      "name": "hsrp-resign",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 1985 and udp[9:1] == 0x2"
+    },
+    {
+      "name": "hsrp-active",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "state",
+          "value": 16
+        }
+      ],
+      "expect": "udp port 1985 and udp[10:1] == 0x10"
+    },
+    {
+      "name": "hsrp-standby",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "state",
+          "value": 8
+        }
+      ],
+      "expect": "udp port 1985 and udp[10:1] == 0x8"
+    },
+    {
+      "name": "hsrp-speak",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "state",
+          "value": 4
+        }
+      ],
+      "expect": "udp port 1985 and udp[10:1] == 0x4"
+    },
+    {
+      "name": "hsrp-priority-100",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "priority",
+          "value": 100
+        }
+      ],
+      "expect": "udp port 1985 and udp[13:1] == 100"
+    },
+    {
+      "name": "hsrp-hellotime-3",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "hellotime",
+          "value": 3
+        }
+      ],
+      "expect": "udp port 1985 and udp[11:1] == 3"
+    },
+    {
+      "name": "hsrp-holdtime-10",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "holdtime",
+          "value": 10
+        }
+      ],
+      "expect": "udp port 1985 and udp[12:1] == 10"
+    },
+    {
+      "name": "hsrp-version-1",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "version",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 1985 and udp[8:1] == 0"
+    },
+    {
+      "name": "hsrp-reserved-0",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 1985 and udp[15:1] == 0"
+    },
+    {
+      "name": "hsrp-default-password",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "auth_data_1",
+          "value": 1667459683
+        },
+        {
+          "field": "auth_data_2",
+          "value": 1862270976
+        }
+      ],
+      "expect": "udp port 1985 and udp[16:4] == 1667459683 and udp[20:4] == 1862270976"
+    },
+    {
+      "name": "hsrp-virtual-ip",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "virtual_ip",
+          "value": "192.0.2.254"
+        }
+      ],
+      "expect": "udp port 1985 and udp[24:4] == 0xc00002fe"
+    },
+    {
+      "name": "hsrp-group-1-active",
+      "entry": "hsrp",
+      "select": [
+        {
+          "field": "group",
+          "value": 1
+        },
+        {
+          "field": "state",
+          "value": 16
+        }
+      ],
+      "expect": "udp port 1985 and udp[10:1] == 0x10 and udp[14:1] == 1"
+    },
+    {
       "name": "icmp-type-echo-request",
       "entry": "icmp",
       "select": [
@@ -617,6 +941,132 @@
         }
       ],
       "expect": "icmp[0:1] == 0x8 and icmp[1:1] == 0"
+    },
+    {
+      "name": "icmp6-echo-request",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 128
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x80"
+    },
+    {
+      "name": "icmp6-echo-reply",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 129
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x81"
+    },
+    {
+      "name": "icmp6-router-solicitation",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 133
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x85"
+    },
+    {
+      "name": "icmp6-router-advertisement",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 134
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x86"
+    },
+    {
+      "name": "icmp6-neighbor-solicitation",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 135
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x87"
+    },
+    {
+      "name": "icmp6-neighbor-advertisement",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 136
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x88"
+    },
+    {
+      "name": "icmp6-dest-unreachable",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        },
+        {
+          "field": "code",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x1 and ip6[41:1] == 0"
+    },
+    {
+      "name": "icmp6-echo-id",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 128
+        },
+        {
+          "field": "identifier",
+          "value": 4660
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x80 and ip6[44:2] == 4660"
+    },
+    {
+      "name": "icmp6-echo-seq",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 128
+        },
+        {
+          "field": "sequence",
+          "value": 1
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x80 and ip6[46:2] == 1"
+    },
+    {
+      "name": "icmp6-echo-checksum",
+      "entry": "icmp6",
+      "select": [
+        {
+          "field": "type",
+          "value": 128
+        },
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip6 proto 58 and ip6[40:1] == 0x80 and ip6[42:2] == 4660"
     },
     {
       "name": "ipv4-version-4",
@@ -822,6 +1272,280 @@
       "expect": "ip6[7:1] == 64"
     },
     {
+      "name": "lacp-subtype-lacp",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "subtype",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[14:1] == 0x1"
+    },
+    {
+      "name": "lacp-version-1",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[15:1] == 1"
+    },
+    {
+      "name": "lacp-actor-system",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_system",
+          "value": "02:00:00:00:00:03"
+        }
+      ],
+      "expect": "ether proto 34825 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3)"
+    },
+    {
+      "name": "lacp-actor-key-1",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_key",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[26:2] == 1"
+    },
+    {
+      "name": "lacp-actor-port-1",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_port_number",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[30:2] == 1"
+    },
+    {
+      "name": "lacp-actor-port-priority-32768",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_port_priority",
+          "value": 32768
+        }
+      ],
+      "expect": "ether proto 34825 and ether[28:2] == 32768"
+    },
+    {
+      "name": "lacp-actor-system-priority-32768",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_system_priority",
+          "value": 32768
+        }
+      ],
+      "expect": "ether proto 34825 and ether[18:2] == 32768"
+    },
+    {
+      "name": "lacp-actor-tlv-type",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_tlv_type",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[16:1] == 0x1"
+    },
+    {
+      "name": "lacp-actor-tlv-length-20",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_tlv_length",
+          "value": 20
+        }
+      ],
+      "expect": "ether proto 34825 and ether[17:1] == 20"
+    },
+    {
+      "name": "lacp-actor-sync-collect-distribute",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_state",
+          "flags": [
+            "Synchronization",
+            "Collecting",
+            "Distributing"
+          ]
+        }
+      ],
+      "expect": "ether proto 34825 and (ether[32:1] & 0x38) == 0x38"
+    },
+    {
+      "name": "lacp-partner-system",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_system",
+          "value": "02:00:00:00:00:04"
+        }
+      ],
+      "expect": "ether proto 34825 and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
+    },
+    {
+      "name": "lacp-partner-key-1",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_key",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34825 and ether[46:2] == 1"
+    },
+    {
+      "name": "lacp-partner-port-2",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_port_number",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34825 and ether[50:2] == 2"
+    },
+    {
+      "name": "lacp-partner-port-priority-32768",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_port_priority",
+          "value": 32768
+        }
+      ],
+      "expect": "ether proto 34825 and ether[48:2] == 32768"
+    },
+    {
+      "name": "lacp-partner-system-priority-32768",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_system_priority",
+          "value": 32768
+        }
+      ],
+      "expect": "ether proto 34825 and ether[38:2] == 32768"
+    },
+    {
+      "name": "lacp-partner-tlv-type",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_tlv_type",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34825 and ether[36:1] == 0x2"
+    },
+    {
+      "name": "lacp-partner-tlv-length-20",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_tlv_length",
+          "value": 20
+        }
+      ],
+      "expect": "ether proto 34825 and ether[37:1] == 20"
+    },
+    {
+      "name": "lacp-partner-sync",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "partner_state",
+          "flags": [
+            "Synchronization"
+          ]
+        }
+      ],
+      "expect": "ether proto 34825 and (ether[52:1] & 0x8) == 0x8"
+    },
+    {
+      "name": "lacp-collector-tlv-type",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "collector_tlv_type",
+          "value": 3
+        }
+      ],
+      "expect": "ether proto 34825 and ether[56:1] == 0x3"
+    },
+    {
+      "name": "lacp-collector-tlv-length-16",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "collector_tlv_length",
+          "value": 16
+        }
+      ],
+      "expect": "ether proto 34825 and ether[57:1] == 16"
+    },
+    {
+      "name": "lacp-collector-max-delay-0",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "collector_max_delay",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34825 and ether[58:2] == 0"
+    },
+    {
+      "name": "lacp-terminator-tlv-type",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "terminator_tlv_type",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34825 and ether[72:1] == 0x0"
+    },
+    {
+      "name": "lacp-terminator-tlv-length-0",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "terminator_tlv_length",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34825 and ether[73:1] == 0"
+    },
+    {
+      "name": "lacp-system-and-partner",
+      "entry": "lacp",
+      "select": [
+        {
+          "field": "actor_system",
+          "value": "02:00:00:00:00:03"
+        },
+        {
+          "field": "partner_system",
+          "value": "02:00:00:00:00:04"
+        }
+      ],
+      "expect": "ether proto 34825 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3) and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
+    },
+    {
       "name": "lldp-chassis-subtype-mac",
       "entry": "lldp",
       "select": [
@@ -857,6 +1581,98 @@
         }
       ],
       "expect": "ether proto 35020 and (ether[14:2] & 0x1ff) == 0x7 and ether[16:1] == 0x4"
+    },
+    {
+      "name": "mpls-label-16",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "label",
+          "value": 16
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000"
+    },
+    {
+      "name": "mpls-label-240001",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "label",
+          "value": 240001
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x3a981000"
+    },
+    {
+      "name": "mpls-explicit-null",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "label",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x0"
+    },
+    {
+      "name": "mpls-tc-0",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "traffic_class",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[16:1] & 0xe) == 0x0"
+    },
+    {
+      "name": "mpls-tc-3",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "traffic_class",
+          "value": 3
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[16:1] & 0xe) == 0x6"
+    },
+    {
+      "name": "mpls-bottom-of-stack",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "bottom_of_stack",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[16:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "mpls-ttl-64",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "ttl",
+          "value": 64
+        }
+      ],
+      "expect": "ether proto 34887 and ether[17:1] == 64"
+    },
+    {
+      "name": "mpls-label-16-ttl-64",
+      "entry": "mpls",
+      "select": [
+        {
+          "field": "label",
+          "value": 16
+        },
+        {
+          "field": "ttl",
+          "value": 64
+        }
+      ],
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000 and ether[17:1] == 64"
     },
     {
       "name": "ospf-version-2",
@@ -1330,6 +2146,131 @@
         }
       ],
       "expect": "vlan 4094"
+    },
+    {
+      "name": "vrrp-vrid-1",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "vrid",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 112 and ip[21:1] == 1"
+    },
+    {
+      "name": "vrrp-vrid-2",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "vrid",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 112 and ip[21:1] == 2"
+    },
+    {
+      "name": "vrrp-priority-100",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "priority",
+          "value": 100
+        }
+      ],
+      "expect": "ip proto 112 and ip[22:1] == 100"
+    },
+    {
+      "name": "vrrp-priority-owner",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "priority",
+          "value": 255
+        }
+      ],
+      "expect": "ip proto 112 and ip[22:1] == 255"
+    },
+    {
+      "name": "vrrp-version-2",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 112 and (ip[20:1] & 0xf0) == 0x20"
+    },
+    {
+      "name": "vrrp-advertisement",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 112 and (ip[20:1] & 0xf) == 0x1"
+    },
+    {
+      "name": "vrrp-vrid-1-priority-110",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "vrid",
+          "value": 1
+        },
+        {
+          "field": "priority",
+          "value": 110
+        }
+      ],
+      "expect": "ip proto 112 and ip[21:1] == 1 and ip[22:1] == 110"
+    },
+    {
+      "name": "vrrp-auth-type-0",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "auth_type",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 112 and ip[24:1] == 0"
+    },
+    {
+      "name": "vrrp-adver-int-1",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "adver_int",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 112 and ip[25:1] == 1"
+    },
+    {
+      "name": "vrrp-ip-count-1",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "ip_count",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 112 and ip[23:1] == 1"
+    },
+    {
+      "name": "vrrp-checksum",
+      "entry": "vrrp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 112 and ip[26:2] == 4660"
     },
     {
       "name": "vxlan-flags-i",

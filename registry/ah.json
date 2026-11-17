@@ -1,0 +1,67 @@
+{
+  "id": "ah",
+  "label": "AH",
+  "rfc": ["4302"],
+  "notes": "IPsec Authentication Header over IPv4 transport (protocol 51). The 12-byte fixed header is modelled in full. The variable-length Integrity Check Value and padding that follow depend on the SA's authentication algorithm and are not modelled; neither is the protected payload. ESP (RFC 4303) is a separate entry and IKE is out of scope.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": ["ip proto 51"],
+  "headerLength": 12,
+  "fields": [
+    {
+      "id": "next_header",
+      "label": "Next Header",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 4302 §2.1",
+      "min": 0,
+      "max": 255,
+      "description": "IP protocol number of the payload: 4 IPv4, 6 TCP, 17 UDP, 50 ESP, 51 AH."
+    },
+    {
+      "id": "payload_length",
+      "label": "Payload Length",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 4302 §2.2",
+      "min": 0,
+      "max": 255,
+      "description": "Length of the AH in 32-bit words minus 2; 2 for a bare 12-byte header."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 4302 §2.3",
+      "min": 0,
+      "max": 65535,
+      "description": "Reserved for future use; sent as zero."
+    },
+    {
+      "id": "spi",
+      "label": "Security Parameters Index",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 4302 §2.4",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "id": "seq",
+      "label": "Sequence Number",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 4302 §2.5",
+      "min": 0,
+      "max": 4294967295
+    }
+  ]
+}

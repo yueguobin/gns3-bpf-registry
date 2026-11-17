@@ -1,0 +1,126 @@
+{
+  "id": "icmp6",
+  "label": "ICMPv6",
+  "rfc": ["4443", "4861"],
+  "notes": "ICMPv6 over IPv6 (protocol 58). All fields of the 8-byte common header are modelled. The four bytes after the checksum are modelled at their fixed offsets as Identifier and Sequence Number; for other message types those bytes carry type-specific data (MTU, pointer, and so on) that is not modelled. NDP messages (Router Solicitation through Redirect) and MLD share this header, which makes this entry cover the IPv6 control-plane traffic a GNS3 lab generates. The Code field is kept as a number because its meaning depends on Type.",
+  "anchor": {
+    "header": "ip6",
+    "base": 40
+  },
+  "locator": ["ip6 proto 58"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 4443 §3/§4; RFC 4861 §4",
+      "values": [
+        {
+          "value": 1,
+          "label": "Destination Unreachable"
+        },
+        {
+          "value": 2,
+          "label": "Packet Too Big"
+        },
+        {
+          "value": 3,
+          "label": "Time Exceeded"
+        },
+        {
+          "value": 4,
+          "label": "Parameter Problem"
+        },
+        {
+          "value": 128,
+          "label": "Echo Request"
+        },
+        {
+          "value": 129,
+          "label": "Echo Reply"
+        },
+        {
+          "value": 130,
+          "label": "Multicast Listener Query"
+        },
+        {
+          "value": 131,
+          "label": "Multicast Listener Report"
+        },
+        {
+          "value": 132,
+          "label": "Multicast Listener Done"
+        },
+        {
+          "value": 133,
+          "label": "Router Solicitation"
+        },
+        {
+          "value": 134,
+          "label": "Router Advertisement"
+        },
+        {
+          "value": 135,
+          "label": "Neighbor Solicitation"
+        },
+        {
+          "value": 136,
+          "label": "Neighbor Advertisement"
+        },
+        {
+          "value": 137,
+          "label": "Redirect"
+        },
+        {
+          "value": 143,
+          "label": "Version 2 Multicast Listener Report"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "label": "Code",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 4443 §3",
+      "min": 0,
+      "max": 255
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 4443 §2.3",
+      "min": 0,
+      "max": 65535
+    },
+    {
+      "id": "identifier",
+      "label": "Identifier",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 4443 §4.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Echo Request/Reply identifier; type-specific data in other messages."
+    },
+    {
+      "id": "sequence",
+      "label": "Sequence Number",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 4443 §4.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Echo Request/Reply sequence number; type-specific data in other messages."
+    }
+  ]
+}

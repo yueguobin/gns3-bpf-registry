@@ -1,0 +1,46 @@
+{
+  "id": "cdp",
+  "label": "CDP",
+  "rfc": [],
+  "notes": "Cisco Discovery Protocol over Ethernet, EtherType 0x2000 (Cisco proprietary; the normative reference is the Cisco Discovery Protocol Specification). The 4-byte header (version, TTL, checksum) is modelled in full. Everything after it is a TLV chain whose offsets shift with each TLV's length, so no TLV payload sits at a fixed offset. CDPv2 sends to 01:00:0c:cc:cc:cc with version 2; CDPv1 packets differ only in the version byte. LLDP (IEEE 802.1AB) is the standards-based counterpart and a separate entry.",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": ["ether proto 8192"],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "Cisco Discovery Protocol Specification 2.02 (Message Format)",
+      "min": 0,
+      "max": 255,
+      "description": "CDP version; 2 on current Cisco devices."
+    },
+    {
+      "id": "ttl",
+      "label": "TTL",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "Cisco Discovery Protocol Specification 2.02 (Message Format)",
+      "min": 0,
+      "max": 255,
+      "description": "Seconds a receiver should hold the neighbour information; 180 by default."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "Cisco Discovery Protocol Specification 2.02 (Message Format)",
+      "min": 0,
+      "max": 65535
+    }
+  ]
+}

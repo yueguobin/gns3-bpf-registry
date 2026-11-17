@@ -1,0 +1,84 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:00:5e:00:00:02"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "224.0.0.2", "ttl": 1, "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 1985, "chksum": "$PIN"}},
+    {"layer": "HSRPHeader", "fields": {
+      "version": 0,
+      "opcode": 0,
+      "state": 16,
+      "hellotime": 3,
+      "holdtime": 10,
+      "priority": 100,
+      "group": 1,
+      "reserved": 0,
+      "auth1": "0x63697363",
+      "auth2": "0x6f000000",
+      "vip": "192.0.2.254"
+    }}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 20,
+  "fieldMap": {
+    "auth_data_1": "auth1",
+    "auth_data_2": "auth2",
+    "virtual_ip": "vip"
+  },
+  "probe": {
+    "version": ["0x0f", "0xf0"],
+    "opcode": ["0x0f", "0xf0"],
+    "state": ["0x0f", "0xf0"],
+    "hellotime": ["0x0f", "0xf0"],
+    "holdtime": ["0x0f", "0xf0"],
+    "priority": ["0x0f", "0xf0"],
+    "group": ["0x0f", "0xf0"],
+    "reserved": ["0x0f", "0xf0"],
+    "auth_data_1": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "auth_data_2": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "virtual_ip": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "opcode": "0x5a",
+    "state": "0x5a",
+    "hellotime": "0x5a",
+    "holdtime": "0x5a",
+    "priority": "0x5a",
+    "group": "0x5a",
+    "reserved": "0x5a",
+    "auth_data_1": "0x5a5a5a5a",
+    "auth_data_2": "0x5a5a5a5a",
+    "virtual_ip": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "version": [0, 2],
+    "opcode": [0, 1],
+    "state": [16, 8],
+    "hellotime": [3, 1],
+    "holdtime": [10, 5],
+    "priority": [100, 110],
+    "group": [1, 2],
+    "reserved": [0, 1],
+    "auth_data_1": ["0x63697363", 0],
+    "auth_data_2": ["0x6f000000", 0],
+    "virtual_ip": ["192.0.2.254", "192.0.2.253"]
+  },
+  "vectors": [
+    {"name": "hsrp-group-1", "select": [{"field": "group", "value": 1}]},
+    {"name": "hsrp-group-2", "select": [{"field": "group", "value": 2}]},
+    {"name": "hsrp-hello", "select": [{"field": "opcode", "value": 0}]},
+    {"name": "hsrp-coup", "select": [{"field": "opcode", "value": 1}]},
+    {"name": "hsrp-resign", "select": [{"field": "opcode", "value": 2}]},
+    {"name": "hsrp-active", "select": [{"field": "state", "value": 16}]},
+    {"name": "hsrp-standby", "select": [{"field": "state", "value": 8}]},
+    {"name": "hsrp-speak", "select": [{"field": "state", "value": 4}]},
+    {"name": "hsrp-priority-100", "select": [{"field": "priority", "value": 100}]},
+    {"name": "hsrp-hellotime-3", "select": [{"field": "hellotime", "value": 3}]},
+    {"name": "hsrp-holdtime-10", "select": [{"field": "holdtime", "value": 10}]},
+    {"name": "hsrp-version-1", "select": [{"field": "version", "value": 0}]},
+    {"name": "hsrp-reserved-0", "select": [{"field": "reserved", "value": 0}]},
+    {"name": "hsrp-default-password", "select": [{"field": "auth_data_1", "value": 1667459683}, {"field": "auth_data_2", "value": 1862270976}]},
+    {"name": "hsrp-virtual-ip", "select": [{"field": "virtual_ip", "value": "192.0.2.254"}]},
+    {"name": "hsrp-group-1-active", "select": [{"field": "group", "value": 1}, {"field": "state", "value": 16}]}
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "id": "hsrp",
+  "label": "HSRP",
+  "rfc": ["2281"],
+  "notes": "Cisco Hot Standby Router Protocol version 1 over UDP port 1985, sent to 224.0.0.2 with TTL 1. The 20-byte message is modelled in full: the virtual IP address is payload-embedded (a host primitive would match the routers' real addresses, not the virtual one), so it is a first-class ipv4 field. The authentication bytes carry the clear-text reused password and are modelled as two number views. HSRPv2 shares the UDP port with a different layout (millisecond timers, flags) and is not covered by this entry; VRRP and GLBP are separate protocols.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": ["udp port 1985"],
+  "headerLength": 20,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "HSRP version; 0 identifies HSRPv1 messages."
+    },
+    {
+      "id": "opcode",
+      "label": "Op Code",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2281 §5.1",
+      "values": [
+        {
+          "value": 0,
+          "label": "Hello"
+        },
+        {
+          "value": 1,
+          "label": "Coup"
+        },
+        {
+          "value": 2,
+          "label": "Resign"
+        }
+      ]
+    },
+    {
+      "id": "state",
+      "label": "State",
+      "offset": 2,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2281 §5.3",
+      "values": [
+        {
+          "value": 0,
+          "label": "Initial"
+        },
+        {
+          "value": 1,
+          "label": "Learn"
+        },
+        {
+          "value": 2,
+          "label": "Listen"
+        },
+        {
+          "value": 4,
+          "label": "Speak"
+        },
+        {
+          "value": 8,
+          "label": "Standby"
+        },
+        {
+          "value": 16,
+          "label": "Active"
+        }
+      ]
+    },
+    {
+      "id": "hellotime",
+      "label": "Hellotime",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Seconds between Hello messages; the recommended default is 3."
+    },
+    {
+      "id": "holdtime",
+      "label": "Holdtime",
+      "offset": 4,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Seconds a Hello stays valid; the recommended default is 10."
+    },
+    {
+      "id": "priority",
+      "label": "Priority",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Higher value wins the election; 100 is the Cisco default."
+    },
+    {
+      "id": "group",
+      "label": "Group",
+      "offset": 6,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Standby group number; the virtual MAC is 0000.0c07.acXX with XX = group."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 7,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved; sent as zero."
+    },
+    {
+      "id": "auth_data_1",
+      "label": "Authentication Data (1)",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "First four bytes of the clear-text reused password; 0x63697363 for the default \"cisco\"."
+    },
+    {
+      "id": "auth_data_2",
+      "label": "Authentication Data (2)",
+      "offset": 12,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2281 §5.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Last four bytes of the clear-text reused password; 0x6f000000 for the default \"cisco\"."
+    },
+    {
+      "id": "virtual_ip",
+      "label": "Virtual IP Address",
+      "offset": 16,
+      "size": 4,
+      "kind": "ipv4",
+      "ref": "RFC 2281 §5.1",
+      "description": "The virtual router's IP address served by the active gateway."
+    }
+  ]
+}

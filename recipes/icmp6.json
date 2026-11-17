@@ -1,0 +1,47 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "33:33:00:00:00:01"}},
+    {"layer": "IPv6", "fields": {"src": "2001:db8::1", "dst": "2001:db8::2", "nh": 58}},
+    {"layer": "ICMPv6EchoRequest", "fields": {"type": 128, "code": 0, "cksum": "$PIN", "id": 0, "seq": 0}}
+  ],
+  "anchor": {"header": "ip6", "base": 40},
+  "headerLength": 8,
+  "fieldMap": {
+    "checksum": "cksum",
+    "identifier": "id",
+    "sequence": "seq"
+  },
+  "probe": {
+    "type": ["0x0f", "0xf0"],
+    "code": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"],
+    "identifier": ["0x0f0f", "0xf0f0"],
+    "sequence": ["0x0f0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "type": "0x5a",
+    "code": "0x5a",
+    "checksum": "0x5a5a",
+    "identifier": "0x5a5a",
+    "sequence": "0x5a5a"
+  },
+  "fixtures": {
+    "type": [128, 133],
+    "code": [0, 1],
+    "checksum": ["0x1234", "0x1235"],
+    "identifier": ["0x1234", "0x1235"],
+    "sequence": [1, 2]
+  },
+  "vectors": [
+    {"name": "icmp6-echo-request", "select": [{"field": "type", "value": 128}]},
+    {"name": "icmp6-echo-reply", "select": [{"field": "type", "value": 129}]},
+    {"name": "icmp6-router-solicitation", "select": [{"field": "type", "value": 133}]},
+    {"name": "icmp6-router-advertisement", "select": [{"field": "type", "value": 134}]},
+    {"name": "icmp6-neighbor-solicitation", "select": [{"field": "type", "value": 135}]},
+    {"name": "icmp6-neighbor-advertisement", "select": [{"field": "type", "value": 136}]},
+    {"name": "icmp6-dest-unreachable", "select": [{"field": "type", "value": 1}, {"field": "code", "value": 0}]},
+    {"name": "icmp6-echo-id", "select": [{"field": "type", "value": 128}, {"field": "identifier", "value": 4660}]},
+    {"name": "icmp6-echo-seq", "select": [{"field": "type", "value": 128}, {"field": "sequence", "value": 1}]},
+    {"name": "icmp6-echo-checksum", "select": [{"field": "type", "value": 128}, {"field": "checksum", "value": 4660}]}
+  ]
+}

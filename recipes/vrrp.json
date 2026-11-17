@@ -1,0 +1,60 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "00:00:5e:00:01:01"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "224.0.0.18", "ttl": 255, "chksum": "$PIN", "proto": 112}},
+    {"layer": "VRRPHeader", "fields": {"version": 2, "type": 1, "vrid": 1, "priority": 100, "ipcount": 1, "authtype": 0, "adv": 1, "chksum": "$PIN"}}
+  ],
+  "anchor": {"header": "ip", "base": 20},
+  "headerLength": 8,
+  "fieldMap": {
+    "ip_count": "ipcount",
+    "auth_type": "authtype",
+    "adver_int": "adv",
+    "checksum": "VRRPHeader.chksum"
+  },
+  "probe": {
+    "vrid": ["0x0f", "0xf0"],
+    "priority": ["0x0f", "0xf0"],
+    "ip_count": ["0x0f", "0xf0"],
+    "auth_type": ["0x0f", "0xf0"],
+    "adver_int": ["0x0f", "0xf0"],
+    "checksum": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "version": "4 bits share byte 0 with the type nibble; scapy's 4-bit BitField clamps the logical bits so the probe cannot isolate them, and the mask/shift view is hand-declared per RFC 3768 section 5.1 and crosscheck-verified",
+    "type": "4 bits share byte 0 with the version nibble; the mask/shift view is hand-declared per RFC 3768 section 5.1 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "version": "0x2",
+    "type": "0x1",
+    "vrid": "0x5a",
+    "priority": "0x5a",
+    "ip_count": "0x5a",
+    "auth_type": "0x5a",
+    "adver_int": "0x5a",
+    "checksum": "0x5a5a"
+  },
+  "fixtures": {
+    "version": [2, 3],
+    "type": [1, 2],
+    "vrid": [1, 2],
+    "priority": [100, 110],
+    "ip_count": [1, 2],
+    "auth_type": [0, 1],
+    "adver_int": [1, 2],
+    "checksum": ["0x1234", "0x1235"]
+  },
+  "vectors": [
+    {"name": "vrrp-vrid-1", "select": [{"field": "vrid", "value": 1}]},
+    {"name": "vrrp-vrid-2", "select": [{"field": "vrid", "value": 2}]},
+    {"name": "vrrp-priority-100", "select": [{"field": "priority", "value": 100}]},
+    {"name": "vrrp-priority-owner", "select": [{"field": "priority", "value": 255}]},
+    {"name": "vrrp-version-2", "select": [{"field": "version", "value": 2}]},
+    {"name": "vrrp-advertisement", "select": [{"field": "type", "value": 1}]},
+    {"name": "vrrp-vrid-1-priority-110", "select": [{"field": "vrid", "value": 1}, {"field": "priority", "value": 110}]},
+    {"name": "vrrp-auth-type-0", "select": [{"field": "auth_type", "value": 0}]},
+    {"name": "vrrp-adver-int-1", "select": [{"field": "adver_int", "value": 1}]},
+    {"name": "vrrp-ip-count-1", "select": [{"field": "ip_count", "value": 1}]},
+    {"name": "vrrp-checksum", "select": [{"field": "checksum", "value": 4660}]}
+  ]
+}

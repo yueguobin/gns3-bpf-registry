@@ -41,19 +41,23 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-18 entries, 100 fields.
+25 entries, 159 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
-| arp | RFC 826 | 9 | ipv6 | RFC 8200 | 6 |
+| ah | RFC 4302 | 5 | ipv6 | RFC 8200 | 6 |
+| arp | RFC 826 | 9 | lacp | IEEE 802.1AX | 22 |
 | bgp | RFC 4271/2918 | 2 | lldp | IEEE 802.1AB | 2 |
+| cdp | Cisco CDP Spec 2.02 | 3 | mpls | RFC 3032/5462 | 4 |
 | dhcp | RFC 2131/2132 | 12 | ospf | RFC 2328 | 7 |
 | eigrp | RFC 7868 | 8 | rip | RFC 2453 | 3 |
 | esp | RFC 4303 | 2 | stp | IEEE 802.1D | 14 |
 | ethernet | IEEE 802.3 | 1 | tcp | RFC 9293 | 8 |
 | gre | RFC 2784/2890 | 5 | udp | RFC 768 | 2 |
-| icmp | RFC 792 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
-| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 3 |
+| hsrp | RFC 2281 | 11 | vlan | IEEE 802.1Q | 1 (primitive) |
+| icmp | RFC 792 | 5 | vrrp | RFC 3768 | 8 |
+| icmp6 | RFC 4443/4861 | 5 | vxlan | RFC 7348 | 3 |
+| ipv4 | RFC 791 | 10 | | | |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 

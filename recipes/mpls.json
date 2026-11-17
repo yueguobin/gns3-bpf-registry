@@ -1,0 +1,42 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST", "type": "0x8847"}},
+    {"layer": "MPLSHeader", "fields": {"label": 16, "tc": 0, "s": 1, "ttl": 64}}
+  ],
+  "anchor": {"header": "ether", "base": 14},
+  "headerLength": 4,
+  "fieldMap": {
+    "traffic_class": "tc",
+    "bottom_of_stack": "s"
+  },
+  "manual": {
+    "label": "20 bits share the word with TC, S and TTL; scapy's 20-bit BitField clamps logical bits at and above bit 20, so the per-bit probe cannot isolate them, and the mask/shift view is hand-declared per RFC 3032 section 2.1 and crosscheck-verified",
+    "traffic_class": "3 bits share byte 2 with the label tail and the S bit; scapy's 3-bit BitField clamps the logical bits, so the per-bit probe cannot isolate them, and the mask/shift view is hand-declared per RFC 3032 section 2.1 and crosscheck-verified",
+    "bottom_of_stack": "1 bit shares byte 2 with the label tail and TC; the single-bit probe cannot produce a byte-contrast pair, so the mask/shift view is hand-declared per RFC 3032 section 2.1 and crosscheck-verified"
+  },
+  "probe": {
+    "ttl": ["0x0f", "0xf0"]
+  },
+  "crosscheck": {
+    "label": "0x1",
+    "traffic_class": "0x1",
+    "bottom_of_stack": "0x1",
+    "ttl": "0x5a"
+  },
+  "fixtures": {
+    "label": [16, 17],
+    "traffic_class": [0, 3],
+    "bottom_of_stack": [1, 0],
+    "ttl": [64, 63]
+  },
+  "vectors": [
+    {"name": "mpls-label-16", "select": [{"field": "label", "value": 16}]},
+    {"name": "mpls-label-240001", "select": [{"field": "label", "value": 240001}]},
+    {"name": "mpls-explicit-null", "select": [{"field": "label", "value": 0}]},
+    {"name": "mpls-tc-0", "select": [{"field": "traffic_class", "value": 0}]},
+    {"name": "mpls-tc-3", "select": [{"field": "traffic_class", "value": 3}]},
+    {"name": "mpls-bottom-of-stack", "select": [{"field": "bottom_of_stack", "value": 1}]},
+    {"name": "mpls-ttl-64", "select": [{"field": "ttl", "value": 64}]},
+    {"name": "mpls-label-16-ttl-64", "select": [{"field": "label", "value": 16}, {"field": "ttl", "value": 64}]}
+  ]
+}
