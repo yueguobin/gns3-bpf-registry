@@ -245,8 +245,8 @@ const FAM = {
    registry models VLAN as a primitive — and the custom layer). */
 const UI = {
   ethernet: {fam:"link",
-    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34871:"mpls", 34889:"lacp"}},
-    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34871, l:"MPLS"},{v:34889, l:"LACP"}]},
+    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp"}},
+    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"}]},
     primitives:{dst:{p:"ether dst", kind:"mac", label:"Destination MAC"},
                 src:{p:"ether src", kind:"mac", label:"Source MAC"}}},
   ipv4: {fam:"net",

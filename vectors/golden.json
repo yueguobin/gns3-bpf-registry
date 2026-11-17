@@ -1280,7 +1280,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[14:1] == 0x1"
+      "expect": "ether proto 34825 and ether[14:1] == 0x1"
     },
     {
       "name": "lacp-version-1",
@@ -1291,7 +1291,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[15:1] == 1"
+      "expect": "ether proto 34825 and ether[15:1] == 1"
     },
     {
       "name": "lacp-actor-system",
@@ -1302,7 +1302,7 @@
           "value": "02:00:00:00:00:03"
         }
       ],
-      "expect": "ether proto 34889 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3)"
+      "expect": "ether proto 34825 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3)"
     },
     {
       "name": "lacp-actor-key-1",
@@ -1313,7 +1313,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[26:2] == 1"
+      "expect": "ether proto 34825 and ether[26:2] == 1"
     },
     {
       "name": "lacp-actor-port-1",
@@ -1324,7 +1324,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[30:2] == 1"
+      "expect": "ether proto 34825 and ether[30:2] == 1"
     },
     {
       "name": "lacp-actor-port-priority-32768",
@@ -1335,7 +1335,7 @@
           "value": 32768
         }
       ],
-      "expect": "ether proto 34889 and ether[28:2] == 32768"
+      "expect": "ether proto 34825 and ether[28:2] == 32768"
     },
     {
       "name": "lacp-actor-system-priority-32768",
@@ -1346,7 +1346,7 @@
           "value": 32768
         }
       ],
-      "expect": "ether proto 34889 and ether[18:2] == 32768"
+      "expect": "ether proto 34825 and ether[18:2] == 32768"
     },
     {
       "name": "lacp-actor-tlv-type",
@@ -1357,7 +1357,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[16:1] == 0x1"
+      "expect": "ether proto 34825 and ether[16:1] == 0x1"
     },
     {
       "name": "lacp-actor-tlv-length-20",
@@ -1368,7 +1368,7 @@
           "value": 20
         }
       ],
-      "expect": "ether proto 34889 and ether[17:1] == 20"
+      "expect": "ether proto 34825 and ether[17:1] == 20"
     },
     {
       "name": "lacp-actor-sync-collect-distribute",
@@ -1383,7 +1383,7 @@
           ]
         }
       ],
-      "expect": "ether proto 34889 and (ether[32:1] & 0x38) == 0x38"
+      "expect": "ether proto 34825 and (ether[32:1] & 0x38) == 0x38"
     },
     {
       "name": "lacp-partner-system",
@@ -1394,7 +1394,7 @@
           "value": "02:00:00:00:00:04"
         }
       ],
-      "expect": "ether proto 34889 and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
+      "expect": "ether proto 34825 and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
     },
     {
       "name": "lacp-partner-key-1",
@@ -1405,7 +1405,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34889 and ether[46:2] == 1"
+      "expect": "ether proto 34825 and ether[46:2] == 1"
     },
     {
       "name": "lacp-partner-port-2",
@@ -1416,7 +1416,7 @@
           "value": 2
         }
       ],
-      "expect": "ether proto 34889 and ether[50:2] == 2"
+      "expect": "ether proto 34825 and ether[50:2] == 2"
     },
     {
       "name": "lacp-partner-port-priority-32768",
@@ -1427,7 +1427,7 @@
           "value": 32768
         }
       ],
-      "expect": "ether proto 34889 and ether[48:2] == 32768"
+      "expect": "ether proto 34825 and ether[48:2] == 32768"
     },
     {
       "name": "lacp-partner-system-priority-32768",
@@ -1438,7 +1438,7 @@
           "value": 32768
         }
       ],
-      "expect": "ether proto 34889 and ether[38:2] == 32768"
+      "expect": "ether proto 34825 and ether[38:2] == 32768"
     },
     {
       "name": "lacp-partner-tlv-type",
@@ -1449,7 +1449,7 @@
           "value": 2
         }
       ],
-      "expect": "ether proto 34889 and ether[36:1] == 0x2"
+      "expect": "ether proto 34825 and ether[36:1] == 0x2"
     },
     {
       "name": "lacp-partner-tlv-length-20",
@@ -1460,7 +1460,7 @@
           "value": 20
         }
       ],
-      "expect": "ether proto 34889 and ether[37:1] == 20"
+      "expect": "ether proto 34825 and ether[37:1] == 20"
     },
     {
       "name": "lacp-partner-sync",
@@ -1473,7 +1473,7 @@
           ]
         }
       ],
-      "expect": "ether proto 34889 and (ether[52:1] & 0x8) == 0x8"
+      "expect": "ether proto 34825 and (ether[52:1] & 0x8) == 0x8"
     },
     {
       "name": "lacp-collector-tlv-type",
@@ -1484,7 +1484,7 @@
           "value": 3
         }
       ],
-      "expect": "ether proto 34889 and ether[56:1] == 0x3"
+      "expect": "ether proto 34825 and ether[56:1] == 0x3"
     },
     {
       "name": "lacp-collector-tlv-length-16",
@@ -1495,7 +1495,7 @@
           "value": 16
         }
       ],
-      "expect": "ether proto 34889 and ether[57:1] == 16"
+      "expect": "ether proto 34825 and ether[57:1] == 16"
     },
     {
       "name": "lacp-collector-max-delay-0",
@@ -1506,7 +1506,7 @@
           "value": 0
         }
       ],
-      "expect": "ether proto 34889 and ether[58:2] == 0"
+      "expect": "ether proto 34825 and ether[58:2] == 0"
     },
     {
       "name": "lacp-terminator-tlv-type",
@@ -1517,7 +1517,7 @@
           "value": 0
         }
       ],
-      "expect": "ether proto 34889 and ether[72:1] == 0x0"
+      "expect": "ether proto 34825 and ether[72:1] == 0x0"
     },
     {
       "name": "lacp-terminator-tlv-length-0",
@@ -1528,7 +1528,7 @@
           "value": 0
         }
       ],
-      "expect": "ether proto 34889 and ether[73:1] == 0"
+      "expect": "ether proto 34825 and ether[73:1] == 0"
     },
     {
       "name": "lacp-system-and-partner",
@@ -1543,7 +1543,7 @@
           "value": "02:00:00:00:00:04"
         }
       ],
-      "expect": "ether proto 34889 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3) and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
+      "expect": "ether proto 34825 and (ether[20:4] == 0x2000000 and ether[24:2] == 0x3) and (ether[40:4] == 0x2000000 and ether[44:2] == 0x4)"
     },
     {
       "name": "lldp-chassis-subtype-mac",
@@ -1591,7 +1591,7 @@
           "value": 16
         }
       ],
-      "expect": "ether proto 34871 and (ether[14:4] & 0xfffff000) == 0x10000"
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000"
     },
     {
       "name": "mpls-label-240001",
@@ -1602,7 +1602,7 @@
           "value": 240001
         }
       ],
-      "expect": "ether proto 34871 and (ether[14:4] & 0xfffff000) == 0x3a981000"
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x3a981000"
     },
     {
       "name": "mpls-explicit-null",
@@ -1613,7 +1613,7 @@
           "value": 0
         }
       ],
-      "expect": "ether proto 34871 and (ether[14:4] & 0xfffff000) == 0x0"
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x0"
     },
     {
       "name": "mpls-tc-0",
@@ -1624,7 +1624,7 @@
           "value": 0
         }
       ],
-      "expect": "ether proto 34871 and (ether[16:1] & 0xe) == 0x0"
+      "expect": "ether proto 34887 and (ether[16:1] & 0xe) == 0x0"
     },
     {
       "name": "mpls-tc-3",
@@ -1635,7 +1635,7 @@
           "value": 3
         }
       ],
-      "expect": "ether proto 34871 and (ether[16:1] & 0xe) == 0x6"
+      "expect": "ether proto 34887 and (ether[16:1] & 0xe) == 0x6"
     },
     {
       "name": "mpls-bottom-of-stack",
@@ -1646,7 +1646,7 @@
           "value": 1
         }
       ],
-      "expect": "ether proto 34871 and (ether[16:1] & 0x1) == 0x1"
+      "expect": "ether proto 34887 and (ether[16:1] & 0x1) == 0x1"
     },
     {
       "name": "mpls-ttl-64",
@@ -1657,7 +1657,7 @@
           "value": 64
         }
       ],
-      "expect": "ether proto 34871 and ether[17:1] == 64"
+      "expect": "ether proto 34887 and ether[17:1] == 64"
     },
     {
       "name": "mpls-label-16-ttl-64",
@@ -1672,7 +1672,7 @@
           "value": 64
         }
       ],
-      "expect": "ether proto 34871 and (ether[14:4] & 0xfffff000) == 0x10000 and ether[17:1] == 64"
+      "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000 and ether[17:1] == 64"
     },
     {
       "name": "ospf-version-2",

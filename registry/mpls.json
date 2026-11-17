@@ -7,7 +7,7 @@
     "header": "ether",
     "base": 14
   },
-  "locator": ["ether proto 34871"],
+  "locator": ["ether proto 34887"],
   "headerLength": 4,
   "fields": [
     {
