@@ -816,6 +816,94 @@
       "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x1 and (udp[8:4] & 0xffffff) == 0x123456"
     },
     {
+      "name": "eapol-start",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x1"
+    },
+    {
+      "name": "eapol-logoff",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x2"
+    },
+    {
+      "name": "eapol-key",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 3
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x3"
+    },
+    {
+      "name": "eapol-eap-packet",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x0"
+    },
+    {
+      "name": "eapol-mka",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 5
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x5"
+    },
+    {
+      "name": "eapol-announcement-generic",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "type",
+          "value": 6
+        }
+      ],
+      "expect": "ether proto 34958 and ether[15:1] == 0x6"
+    },
+    {
+      "name": "eapol-version-2004",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "version",
+          "value": 2
+        }
+      ],
+      "expect": "ether proto 34958 and ether[14:1] == 0x2"
+    },
+    {
+      "name": "eapol-body-length-0",
+      "entry": "eapol",
+      "select": [
+        {
+          "field": "body_length",
+          "value": 0
+        }
+      ],
+      "expect": "ether proto 34958 and ether[16:2] == 0"
+    },
+    {
       "name": "eigrp-version-2",
       "entry": "eigrp",
       "select": [
@@ -1776,6 +1864,153 @@
         }
       ],
       "expect": "ip proto 2 and ip[26:2] == 4660"
+    },
+    {
+      "name": "ikev2-sa-init",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 34
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x22"
+    },
+    {
+      "name": "ikev2-ike-auth",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 35
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x23"
+    },
+    {
+      "name": "ikev2-create-child-sa",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 36
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x24"
+    },
+    {
+      "name": "ikev2-informational",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "exchange_type",
+          "value": 37
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[26:1] == 0x25"
+    },
+    {
+      "name": "ikev2-next-payload-ke",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 34
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x22"
+    },
+    {
+      "name": "ikev2-next-payload-sk",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 46
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x2e"
+    },
+    {
+      "name": "ikev2-next-payload-none",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "next_payload",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[24:1] == 0x0"
+    },
+    {
+      "name": "ikev2-version-2-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "version",
+          "value": 32
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[25:1] == 0x20"
+    },
+    {
+      "name": "ikev2-version-1-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "version",
+          "value": 16
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[25:1] == 0x10"
+    },
+    {
+      "name": "ikev2-flags-initiator",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Initiator"
+          ]
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and (udp[27:1] & 0x8) == 0x8"
+    },
+    {
+      "name": "ikev2-flags-response",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Response"
+          ]
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and (udp[27:1] & 0x20) == 0x20"
+    },
+    {
+      "name": "ikev2-message-id-0",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "message_id",
+          "value": 0
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[28:4] == 0"
+    },
+    {
+      "name": "ikev2-length-28",
+      "entry": "ikev2",
+      "select": [
+        {
+          "field": "length",
+          "value": 28
+        }
+      ],
+      "expect": "(udp port 500 or udp port 4500 and udp[8:4] = 0) and udp[32:4] == 28"
     },
     {
       "name": "ipv4-version-4",
@@ -2958,6 +3193,116 @@
         }
       ],
       "expect": "ip proto 103 and ip[22:2] == 4660"
+    },
+    {
+      "name": "pppoe-padi",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 9
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x9"
+    },
+    {
+      "name": "pppoe-pado",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 7
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x7"
+    },
+    {
+      "name": "pppoe-padr",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 25
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x19"
+    },
+    {
+      "name": "pppoe-pads",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 101
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x65"
+    },
+    {
+      "name": "pppoe-padt",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 167
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0xa7"
+    },
+    {
+      "name": "pppoe-session-data",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "code",
+          "value": 0
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[15:1] == 0x0"
+    },
+    {
+      "name": "pppoe-session-id-1234",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "session_id",
+          "value": 4660
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[16:2] == 4660"
+    },
+    {
+      "name": "pppoe-payload-length-4",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "payload_length",
+          "value": 4
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and ether[18:2] == 4"
+    },
+    {
+      "name": "pppoe-version-1",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and (ether[14:1] & 0xf0) == 0x10"
+    },
+    {
+      "name": "pppoe-type-1",
+      "entry": "pppoe",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "(ether proto 34915 or ether proto 34916) and (ether[14:1] & 0xf) == 0x1"
     },
     {
       "name": "rip-command-response",

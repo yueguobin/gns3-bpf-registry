@@ -41,7 +41,7 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-36 entries, 225 fields.
+39 entries, 239 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
@@ -52,8 +52,9 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | cdp | Cisco CDP Spec 2.02 | 3 | lldp | IEEE 802.1AB | 2 |
 | dhcp | RFC 2131/2132 | 12 | mpls | RFC 3032/5462 | 4 |
 | dhcpv6 | RFC 8415 | 2 | ospf | RFC 2328 | 7 |
-| eigrp | RFC 7868 | 8 | ospfv3 | RFC 5340 | 8 |
-| esp | RFC 4303 | 2 | pim | RFC 7761 | 4 |
+| eapol | IEEE 802.1X | 3 | ospfv3 | RFC 5340 | 8 |
+| eigrp | RFC 7868 | 8 | pim | RFC 7761 | 4 |
+| esp | RFC 4303 | 2 | pppoe | RFC 2516 | 5 |
 | ethernet | IEEE 802.3 | 1 | rip | RFC 2453 | 3 |
 | geneve | RFC 8926 | 8 | ripng | RFC 2080 | 3 |
 | gre | RFC 2784/2890 | 5 | sctp | RFC 9260 | 4 |
@@ -62,7 +63,8 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | icmp | RFC 792 | 5 | udp | RFC 768 | 2 |
 | icmp6 | RFC 4443/4861 | 5 | vlan | IEEE 802.1Q | 1 (primitive) |
 | igmp | RFC 1112/2236/3376 | 4 | vrrp | RFC 3768 | 8 |
-| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 3 |
+| ikev2 | RFC 7296/3948 | 6 | vxlan | RFC 7348 | 3 |
+| ipv4 | RFC 791 | 10 | | | |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 

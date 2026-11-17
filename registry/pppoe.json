@@ -1,0 +1,110 @@
+{
+  "id": "pppoe",
+  "label": "PPPoE",
+  "rfc": [
+    "RFC 2516"
+  ],
+  "notes": "PPP over Ethernet, RFC 2516: the two-stage access protocol of bridged broadband (DSL/cable) networks. Both stages share one 6-byte header (RFC 2516 section 4): the VER and TYPE nibbles of byte 0, CODE, SESSION_ID and the payload LENGTH. Discovery frames ride EtherType 0x8863 and session frames 0x8864, so the locator matches both stages with one expression. Past byte 6 nothing sits at a fixed offset: discovery packets carry zero or more TAG TLVs (section 5, Appendix A) and session packets carry a PPP frame beginning with the 2-byte PPP Protocol-ID (section 6), so the variable tail is not modelled.",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": [
+    "ether proto 34915",
+    "ether proto 34916"
+  ],
+  "headerLength": 6,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf0",
+      "shift": 4,
+      "kind": "enum",
+      "ref": "RFC 2516 §4",
+      "values": [
+        {
+          "value": 1,
+          "label": "PPPoE version 1 (RFC 2516)"
+        }
+      ],
+      "description": "PPPoE version nibble; MUST be 0x1 in every RFC 2516 frame and no other value is defined."
+    },
+    {
+      "id": "type",
+      "label": "Type",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xf",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "RFC 2516 §4",
+      "values": [
+        {
+          "value": 1,
+          "label": "Type 1 (RFC 2516)"
+        }
+      ],
+      "description": "PPPoE type nibble; MUST be 0x1 in every RFC 2516 frame and no other value is defined. The discovery/session selector is the Ethernet EtherType, not this field."
+    },
+    {
+      "id": "code",
+      "label": "Code",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2516 §5",
+      "values": [
+        {
+          "value": 0,
+          "label": "Session data"
+        },
+        {
+          "value": 7,
+          "label": "PADO (Offer)"
+        },
+        {
+          "value": 9,
+          "label": "PADI (Initiation)"
+        },
+        {
+          "value": 25,
+          "label": "PADR (Request)"
+        },
+        {
+          "value": 101,
+          "label": "PADS (Session-confirmation)"
+        },
+        {
+          "value": 167,
+          "label": "PADT (Terminate)"
+        }
+      ],
+      "description": "Discovery packet code (sections 5.1-5.5): 0x09 PADI, 0x07 PADO, 0x19 PADR, 0x65 PADS, 0xa7 PADT. 0x00 marks PPP session data (section 6), where the code carries no further meaning."
+    },
+    {
+      "id": "session_id",
+      "label": "Session ID",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2516 §4",
+      "min": 0,
+      "max": 65535,
+      "description": "0x0000 in PADI, PADO and PADR; the Access Concentrator assigns the unique value in PADS and it then stays fixed for the whole session, which it defines together with the Ethernet addresses. 0xffff is reserved and MUST NOT be used."
+    },
+    {
+      "id": "payload_length",
+      "label": "Payload Length",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2516 §4",
+      "min": 0,
+      "max": 65535,
+      "description": "Length in octets of the PPPoE payload — the discovery TAGs or the session PPP frame — excluding the Ethernet and PPPoE headers."
+    }
+  ]
+}

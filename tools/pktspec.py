@@ -60,6 +60,7 @@ from scapy.contrib.eigrp import EIGRP as _ScapyEIGRP
 from scapy.contrib.eigrp import _EIGRP_FLAGS, _EIGRP_OPCODES
 from scapy.contrib.geneve import GENEVE
 from scapy.contrib.gtp import GTPHeader
+from scapy.contrib.ikev2 import IKEv2
 from scapy.contrib.ldp import LDP
 from scapy.contrib.lldp import (
     LLDPDUChassisID,
@@ -86,9 +87,11 @@ from scapy.fields import (
 )
 from scapy.layers.dhcp import BOOTP
 from scapy.layers.dhcp6 import DHCP6
+from scapy.layers.eap import EAPOL
 from scapy.layers.igmp import IGMP
 from scapy.layers.inet6 import ICMPv6EchoRequest
 from scapy.layers.ipsec import AH
+from scapy.layers.ppp import PPPoED
 from scapy.layers.rip import RIP
 from scapy.layers.sctp import SCTP
 from scapy.layers.vxlan import VXLAN
@@ -316,6 +319,7 @@ LAYERS = {
         CDPv2_HDR,
         DHCP6,
         Dot1Q,
+        EAPOL,
         EIGRPHeader,
         ESP,
         Ether,
@@ -326,6 +330,7 @@ LAYERS = {
         ICMP,
         ICMPv6EchoRequest,
         IGMP,
+        IKEv2,
         IP,
         IPv6,
         ISISHeader,
@@ -340,6 +345,7 @@ LAYERS = {
         OSPF_Hdr,
         OSPFv3_Hdr,
         PIMv2Hdr,
+        PPPoED,
         RIP,
         RIPng,
         Raw,

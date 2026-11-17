@@ -1,0 +1,97 @@
+{
+  "id": "eapol",
+  "label": "EAPOL (802.1X)",
+  "rfc": [],
+  "notes": "EAP over LAN, the PDU format of IEEE 802.1X port-based network access control, carried in Ethernet II frames with EtherType 0x888E (on 802.11 it rides inside data frames, which the ether anchor does not cover). The fixed part is the 4-byte EAPOL PDU header of IEEE 802.1X-2010 clause 11.3: Protocol Version, Packet Type and Packet Body Length. Everything past byte 4 is the Packet Body, whose layout is selected by the Packet Type — an EAP packet (type 0, RFC 3748), an EAPOL-Key descriptor (type 3), MKA PDUs (type 5) or announcement sets (types 6-8) — while EAPOL-Start and EAPOL-Logoff carry no body at all (body_length 0), so no byte past the header sits at a fixed offset and the EAP Code/Identifier/Length words inside a type-0 body are not modelled.",
+  "anchor": {
+    "header": "ether",
+    "base": 14
+  },
+  "locator": [
+    "ether proto 34958"
+  ],
+  "headerLength": 4,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Protocol Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1X-2010 §11.3.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "802.1X-2001"
+        },
+        {
+          "value": 2,
+          "label": "802.1X-2004"
+        },
+        {
+          "value": 3,
+          "label": "802.1X-2010"
+        }
+      ],
+      "description": "Revision of IEEE 802.1X implemented by the transmitting PAE; deployed supplicants commonly send 2."
+    },
+    {
+      "id": "type",
+      "label": "Packet Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "IEEE 802.1X-2010 §11.3.2",
+      "values": [
+        {
+          "value": 0,
+          "label": "EAP-Packet"
+        },
+        {
+          "value": 1,
+          "label": "EAPOL-Start"
+        },
+        {
+          "value": 2,
+          "label": "EAPOL-Logoff"
+        },
+        {
+          "value": 3,
+          "label": "EAPOL-Key"
+        },
+        {
+          "value": 4,
+          "label": "EAPOL-Encapsulated-ASF-Alert"
+        },
+        {
+          "value": 5,
+          "label": "EAPOL-MKA"
+        },
+        {
+          "value": 6,
+          "label": "EAPOL-Announcement (Generic)"
+        },
+        {
+          "value": 7,
+          "label": "EAPOL-Announcement (Specific)"
+        },
+        {
+          "value": 8,
+          "label": "EAPOL-Announcement-Req"
+        }
+      ],
+      "description": "EAPOL PDU type selecting the Packet Body layout; types 6-8 were added by later amendments and appear in IEEE 802.1X-2020."
+    },
+    {
+      "id": "body_length",
+      "label": "Packet Body Length",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "IEEE 802.1X-2010 §11.3.3",
+      "min": 0,
+      "max": 65535,
+      "description": "Length of the Packet Body in octets, excluding the 4-byte EAPOL header; 0 for EAPOL-Start and EAPOL-Logoff."
+    }
+  ]
+}

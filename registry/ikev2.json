@@ -1,0 +1,256 @@
+{
+  "id": "ikev2",
+  "label": "IKEv2",
+  "rfc": [
+    "RFC 7296",
+    "RFC 3948"
+  ],
+  "notes": "IKEv2, the IPsec control plane (RFC 7296): it negotiates and maintains the security associations whose data plane is esp and ah. Every message begins with the fixed 28-byte header of RFC 7296 section 3.1; what follows is a chain of type-length payloads, cleartext in IKE_SA_INIT and encrypted from IKE_AUTH onwards, and is not modelled. The locator covers both framings: on UDP port 500 the header immediately follows the UDP header, while on UDP port 4500 (NAT traversal, RFC 3948) four zero octets — the non-ESP marker — precede it; the marker check keeps UDP-encapsulated ESP sharing port 4500 out of the match. With the marker present the header starts four octets later, so the field offsets above are exact for port-500 packets. The two 8-byte SPIs exceed the 4-byte BPF load window and are excluded; endpoints are matched with host primitives instead. IKEv1/ISAKMP shares port 500 with a different header layout — the version byte tells the two apart.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 500",
+    "udp port 4500 and udp[8:4] = 0"
+  ],
+  "headerLength": 28,
+  "fields": [
+    {
+      "id": "next_payload",
+      "label": "Next Payload",
+      "offset": 16,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 7296 §3.2",
+      "values": [
+        {
+          "value": 0,
+          "label": "No next payload"
+        },
+        {
+          "value": 33,
+          "label": "SA (Security Association)"
+        },
+        {
+          "value": 34,
+          "label": "KE (Key Exchange)"
+        },
+        {
+          "value": 35,
+          "label": "IDi (Identification - Initiator)"
+        },
+        {
+          "value": 36,
+          "label": "IDr (Identification - Responder)"
+        },
+        {
+          "value": 37,
+          "label": "CERT (Certificate)"
+        },
+        {
+          "value": 38,
+          "label": "CERTREQ (Certificate Request)"
+        },
+        {
+          "value": 39,
+          "label": "AUTH (Authentication)"
+        },
+        {
+          "value": 40,
+          "label": "Nonce (Ni, Nr)"
+        },
+        {
+          "value": 41,
+          "label": "Notify (N)"
+        },
+        {
+          "value": 42,
+          "label": "Delete (D)"
+        },
+        {
+          "value": 43,
+          "label": "Vendor ID (V)"
+        },
+        {
+          "value": 44,
+          "label": "TSi (Traffic Selector - Initiator)"
+        },
+        {
+          "value": 45,
+          "label": "TSr (Traffic Selector - Responder)"
+        },
+        {
+          "value": 46,
+          "label": "SK (Encrypted and Authenticated)"
+        },
+        {
+          "value": 47,
+          "label": "CP (Configuration)"
+        },
+        {
+          "value": 48,
+          "label": "EAP (Extensible Authentication)"
+        },
+        {
+          "value": 49,
+          "label": "GSPM (Generic Secure Password Method, RFC 6467)"
+        },
+        {
+          "value": 50,
+          "label": "IDg (Group Identification, RFC 9838)"
+        },
+        {
+          "value": 51,
+          "label": "GSA (Group Security Association, RFC 9838)"
+        },
+        {
+          "value": 52,
+          "label": "KD (Key Download, RFC 9838)"
+        },
+        {
+          "value": 53,
+          "label": "SKF (Encrypted and Authenticated Fragment, RFC 7383)"
+        },
+        {
+          "value": 54,
+          "label": "PS (Puzzle Solution, RFC 8019)"
+        }
+      ],
+      "description": "Type of the first payload following the header; 0 means the header stands alone. Values 33-48 are the RFC 7296 section 3.2 table, the rest are IANA registrations (values 1-32 are reserved so IKEv1 payload codes never collide)."
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 17,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 7296 §3.1",
+      "values": [
+        {
+          "value": 16,
+          "label": "IKEv1 / ISAKMP 1.0 (RFC 2409)"
+        },
+        {
+          "value": 32,
+          "label": "IKEv2 2.0 (RFC 7296)"
+        }
+      ],
+      "description": "Version byte packing the 4-bit major version in the high nibble and the 4-bit minor version in the low nibble: 0x20 is IKEv2 2.0, 0x10 the IKEv1/ISAKMP header that shares UDP port 500. A receiver supporting at most major version 2 answers a higher major version with an INVALID_MAJOR_VERSION notification."
+    },
+    {
+      "id": "exchange_type",
+      "label": "Exchange Type",
+      "offset": 18,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 7296 §3.1",
+      "values": [
+        {
+          "value": 34,
+          "label": "IKE_SA_INIT"
+        },
+        {
+          "value": 35,
+          "label": "IKE_AUTH"
+        },
+        {
+          "value": 36,
+          "label": "CREATE_CHILD_SA"
+        },
+        {
+          "value": 37,
+          "label": "INFORMATIONAL"
+        },
+        {
+          "value": 38,
+          "label": "IKE_SESSION_RESUME (RFC 5723)"
+        },
+        {
+          "value": 39,
+          "label": "GSA_AUTH (RFC 9838)"
+        },
+        {
+          "value": 40,
+          "label": "GSA_REGISTRATION (RFC 9838)"
+        },
+        {
+          "value": 41,
+          "label": "GSA_REKEY (RFC 9838)"
+        },
+        {
+          "value": 42,
+          "label": "GSA_INBAND_REKEY (RFC 9838)"
+        },
+        {
+          "value": 43,
+          "label": "IKE_INTERMEDIATE (RFC 9242)"
+        },
+        {
+          "value": 44,
+          "label": "IKE_FOLLOWUP_KE (RFC 9370)"
+        }
+      ],
+      "description": "The exchange the message belongs to, which constrains its payload chain: the four core types IKE_SA_INIT, IKE_AUTH, CREATE_CHILD_SA and INFORMATIONAL of RFC 7296, plus IANA-registered extensions."
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 19,
+      "size": 1,
+      "kind": "bitset",
+      "ref": "RFC 7296 §3.1",
+      "bits": [
+        {
+          "mask": 8,
+          "label": "Initiator"
+        },
+        {
+          "mask": 16,
+          "label": "Version"
+        },
+        {
+          "mask": 32,
+          "label": "Response"
+        }
+      ],
+      "description": "Header flags: Initiator is set in messages from the original IKE SA initiator (it also tells which of the two SPIs the sender chose), Response marks responses to a request with the same Message ID, and Version advertises the ability to speak a higher major version. The remaining five bits are reserved and sent as zero."
+    },
+    {
+      "id": "message_id",
+      "label": "Message ID",
+      "offset": 20,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 7296 §3.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Counter pairing requests with responses and catching replays: 0 for both IKE_SA_INIT messages, incremented once per subsequent exchange, reset to 0 when the IKE SA is rekeyed."
+    },
+    {
+      "id": "length",
+      "label": "Length",
+      "offset": 24,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 7296 §3.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Total message length in octets, header plus every payload; 28 for a bare header. On port 4500 the four-octet non-ESP marker is not part of the message and is not counted."
+    }
+  ],
+  "excluded": [
+    {
+      "id": "initiator_spi",
+      "offset": 0,
+      "length": 8,
+      "reason": "64-bit IKE SA initiator-chosen SPI; twice the 4-byte BPF load window, and the endpoints are already matched with host primitives"
+    },
+    {
+      "id": "responder_spi",
+      "offset": 8,
+      "length": 8,
+      "reason": "64-bit IKE SA responder-chosen SPI; twice the 4-byte BPF load window, and the endpoints are already matched with host primitives"
+    }
+  ]
+}

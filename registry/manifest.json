@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.19",
+  "registryVersion": "2026.11.22",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
@@ -9,6 +9,7 @@
     "cdp.json": "sha256:89542fa820e297fca979cde812a964a2465e0d023889e88a8269903e67ba8579",
     "dhcp.json": "sha256:33de3a53720be7a9d2351e0301017c38544793cd5b19070810f459d792a8decf",
     "dhcpv6.json": "sha256:289579f3e49a78c0035eeefba45eef1a09a7fe4095876a850785698aa6a5aabe",
+    "eapol.json": "sha256:c6e098bec093cfaa1cfcfcdaace1339e217cf3f7a64041c0f1287629c8b54a96",
     "eigrp.json": "sha256:aeac37a1dbb8d140782a6f9ce09051b600eeab1f91b0ad35eb9f1f6d0794ab8d",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
     "ethernet.json": "sha256:335501e617e26a8e5b5f964c2a3573ad4bdd6240b36d9802176cf2c3c46f6ec6",
@@ -19,6 +20,7 @@
     "icmp.json": "sha256:d5cafd6d4f0bbd86ef722c3504989aa99377f4c50e3fc030d9b9aca41d07b03a",
     "icmp6.json": "sha256:a2ee390a17f06d62e5e9d0e0fcd5a1406a473bed81ca02fa46c423b828496231",
     "igmp.json": "sha256:847d8a940d368715eb8bf606d563a357058903ba818749fa31cc6d4f42ea8bed",
+    "ikev2.json": "sha256:4ba4537449486576f92e451f35c48bb467fb4eee369f5f2d2a1916cefaaa1473",
     "ipv4.json": "sha256:2fc8f34f2f1abfebf99d096ea700eb5038b9d8d3662f3afa1a972761d6aaefaa",
     "ipv6.json": "sha256:6778da7a164ade0925a6f22361b115ba558225e9d07af2864b37891c0cf5d4be",
     "isis.json": "sha256:769b672fe73698dac9885740107d370191bb62c72016134b48edafefacc6bbcc",
@@ -29,6 +31,7 @@
     "ospf.json": "sha256:be49a2399082563861642712ff82b1c54d572679db99b8653db13a32174d434f",
     "ospfv3.json": "sha256:7eb91d6723a532673375abf662e4f3854fd0284e2e4dd889f69f60ca894ac9a2",
     "pim.json": "sha256:37f60a0bf69175e0c125fb9dbefd325a03237868e2b0ee2110379536995ef60f",
+    "pppoe.json": "sha256:e65a2c7d9b27f16c2800edb26a6b2ad80d166c4e08d9a54cb3e13408d62d65c5",
     "rip.json": "sha256:c10b6e14475444c2fab0a50ecd4e3649cfd18d422b3b5b02015e2084212fa3b0",
     "ripng.json": "sha256:314145cb6abb08c975c0bf05a02a0ee9618e3c3497d167108ade5d2dacab6b01",
     "sctp.json": "sha256:dda797f74567712579478005d0444542c03117636845f0c243f8328dbda952aa",
