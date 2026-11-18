@@ -1527,6 +1527,98 @@
       "expect": "udp port 6081 and udp[15:1] == 0"
     },
     {
+      "name": "glbp-version-1",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 3222 and udp[8:1] == 1"
+    },
+    {
+      "name": "glbp-group-1",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "group",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 3222 and udp[10:2] == 1"
+    },
+    {
+      "name": "glbp-group-1023",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "group",
+          "value": 1023
+        }
+      ],
+      "expect": "udp port 3222 and udp[10:2] == 1023"
+    },
+    {
+      "name": "glbp-unknown1-0",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "unknown1",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 3222 and udp[9:1] == 0"
+    },
+    {
+      "name": "glbp-unknown1-1",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "unknown1",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 3222 and udp[9:1] == 1"
+    },
+    {
+      "name": "glbp-unknown2-0",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "unknown2",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 3222 and udp[12:2] == 0"
+    },
+    {
+      "name": "glbp-owner",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "owner_id",
+          "value": "02:00:00:00:00:0a"
+        }
+      ],
+      "expect": "udp port 3222 and (udp[14:4] == 0x2000000 and udp[18:2] == 0xa)"
+    },
+    {
+      "name": "glbp-group-1-owner",
+      "entry": "glbp",
+      "select": [
+        {
+          "field": "group",
+          "value": 1
+        },
+        {
+          "field": "owner_id",
+          "value": "02:00:00:00:00:0a"
+        }
+      ],
+      "expect": "udp port 3222 and udp[10:2] == 1 and (udp[14:4] == 0x2000000 and udp[18:2] == 0xa)"
+    },
+    {
       "name": "gre-protocol-ipv4",
       "entry": "gre",
       "select": [
