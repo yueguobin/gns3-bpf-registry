@@ -41,7 +41,7 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-47 entries, 306 fields.
+48 entries, 311 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
@@ -56,9 +56,10 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | eapol | IEEE 802.1X | 3 | ospfv3 | RFC 5340 | 8 |
 | eigrp | RFC 7868 | 8 | pim | RFC 7761 | 4 |
 | esp | RFC 4303 | 2 | pppoe | RFC 2516 | 5 |
-| ethernet | IEEE 802.3 | 1 | rip | RFC 2453 | 3 |
-| frag6 | RFC 8200 | 6 | ripng | RFC 2080 | 3 |
-| geneve | RFC 8926 | 8 | rsvp | RFC 2205 | 7 |
+| ethernet | IEEE 802.3 | 1 | radius | RFC 2865/2866/5997 | 3 |
+| frag6 | RFC 8200 | 6 | rip | RFC 2453 | 3 |
+| geneve | RFC 8926 | 8 | ripng | RFC 2080 | 3 |
+| glbp | Cisco (unpublished) | 5 | rsvp | RFC 2205 | 7 |
 | gre | RFC 2784/2890 | 5 | sctp | RFC 9260 | 4 |
 | gtp | 3GPP TS 29.060 | 9 | srh | RFC 8754 | 7 |
 | hsrp | RFC 2281 | 11 | stp | IEEE 802.1D | 14 |
@@ -68,7 +69,6 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | ikev2 | RFC 7296/3948 | 6 | vlan | IEEE 802.1Q | 1 (primitive) |
 | ipv4 | RFC 791 | 10 | vrrp | RFC 3768 | 8 |
 | nhrp | RFC 2332 | 14 | vxlan | RFC 7348 | 3 |
-| radius | RFC 2865/2866/5997 | 3 | | | |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
