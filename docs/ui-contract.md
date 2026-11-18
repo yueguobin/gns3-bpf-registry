@@ -23,20 +23,26 @@ size with bit-width labels (48 / 16 / 24 ...).
 
 - The user adds layers bottom-up (Ether → IP → UDP → VXLAN → inner
   Ether → ...). Each layer renders one colored block in the stack.
-- The construction area is a row of **columns** (horizontally scrolled;
-  a "+" control adds one, an "×" per column deletes it). Each column
-  is an independent stack as described here and one operand of the
-  final boolean expression — see section 2. A column may start at any
-  protocol: a bare OSPF brick is already anchored by its `locator`
+- The construction area stacks **columns** vertically, each one
+  full-width (a "+" bar at the bottom adds one, an "×" per column
+  deletes it, and a horizontal operator bar between adjacent columns
+  cycles `and` / `or` / `not` on click). Each column is an independent
+  stack as described here and one operand of the final boolean
+  expression — see section 2. A column may start at any protocol: a
+  bare OSPF brick is already anchored by its `locator`
   (`ip proto 89`), no Ethernet/IP preamble required.
-- Bricks drag by their label strip: reorder within a column or move
-  across columns (field selections ride along, they are keyed by layer
-  id). A tunnel header drags its whole inner-packet run with it.
+- Bricks drag by their label strip — except the padded × delete zone,
+  which stays a pure click target and never arms a drag: reorder
+  within a column or move across columns (field selections ride
+  along, they are keyed by layer id). A tunnel header drags its whole
+  inner-packet run with it.
 - The brick rail groups protocols by family behind collapsible headers
-  that mirror the brick geometry. Manual open/close is remembered and
-  wins over the auto-open hint (the families that can legally follow
-  the active column's top); picking a brick never collapses the group
-  it came from.
+  that mirror the brick geometry, accordion-style: exactly one family
+  is expanded at a time (including the Custom group) — opening a group
+  collapses the others, and open state changes only by click, so
+  picking a brick never collapses the group it came from. While a
+  search term is active, every group holding matches is expanded
+  instead; clearing the search restores the accordion state.
 - A byte ruler shows the cumulative offset at every layer boundary —
   the prefix sum of the declared header lengths.
 - Clicking a layer expands its **field blocks** from the registry
