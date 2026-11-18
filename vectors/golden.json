@@ -4388,6 +4388,85 @@
       "expect": "ether[14:2] = 0x4242 and (ether[36:4] == 0x2000000 and ether[40:2] == 0x1)"
     },
     {
+      "name": "tacacsplus-type-authentication",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "type",
+          "value": 1
+        }
+      ],
+      "expect": "tcp port 49 and tcp[21:1] == 0x1"
+    },
+    {
+      "name": "tacacsplus-type-accounting",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "type",
+          "value": 3
+        }
+      ],
+      "expect": "tcp port 49 and tcp[21:1] == 0x3"
+    },
+    {
+      "name": "tacacsplus-version-10",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "version",
+          "value": 192
+        }
+      ],
+      "expect": "tcp port 49 and tcp[20:1] == 0xc0"
+    },
+    {
+      "name": "tacacsplus-seq-first-request",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "seq_no",
+          "value": 1
+        }
+      ],
+      "expect": "tcp port 49 and tcp[22:1] == 1"
+    },
+    {
+      "name": "tacacsplus-unencrypted",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Unencrypted"
+          ]
+        }
+      ],
+      "expect": "tcp port 49 and (tcp[23:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "tacacsplus-session-id",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "session_id",
+          "value": 305419896
+        }
+      ],
+      "expect": "tcp port 49 and tcp[24:4] == 305419896"
+    },
+    {
+      "name": "tacacsplus-length-error-reply",
+      "entry": "tacacsplus",
+      "select": [
+        {
+          "field": "length",
+          "value": 0
+        }
+      ],
+      "expect": "tcp port 49 and tcp[28:4] == 0"
+    },
+    {
       "name": "tcp-flags-syn",
       "entry": "tcp",
       "select": [

@@ -1,0 +1,45 @@
+{
+  "id": "tacacsplus",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "TCP", "fields": {"sport": 12345, "dport": 49, "chksum": "$PIN"}},
+    {"layer": "TacacsHeader", "fields": {"version": 192, "type": 1, "seq": 1, "flags": 0, "session_id": "0x12345678", "length": 13}}
+  ],
+  "anchor": {"header": "tcp", "base": 20},
+  "headerLength": 12,
+  "fieldMap": {"seq_no": "seq"},
+  "probe": {
+    "version": ["0xf", "0xf0"],
+    "type": ["0xf", "0xf0"],
+    "seq_no": ["0xf", "0xf0"],
+    "flags": ["0xf", "0xf0"],
+    "session_id": ["0xf0f0f0f", "0xf0f0f0f0"],
+    "length": ["0xf0f0f0f", "0xf0f0f0f0"]
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "type": "0x5a",
+    "seq_no": "0x5a",
+    "flags": "0x5a",
+    "session_id": "0x5a5a5a5a",
+    "length": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "version": [192, 193],
+    "type": [1, 3],
+    "seq_no": [1, 2],
+    "flags": [1, 4],
+    "session_id": ["0x12345678", "0x87654321"],
+    "length": [13, 0]
+  },
+  "vectors": [
+    {"name": "tacacsplus-type-authentication", "select": [{"field": "type", "value": 1}]},
+    {"name": "tacacsplus-type-accounting", "select": [{"field": "type", "value": 3}]},
+    {"name": "tacacsplus-version-10", "select": [{"field": "version", "value": 192}]},
+    {"name": "tacacsplus-seq-first-request", "select": [{"field": "seq_no", "value": 1}]},
+    {"name": "tacacsplus-unencrypted", "select": [{"field": "flags", "flags": ["Unencrypted"]}]},
+    {"name": "tacacsplus-session-id", "select": [{"field": "session_id", "value": 305419896}]},
+    {"name": "tacacsplus-length-error-reply", "select": [{"field": "length", "value": 0}]}
+  ]
+}
