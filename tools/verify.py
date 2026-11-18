@@ -207,6 +207,17 @@ def check_field(entry: dict, field: dict) -> None:
         )
         return
 
+    if kind == "ipv6":
+        require(
+            size == 16,
+            f"{label}: ipv6 fields are exactly 16 bytes",
+        )
+        require(
+            "mask" not in field and "shift" not in field,
+            f"{label}: ipv6 fields cannot use mask or shift",
+        )
+        return
+
     fail(f"{label}: unknown kind {kind!r}")
 
 
@@ -223,7 +234,9 @@ def check_header_entry(entry: dict) -> None:
         offset = int(field["offset"])
         size = int(field["size"])
         require(
-            size in (1, 2, 4) or (field["kind"] == "mac" and size == 6),
+            size in (1, 2, 4)
+            or (field["kind"] == "mac" and size == 6)
+            or (field["kind"] == "ipv6" and size == 16),
             f"{entry['id']}.{field['id']}: invalid size",
         )
         require(

@@ -10,6 +10,7 @@ identical strings.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import sys
 from pathlib import Path
@@ -61,6 +62,16 @@ def parse_mac(value: Any) -> int:
                 return int(compact, 16)
             except ValueError as exc:
                 raise CompileError(f"not a MAC address: {value!r}") from exc
+    return parse_int(value)
+
+
+def parse_ipv6(value: Any) -> int:
+    """Parse an IPv6 address (any RFC 4291 text form) or any integer form."""
+    if isinstance(value, str) and ":" in value:
+        try:
+            return int(ipaddress.IPv6Address(value))
+        except ipaddress.AddressValueError as exc:
+            raise CompileError(f"not an IPv6 address: {value!r}") from exc
     return parse_int(value)
 
 
@@ -186,6 +197,21 @@ def _field_clause(
             f"and {anchor}[{offset + 4}:2] == {_hex(low)})"
         )
 
+    # A 16-byte IPv6 address has no single tcpdump read either: it
+    # compiles to a 4x4-byte conjunction — the same shape libpcap emits
+    # for its own `ip6 host` primitive.
+    if kind == "ipv6":
+        address = parse_ipv6(item["value"])
+        words = [(address >> (96 - 32 * index)) & 0xFFFFFFFF for index in range(4)]
+        return (
+            "("
+            + " and ".join(
+                f"{anchor}[{offset + 4 * index}:4] == {_hex(word)}"
+                for index, word in enumerate(words)
+            )
+            + ")"
+        )
+
     value = (
         parse_ipv4(item["value"]) if kind == "ipv4" else parse_int(item["value"])
     )
@@ -299,6 +325,9 @@ def _parse_cli_selection(
             selection.append({"field": field_id, "value": raw_value})
         elif kind == "mac":
             parse_mac(raw_value)
+            selection.append({"field": field_id, "value": raw_value})
+        elif kind == "ipv6":
+            parse_ipv6(raw_value)  # validate now; the string passes through
             selection.append({"field": field_id, "value": raw_value})
         else:
             selection.append({"field": field_id, "value": parse_int(raw_value)})

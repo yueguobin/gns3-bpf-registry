@@ -79,6 +79,7 @@ from scapy.fields import (
     ByteEnumField,
     ByteField,
     FlagsField,
+    IP6Field,
     IPField,
     IntField,
     LongField,
@@ -100,6 +101,7 @@ from scapy.layers.inet6 import (
     IPv6ExtHdrFragment,
     IPv6ExtHdrSegmentRouting,
     IPv6ExtHdrSegmentRoutingTLV,
+    _ICMPv6,
     ipv6nh,
 )
 from scapy.layers.ipsec import AH
@@ -257,6 +259,42 @@ class GLBPHeader(Packet):
         ShortField("unknown2", 0),
         MACField("owner", "02:00:00:00:00:0a"),
     ]
+
+
+class MLDv1Header(_ICMPv6):
+    """MLDv1 message header per RFC 2710 section 3 (the ICMPv6 prefix).
+
+    Listener Query (130), Report (131) and Done (132) share the layout:
+    type, code, checksum, Maximum Response Delay (meaningful in queries
+    only) and a reserved word. scapy's ICMPv6ML* classes fold the 16-byte
+    multicast address into the same layer; this registry splits the views
+    (the icmp6 entry owns the first 8 bytes, the mld entry the payload
+    window), so the header layer ends after the reserved word and the
+    address rides its own layer. Inheriting _ICMPv6 keeps the checksum
+    computed over the whole MLD message with the IPv6 pseudo-header.
+    """
+
+    fields_desc = [
+        ByteEnumField(
+            "type",
+            130,
+            {130: "Listener Query", 131: "Listener Report", 132: "Listener Done"},
+        ),
+        ByteField("code", 0),
+        XShortField("cksum", None),
+        ShortField("mrd", 10000),
+        ShortField("reserved", 0),
+    ]
+
+
+class MLDGroup(Packet):
+    """MLD message body per RFC 2710 section 3: the 16-byte multicast
+    address on its own layer, so the probed window is exactly the mld
+    registry window. RFC 3810 section 5.1 keeps it at this offset in
+    MLDv2 queries; MLDv2 reports (type 143) carry group records instead.
+    """
+
+    fields_desc = [IP6Field("mladdr", "::")]
 
 
 class MPLSHeader(Packet):
@@ -560,7 +598,14 @@ class NHRPHeader(Packet):
         return pkt
 
 
-from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
+from bpf_compile import (
+    ROOT,
+    CompileError,
+    parse_int,
+    parse_ipv4,
+    parse_ipv6,
+    parse_mac,
+)
 
 RECIPES_DIR = ROOT / "recipes"
 
@@ -603,6 +648,8 @@ LAYERS = {
         LLDPDUEndOfLLDPDU,
         LLDPDUPortID,
         LLDPDUTimeToLive,
+        MLDGroup,
+        MLDv1Header,
         MPLSHeader,
         NHRPHeader,
         NTPHeader,
@@ -740,11 +787,16 @@ def _is_mac_literal(value: str) -> bool:
     return ":" in value and len(value.replace(":", "").replace("-", "")) == 12
 
 
+def _is_ipv6_literal(value: str) -> bool:
+    return ":" in value and not _is_mac_literal(value)
+
+
 def _fixture_value(entry_id: str, field_id: str, value):
     """Address literals pass through as strings; everything else is an int.
 
-    The test is structural (dotted quad / coloned MAC), NOT parser-based:
-    "0x0200" parses as an integer and must stay an integer.
+    The test is structural (dotted quad / coloned MAC / coloned IPv6),
+    NOT parser-based: "0x0200" parses as an integer and must stay an
+    integer.
     """
     if isinstance(value, str):
         if _is_ipv4_literal(value):
@@ -753,15 +805,18 @@ def _fixture_value(entry_id: str, field_id: str, value):
         if _is_mac_literal(value):
             parse_mac(value)
             return value
+        if _is_ipv6_literal(value):
+            parse_ipv6(value)
+            return value
     return parse_int(value)
 
 
 def _crosscheck_pair(entry_id: str, field_id: str, value) -> tuple:
     """Sentinel -> (build value, expected wire integer).
 
-    Address literals build as strings (scapy requires MAC strings) while
-    the expectation is the parsed integer, so the byte comparison in
-    crosscheck.py stays pure integer arithmetic.
+    Address literals build as strings (scapy requires MAC and IPv6
+    strings) while the expectation is the parsed integer, so the byte
+    comparison in crosscheck.py stays pure integer arithmetic.
     """
     if isinstance(value, list):
         return _int_pair(entry_id, field_id, value)
@@ -770,6 +825,8 @@ def _crosscheck_pair(entry_id: str, field_id: str, value) -> tuple:
             return value, parse_ipv4(value)
         if _is_mac_literal(value):
             return value, parse_mac(value)
+        if _is_ipv6_literal(value):
+            return value, parse_ipv6(value)
     sentinel = parse_int(value)
     return sentinel, sentinel
 
