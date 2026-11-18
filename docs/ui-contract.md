@@ -8,8 +8,10 @@ anyone counting bytes.
 
 A live prototype of this contract ships from this repository as the
 BPF Expression Visual Calculator:
-<https://yueguobin.github.io/gns3-bpf-registry/> (single-file
-`prototype/index.html`, deployed by `.github/workflows/pages.yml`).
+<https://yueguobin.github.io/gns3-bpf-registry/> (three files:
+`prototype/index.html` for markup and logic, `prototype/i18n.js` for
+UI-chrome strings, `prototype/overlay.js` for per-protocol UI data;
+deployed by `.github/workflows/pages.yml`).
 
 The rendering model is the textbook encapsulation anatomy: a vertical
 layer stack with a cumulative byte ruler on the side ("50 bytes of
@@ -34,6 +36,11 @@ size with bit-width labels (48 / 16 / 24 ...).
   - `ipv4` — dotted-quad input
   - `mac` — MAC-notation input
   - `ipv6` — IPv6-notation input (any `::`-compressed group-hex form)
+- Single-bit number fields render as a one-letter toggle. The letter
+  comes from the label's `(X)` convention (GRE `Checksum Present (C)`
+  → `C`), else from a short field id which reads like the RFC name
+  (DNS `qr` → `QR`, GTP `pn_flag` → `PN`), else the label initial
+  (`Bottom of Stack` → `B`) — never a bare `?`.
 - Encapsulation addresses and ports (listed in each entry's `excluded`
   with a primitive reason) are offered as **primitives** (`src`, `dst`,
   `port`, `ether src/dst`) — never as byte windows.
@@ -65,10 +72,14 @@ never a wrong match):
 Example (tested):
 
 ```
-stack: Ether → IP(20) → UDP:4789 → VXLAN → Ether → IP(20) → TCP
+stack: Ether → IP(20) → UDP → VXLAN → Ether → IP(20) → TCP
 inner TCP dport 443 →
-  udp port 4789 and (ether[64] & 0x0f) == 5 and ether[86:2] == 443
+  (udp port 4789 or udp port 8472) and (ether[64] & 0x0f) == 5 and ether[86:2] == 443
 ```
+
+(The locator clause is the entry's `locator` list joined with `or` —
+single locators emit bare; the VXLAN entry carries both the standard
+port 4789 and 8472.)
 
 ## 3. Tested pitfalls the generator must respect
 
@@ -122,3 +133,31 @@ requirements:
   (`fixed` / `variable-length` / `tlv` / `tunnel`) so the UI knows
   which layers can advance the ruler by data alone and which need a
   declared length. Not yet in the schema.
+
+## 7. Localization (i18n)
+
+The calculator is bilingual (English default, Chinese secondary) and
+keeps two string populations apart:
+
+- **UI chrome** lives in `prototype/i18n.js`: one `STR` table with
+  `en` and `zh` blocks declaring identical key sets, resolved through
+  `T(key)` (English is the fallback) and `L(obj)` for `{en, zh}`
+  objects. The language-switch button shows the *other* language's
+  name in that language (`中文` on the English UI) — the one
+  sanctioned CJK occurrence inside `STR.en`.
+- **Data strings** travel with their entry, never in the chrome
+  table: registry entries carry `description` / `reason` as inline
+  `{en, zh}` objects, and the UI overlay (`prototype/overlay.js`)
+  does the same for tail notes, pin warnings and family labels.
+
+`tools/check_i18n.py` (CI-enforced) keeps the split honest: no CJK
+codepoint anywhere in `index.html`, no CJK in `STR.en` (except the
+language name above), identical `en`/`zh` key sets, no unused keys or
+unresolved `T()` references, and both languages present on every
+localized object in the overlay and the registry. Without the
+index.html rule a hover or badge can silently ship untranslated in
+the other language.
+
+The GNS3 web UI should port the chrome table into its own i18n
+catalogs (vue-i18n or equivalent) and consume the registry's
+`{en, zh}` data objects as-is; the file split mirrors that boundary.

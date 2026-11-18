@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>BPF Expression Visual Calculator</title>
@@ -122,7 +122,7 @@
 </style>
 </head>
 <body>
-<h1><span id="tTitle">BPF Expression Visual Calculator</span> <span id="modeBadge" class="mode native">Native</span> <button id="langBtn" class="langbtn" onclick="toggleLang()">中文</button></h1>
+<h1><span id="tTitle">BPF Expression Visual Calculator</span> <span id="modeBadge" class="mode native">Native</span> <button id="langBtn" class="langbtn" onclick="toggleLang()">Chinese</button></h1>
 <div class="sub" id="tSub"></div>
 
 <div class="layout">
@@ -140,7 +140,7 @@
 
     <div class="card">
       <h2 id="tSec3"></h2>
-      <div class="expr" id="expr">尚未选择字段</div>
+      <div class="expr" id="expr"></div>
       <div class="note" id="exprNote"></div>
     </div>
   </div>
@@ -153,64 +153,13 @@
   </div>
 </div>
 
+<script src="i18n.js"></script>
+<script src="overlay.js"></script>
 <script>
-/* ---------- i18n: English default, Chinese optional ---------- */
-let LANG = "en";
-try{ LANG = localStorage.getItem("bpfcalc-lang") || "en"; }catch(e){}
-const STR = {
-  en:{
-    title:"BPF Expression Visual Calculator",
-    sub:"Stack protocol bricks like building a packet — every field visible in its textbook word grid, click a field to input a value, offsets are computed for you. Never count bytes again.",
-    sec1:"1 · Packet Construction", sec2:"2 · Selected Conditions & Guards", sec3:"3 · Generated BPF Expression",
-    pal:"Bricks", searchPh:"Search protocols…",
-    customBtn:"＋ Custom layer (declare length)", customPrompt:"Custom layer length (bytes)",
-    noFields:"Custom layer has no fields; its job is to advance the offset ruler.",
-    offset:"offset", drillL:" · drill", tunnelL:" · tunnel",
-    inner:"📦 Inner packet · ${label} payload (drill: absolute offsets + guards)",
-    innerEmpty:"No inner packet yet — bricks added next become the tunnel payload",
-    emptyStack:"Add bricks from the rail…",
-    total:n=>`Total ${n} bytes`,
-    noneYet:"No field selected yet",
-    modeNative:"Native (keyword anchors)", modeDrill:"Drill (absolute offsets + guards)",
-    noteDrill:"Drill mode: absolute offsets come from the accumulated ruler; guard clauses verify the declared encapsulation — mismatches safe-miss, never false-match.",
-    noteNative:"Native mode: keyword anchors / primitives; libpcap handles outer IHL/VLAN.",
-    guard:"Guard", ihlPin:"IHL pin", optPin:"optional-field pin",
-    warnMis:(a,b,c)=>`${a}=${b} points to ${c}`,
-    warnTail:", but the next layer is ",
-    clickDd:"; click for dropdown", dblIn:"; double-click to input", letTgl:"; click letters to toggle",
-    notFilterable:"not filterable", exclConst:"constant, not filterable",
-    prim1:"native emits \"", prim2:"\", drill emits the byte window",
-    varLen:"variable", value:"value",
-    loadFail:"Cannot load registry/*.json next to the page.\nServe the repository over HTTP and open the page from there:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
-  },
-  zh:{
-    title:"BPF 表达式可视化计算器",
-    sub:"像搭报文一样逐层拼积木,每个字段按教科书 32 位字格展示;点字段输入值,偏移自动计算,用户永远不数字节。",
-    sec1:"1 · 报文构造", sec2:"2 · 已选条件与守卫", sec3:"3 · 生成的 BPF 表达式",
-    pal:"层积木", searchPh:"搜索协议…",
-    customBtn:"＋ 自定义层(声明长度)", customPrompt:"自定义层长度(字节)",
-    noFields:"自定义层无字段,作用是推进标尺。",
-    offset:"累计偏移", drillL:" · 钻取层", tunnelL:" · 隧道",
-    inner:"📦 内层报文 · ${label} 载荷（钻取:绝对偏移 + 守卫）",
-    innerEmpty:"尚无内层报文 — 继续添加积木,它们会成为隧道载荷",
-    emptyStack:"从右侧积木栏添加层…",
-    total:n=>`报文总长 ${n} 字节`,
-    noneYet:"尚未选择字段",
-    modeNative:"原生模式(关键字锚点)", modeDrill:"钻取模式(绝对偏移+守卫)",
-    noteDrill:"钻取模式:绝对偏移由累计标尺计算;守卫子句校验声明的封装,错配安全漏报、永不误匹配。",
-    noteNative:"原生模式:关键字锚点/原语,libpcap 自动处理外层 IHL/VLAN。",
-    guard:"守卫", ihlPin:"IHL 钉子", optPin:"可选字段钉子",
-    warnMis:(a,b,c)=>`${a}.${b}=${c}`,
-    warnTail:",下一层却是 ",
-    clickDd:"；点击下拉选择", dblIn:"；双击直接输入", letTgl:"；点击字母位直接开关",
-    notFilterable:"不可过滤", exclConst:"常量,不可过滤",
-    prim1:"原生输出「", prim2:"」,钻取输出字节窗口",
-    varLen:"变长", value:"数值",
-    loadFail:"无法加载页面旁的 registry/*.json。\n请通过 HTTP 提供本仓库后再打开页面:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
-  },
-};
-function T(k){ const v = STR[LANG] && STR[LANG][k]; return v===undefined ? (STR.en[k] ?? k) : v; }
-function L(x){ return x && typeof x==="object" ? (x[LANG] ?? x.en) : x; }
+/* i18n chrome (STR, T, L, LANG) lives in i18n.js; per-protocol UI data
+   (FAM, UI, SYN — with their inline {en, zh} objects) in overlay.js.
+   This file holds markup and logic only: tools/check_i18n.py fails on
+   any CJK codepoint here, so a hover or label cannot ship untranslated. */
 function toggleLang(){ LANG = LANG==="en" ? "zh" : "en"; try{ localStorage.setItem("bpfcalc-lang", LANG); }catch(e){} renderChrome(); renderAll(); }
 function renderChrome(){
   document.title = T("title");
@@ -220,160 +169,14 @@ function renderChrome(){
   document.getElementById("tSec2").textContent = T("sec2");
   document.getElementById("tSec3").textContent = T("sec3");
   document.getElementById("tPal").textContent = T("pal");
-  document.getElementById("langBtn").textContent = LANG==="en" ? "中文" : "English";
+  document.getElementById("langBtn").textContent = T("langOther");
   document.documentElement.lang = LANG==="en" ? "en" : "zh-CN";
 }
-/* ---------- mock registry (field layout mirrors registry/*.json) ----------
-   Color encodes FAMILY (link/net/trans/tunnel/app), never per-protocol identity:
-   the label strip's protocol name is the identity, 5-6 family hues always suffice. */
-const FAM = {
-  link:   {color:"#64748b", label:{en:"Link Layer", zh:"链路层"}},
-  net:    {color:"#3b82f6", label:{en:"Network Layer", zh:"网络层"}},
-  trans:  {color:"#10b981", label:{en:"Transport", zh:"传输层"}},
-  tunnel: {color:"#ef4444", label:{en:"Tunnel / Overlay", zh:"隧道/Overlay"}},
-  app:    {color:"#f59e0b", label:{en:"Application", zh:"应用层"}},
-  custom: {color:"#94a3b8", label:{en:"Custom", zh:"自定义"}},
-};
-/* ---------- registry-driven protocol table ----------
-   The bricks are derived from registry/*.json at runtime: field ids, labels,
-   offsets, masks, kinds, enum values, bit labels, locators and exclusion rows
-   all come from the registry — there is no hand-maintained mirror to drift.
-   What the registry deliberately does not carry stays in the UI overlay
-   below: palette family, successor linkage, tail notes, clickable primitive
-   cells for excluded addresses/ports, the GRE presence pin, display-only
-   enum additions, and the two synthetic bricks (the 802.1Q tag layout — the
-   registry models VLAN as a primitive — and the custom layer). */
-const UI = {
-  ethernet: {fam:"link",
-    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp", 34958:"eapol", 34915:"pppoe", 34916:"pppoe"}},
-    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"},{v:34958, l:"EAPOL"},{v:34915, l:"PPPoE Discovery"},{v:34916, l:"PPPoE Session"}]},
-    primitives:{dst:{p:"ether dst", kind:"mac", label:"Destination MAC"},
-                src:{p:"ether src", kind:"mac", label:"Source MAC"}}},
-  ipv4: {fam:"net",
-    successors:{protocol:{1:"icmp", 2:"igmp", 6:"tcp", 17:"udp", 46:"rsvp", 47:"gre", 50:"esp", 51:"ah", 54:"nhrp", 88:"eigrp", 89:"ospf", 103:"pim", 112:"vrrp", 132:"sctp"}},
-    enumAdds:{protocol:[{v:88, l:"EIGRP"},{v:112, l:"VRRP"},{v:2, l:"IGMP"},{v:103, l:"PIM"},{v:46, l:"RSVP"},{v:54, l:"NHRP"}]},
-    primitives:{src:{p:"src", kind:"ipv4", label:"Source Address"},
-                dst:{p:"dst", kind:"ipv4", label:"Destination Address"}},
-    tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when IHL>5 (variable). The drill guard pins IHL=5, so the region is absent and following offsets stay exact.", zh:"选项+填充:仅 IHL>5 时存在,变长。钻取守卫已将 IHL 钉为 5,此时该区不存在,后续偏移精确。"}}},
-  ipv6: {fam:"net",
-    successors:{next_header:{6:"tcp", 17:"udp", 43:"srh", 44:"frag6", 58:"icmp6", 89:"ospfv3", 132:"sctp"}},
-    enumAdds:{next_header:[{v:89, l:"OSPFv3"},{v:132, l:"SCTP"}]},
-    primitives:{src:{p:"src", kind:"ipv6", label:"Source Address"},
-                dst:{p:"dst", kind:"ipv6", label:"Destination Address"}},
-    tail:{label:{en:"Extension Headers", zh:"扩展头"}, note:{en:"Hop-by-hop / routing / fragment chains shift every following header; only the fixed 40-byte base header is modelled.", zh:"逐跳/路由/分片等扩展头链会移动其后所有头部;仅建模固定 40 字节基本头。"}}},
-  udp: {fam:"trans",
-    successors:{dst_port:{53:"dns", 67:"dhcp", 68:"dhcp", 123:"ntp", 500:"ikev2", 546:"dhcpv6", 547:"dhcpv6", 4789:"vxlan", 520:"rip", 521:"ripng", 1812:"radius", 1813:"radius", 1985:"hsrp", 2123:"gtp", 2152:"gtp", 3222:"glbp", 3784:"bfd", 4784:"bfd", 6081:"geneve"}},
-    primitives:{src_port:{p:"src port", kind:"number", label:"Src Port"},
-                dst_port:{p:"dst port", kind:"number", label:"Dst Port"}}},
-  tcp: {fam:"trans",
-    successors:{dst_port:{49:"tacacsplus", 179:"bgp", 646:"ldp"}},
-    primitives:{src_port:{p:"src port", kind:"number", label:"Src Port"},
-                dst_port:{p:"dst port", kind:"number", label:"Dst Port"}},
-    tail:{label:{en:"Options + Padding", zh:"选项 + 填充"}, note:{en:"Present only when Data Offset>5 (variable). Without a data-offset pin, drill offsets of later layers assume the 20-byte minimum header.", zh:"选项+填充:仅数据偏移>5 时存在,变长。守卫未钉数据偏移时,其后层的钻取偏移按最小头 20B 计算。"}}},
-  vxlan: {fam:"tunnel", tunnel:true},
-  arp:  {fam:"link"},
-  icmp: {fam:"net"},
-  icmp6: {fam:"net",
-    successors:{type:{130:"mld", 131:"mld", 132:"mld", 143:"mld"}}},
-  mld:  {fam:"net",
-    tail:{label:{en:"MLDv2 Query Tail / Records", zh:"MLDv2 查询尾部 / 组记录"}, note:{en:"The 16-byte multicast address is the whole fixed window. MLDv2 queries continue past it with the S flag/QRV, QQIC and the source count (ICMPv6 bytes 24-27), and MLDv2 reports (type 143) replace it with a variable group-record list; v1 messages end at byte 16. A specific-group query, a v1 report and a done also carry the group in the IPv6 destination address, but the v2 report goes to ff02::16 regardless — the byte view is the only exact group filter.", zh:"16 字节组地址即全部固定窗口。MLDv2 查询在其后还有 S/QRV、QQIC 与源计数(ICMPv6 第 24-27 字节),MLDv2 报告(类型 143)则以变长组记录链取而代之;v1 报文止于第 16 字节。特定组查询、v1 报告与离开报文同时把组地址带入 IPv6 目的地址,而 v2 报告固定发往 ff02::16——字节视图是唯一精确的组过滤器。"}}},
-  ah:  {fam:"net",
-    tail:{label:{en:"ICV + Protected Payload", zh:"ICV + 受保护载荷"}, note:{en:"The variable-length Integrity Check Value depends on the SA's auth algorithm, then comes the authenticated (not encrypted) payload.", zh:"变长 ICV 取决于 SA 的认证算法,其后为经认证(未加密)的载荷。"}}},
-  vrrp:  {fam:"net",
-    tail:{label:{en:"IP Address List + Auth Data", zh:"地址列表 + 认证数据"}, note:{en:"The count-dependent virtual-router address list follows the fixed header, then the RFC 2338-era auth words; neither sits at a fixed offset. VRRPv3 shares the protocol number with a different layout.", zh:"固定头之后是随数量变化的虚拟路由器地址列表,再后是 RFC 2338 遗留认证字;均无固定偏移。VRRPv3 复用协议号但布局不同。"}}},
-  hsrp:  {fam:"net"},
-  glbp: {fam:"net",
-    tail:{label:{en:"TLV Chain", zh:"TLV 链"}, note:{en:"Past the 12-byte header everything rides in a TLV chain: Hello (gateway state, priority, millisecond timers, virtual address), forwarder request/response (virtual MAC) and authentication; order and presence vary, so no TLV byte sits at a fixed offset. Cisco never published the layout — offsets follow Wireshark's reverse-engineered dissector verified against captures. Routers send from their own interface address (both ports 3222) to 224.0.0.102.", zh:"12 字节头部之后全部为 TLV 链:Hello(网关状态、优先级、毫秒计时器、虚拟地址)、转发者请求/应答(虚拟 MAC)与认证;顺序与有无皆可变,无固定偏移。思科未公开布局——偏移取自 Wireshark 逆向解析器并经实包校验。路由器以自身接口地址发送(双端口 3222),目的为 224.0.0.102。"}}},
-  mpls: {fam:"tunnel",
-    tail:{label:{en:"Inner Label / Payload", zh:"内层标签 / 载荷"}, note:{en:"Only the outermost label is at a fixed offset; deeper entries sit behind a variable stack depth.", zh:"仅最外层标签位于固定偏移;更深的条目取决于变长的标签栈深度。"}}},
-  cdp: {fam:"link",
-    tail:{label:{en:"TLV Chain", zh:"TLV 链"}, note:{en:"Device ID, ports, capabilities and so on ride in a TLV chain; offsets shift with each TLV length.", zh:"设备 ID、端口、能力等位于 TLV 链中;偏移随各 TLV 长度漂移。"}}},
-  lacp: {fam:"link",
-    exclLabels:{actor_reserved:"Actor Reserved", partner_reserved:"Partner Reserved", collector_reserved:"Collector Reserved"},
-    tail:{label:{en:"Reserved (50B)", zh:"保留 (50B)"}, note:{en:"The LACPDU is padded to 110 bytes; the trailing 50 bytes are zero and carry no filterable state.", zh:"LACPDU 填充至 110 字节;尾部 50 字节为零,无可过滤状态。"}}},
-  esp:  {fam:"net",
-    tail:{label:{en:"Encrypted Payload", zh:"加密载荷"}, note:{en:"Everything after SPI/Seq is encrypted (payload+padding+ICV); no filterable fixed fields.", zh:"SPI/Seq 之后全部加密(载荷+填充+ICV),无可过滤的固定字段。"}}},
-  ikev2: {fam:"app",
-    tail:{label:{en:"Payload Chain", zh:"载荷链"}, note:{en:"Type-length payloads chained by each Next Payload byte: cleartext in IKE_SA_INIT, encrypted and authenticated (SK) from IKE_AUTH on. On the NAT-traversal port 4500 the header is preceded by the 4-octet non-ESP marker, shifting these offsets by four; the registry locator marker-guards that port.", zh:"由各 Next Payload 字节串起的类型-长度载荷链:IKE_SA_INIT 中为明文,IKE_AUTH 起整体加密认证(SK)。NAT-T 4500 端口上头部前有 4 字节 non-ESP 标记,偏移后移 4 字节;注册表定位子已对该端口做标记守卫。"}}},
-  gre:  {fam:"tunnel", tunnel:true,
-    pin:"(ip[20:2] & 0xb000) == 0", pinYield:["c_bit", "k_bit", "s_bit"],
-    successors:{protocol:{2048:"ipv4", 34525:"ipv6", 25944:"ethernet"}}},
-  ospf: {fam:"net", kindOverride:{router_id:"ipv4", area_id:"ipv4"},
-    exclLabels:{auth_data:"Auth Data"}},
-  stp:  {fam:"link"},
-  lldp: {fam:"link", exclLabels:{tail:"TLV Chain"}},
-  eapol: {fam:"link",
-    tail:{label:{en:"Packet Body", zh:"包体"}, note:{en:"Layout depends on the Packet Type: EAP packet (0), key descriptor (3), MKA (5) or announcements (6-8); Start/Logoff carry none, so no byte past the 4-byte header is fixed.", zh:"布局取决于 Packet Type:EAP 报文(0)、密钥描述符(3)、MKA(5)或通告(6-8);Start/Logoff 无包体,4 字节头部之后无固定偏移。"}}},
-  pppoe: {fam:"link",
-    tail:{label:{en:"TAGs / PPP Frame", zh:"TAG / PPP 帧"}, note:{en:"Past the 6-byte header nothing is fixed: discovery frames (EtherType 0x8863) carry zero or more TAG TLVs (Service-Name, AC-Name, ...), session frames (0x8864) carry a PPP frame beginning with the 2-byte Protocol-ID.", zh:"6 字节头部之后无固定偏移:发现帧(EtherType 0x8863)为零或多个 TAG TLV(Service-Name、AC-Name……),会话帧(0x8864)为以 2 字节 Protocol-ID 起始的 PPP 帧。"}}},
-  rsvp: {fam:"net",
-    tail:{label:{en:"Objects (TLV)", zh:"对象 (TLV)"}, note:{en:"Variable-count objects (SESSION, HOP, TIME_VALUES, LABEL_REQUEST, ...) follow the 8-byte common header; each is a Length/Class-Num/C-Type TLV, so no byte past the header is at a fixed offset.", zh:"8 字节公共头之后为变长对象链(SESSION、HOP、TIME_VALUES、LABEL_REQUEST 等),每个对象为 Length/Class-Num/C-Type TLV,头部之后无固定偏移。"}}},
-  dhcp: {fam:"app",
-    exclLabels:{chaddr_tail:"chaddr pad", sname:"Server Name", file:"Boot File Name"},
-    tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"After the magic cookie (0x63825363): a variable TLV option chain; option 53 (message type) has no fixed offset.", zh:"Magic cookie (0x63825363) 之后为变长 TLV 选项链;option 53(消息类型)无固定偏移。"}}},
-  eigrp: {fam:"net",
-    tail:{label:{en:"TLV Chain", zh:"TLV 链"}, note:{en:"Variable TLVs (parameters, sequence, routes) follow the header; their offsets drift with each TLV length.", zh:"头部之后为变长 TLV(参数/序列/路由);偏移随各 TLV 长度漂移。"}}},
-  nhrp: {fam:"net",
-    tail:{label:{en:"Mandatory Tail + Extensions", zh:"变长尾部 + 扩展"}, note:{en:"The tail is bounded by length bytes: source NBMA address and subaddress (shtl/sstl), source and destination protocol addresses, then CIEs and extension TLVs — no byte past 28 sits at a fixed offset. In Error and Traffic Indications bytes 22-27 carry error metadata instead of flags/request ID. DMVPN carries NHRP inside GRE (proto 0x2001) as well as directly over IP proto 54; offsets are NHRP-relative either way.", zh:"变长尾部由长度字节定界:源 NBMA 地址与子地址(shtl/sstl)、源与目的协议地址,其后为 CIE 链与扩展 TLV——第 28 字节后无固定偏移。Error/Traffic Indication 中第 22-27 字节承载错误元数据而非 flags/request ID。DMVPN 的 NHRP 既封装于 GRE(proto 0x2001)也直接承载于 IP proto 54;两种方式下偏移均相对 NHRP 头。"}}},
-  rip:  {fam:"app",
-    tail:{label:{en:"Route Entries", zh:"路由表项"}, note:{en:"Variable-count 20-byte entries; the first RIPv2 entry may be an authentication record instead of a route, so nothing past the header is at a fixed offset.", zh:"变长 20 字节表项链;RIPv2 首个表项可能是认证记录而非路由,头部之后无固定偏移。"}}},
-  ripng:  {fam:"app",
-    tail:{label:{en:"Route Table Entries", zh:"路由表项"}, note:{en:"Variable-count 20-byte RTEs (IPv6 prefix, tag, prefix length, metric); the first may be a next-hop RTE instead, so nothing past the header is at a fixed offset.", zh:"变长 20 字节 RTE(IPv6 前缀、标签、前缀长度、度量);首个表项可能是下一跳 RTE,头部之后无固定偏移。"}}},
-  bgp:  {fam:"app",
-    exclLabels:{marker:"Marker"},
-    tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"OPEN / UPDATE / NOTIFICATION / KEEPALIVE body: variable length. Base 20 assumes a TCP header without options.", zh:"OPEN/UPDATE/NOTIFICATION/KEEPALIVE 报文体:变长。基准 20 假设 TCP 头部无选项。"}}},
-  tacacsplus: {fam:"app",
-    tail:{label:{en:"Packet Body", zh:"报文体"}, note:{en:"Authentication / authorization / accounting bodies are variable-length and, unless the Unencrypted flag is set, obfuscated with an MD5 pseudo-pad keyed by session_id, version and seq_no (RFC 8907 section 4.5). Once single-connection mode is negotiated, sessions are multiplexed on one TCP connection and told apart by session_id. Base 20 assumes a TCP header without options.", zh:"认证/授权/计费报文体均为变长,且除非 Unencrypted 位置位,否则以 session_id、版本和 seq_no 作种的 MD5 伪随机垫混淆(RFC 8907 4.5 节)。协商单连接模式后,多条会话复用一条 TCP 连接,靠 session_id 区分。基准 20 假设 TCP 头部无选项。"}}},
-  radius: {fam:"app",
-    tail:{label:{en:"Attributes (TLV)", zh:"属性 (TLV)"}, note:{en:"A variable type-length-value chain follows byte 20; each attribute's position depends on the lengths of all preceding ones, so no attribute byte sits at a fixed offset. The 16-byte authenticator inside the header is excluded: 16 random octets in a request, an MD5 digest in a reply — no stable bytes worth matching. Legacy ports 1645/1646 share the layout.", zh:"第 20 字节起为变长 TLV 属性链;每个属性的位置取决于其前所有属性的长度,无固定偏移。头部内 16 字节 authenticator 已排除:请求中为 16 随机字节,应答中为 MD5 摘要——无稳定字节可匹配。旧端口 1645/1646 布局相同。"}}},
-  dhcpv6: {fam:"app",
-    tail:{label:{en:"Options (TLV)", zh:"选项 (TLV)"}, note:{en:"A variable option chain (DUID, IA_NA, status...) follows at byte 4; relay messages 12/13 use a different layout.", zh:"第 4 字节起为变长选项链(DUID、IA_NA、状态等);12/13 中继报文布局不同。"}}},
-  dns: {fam:"app",
-    tail:{label:{en:"Question / Answer Sections", zh:"问题 / 应答区"}, note:{en:"Question, answer, authority and additional records follow byte 12: QNAME labels with pointer compression make every offset variable, and the EDNS0 OPT pseudo-record (extended rcode bits) rides in the additional section. DNS over TCP 53 prepends a 2-byte length word, which this udp anchor does not model.", zh:"第 12 字节后为问题/应答/授权/附加记录:QNAME 标签与指针压缩使所有偏移可变;EDNS0 OPT 伪记录(扩展 rcode 位)位于附加区。TCP 53 端口前置 2 字节长度字,udp 锚点不建模。"}}},
-  ntp: {fam:"app",
-    exclLabels:{reference_ts:"Reference TS", originate_ts:"Originate TS", receive_ts:"Receive TS", transmit_ts:"Transmit TS"},
-    tail:{label:{en:"Extension Fields", zh:"扩展字段"}, note:{en:"Optional extension fields (RFC 7822) follow byte 48 in client/server/symmetric modes, each a type-length-value padded to a word boundary. The four 64-bit timestamps inside the header are twice the 4-byte BPF load window, so no equality clause exists for them. Mode 6 control and mode 7 private messages share the port and the fixed header.", zh:"客户/服务器/对称模式下第 48 字节后为可选扩展字段(RFC 7822),每个 type-length-value 按字边界填充。头部内四个 64 位时间戳是 4 字节 BPF 读取窗口的两倍,无法构造等值子句。mode 6 控制与 mode 7 私有报文复用该端口与固定头。"}}},
-  ospfv3: {fam:"net",
-    tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"Hello parameters, LSAs or DBD contents follow with variable length.", zh:"Hello 参数、LSA 或 DBD 内容:变长。"}}},
-  srh: {fam:"net",
-    tail:{label:{en:"Segment List + TLVs", zh:"段列表 + TLV"}, note:{en:"The Segment List (Last Entry + 1 segments of 128 bits, stored last-segment-first; the active segment rides in the IPv6 destination address) followed by optional TLVs: variable, and each segment is four times the 4-byte BPF load window. The locator pins Routing Type 4 so other routing-header types never match.", zh:"段列表(Last Entry + 1 个 128 位段,末段在前;活动段位于 IPv6 目的地址)及其后可选 TLV:均为变长,且单个段是 4 字节 BPF 读取窗口的四倍。定位子将路由类型钉为 4,其他路由头类型不会匹配。"}}},
-  frag6: {fam:"net",
-    tail:{label:{en:"Fragmentable Part", zh:"可分片部分"}, note:{en:"The rest of the original packet follows byte 8: the first fragment repeats its header chain, later fragments carry pure payload, so nothing past the header sits at a fixed offset. Offset 0 with M=0 is the unfragmented atomic-fragment idiom of RFC 6946; the anchor pins the header right after the 40-byte IPv6 base.", zh:"第 8 字节后为原报文其余部分:首分片重复其头部链,后续分片为纯载荷,头部之后无固定偏移。偏移 0 且 M=0 即 RFC 6946 的未分片原子分片写法;锚点假设分片头紧跟 40 字节 IPv6 基本头。"}}},
-  bfd: {fam:"net",
-    tail:{label:{en:"Auth Section", zh:"认证区"}, note:{en:"Present only when the Auth Present bit is set; shifts the payload past byte 24.", zh:"仅 Auth Present 位置位时存在;使载荷越过第 24 字节。"}}},
-  pim: {fam:"net",
-    tail:{label:{en:"Message Body", zh:"报文体"}, note:{en:"Hello options, Join/Prune encoded group/source lists and Register payloads: variable.", zh:"Hello 选项、Join/Prune 编码的组/源列表及 Register 载荷:变长。"}}},
-  igmp: {fam:"net",
-    tail:{label:{en:"Query Sources / Group Records", zh:"查询源列表 / 组记录"}, note:{en:"IGMPv3 query source list or v3 report group records; v1/v2 messages end at byte 8.", zh:"IGMPv3 查询源列表或 v3 报告组记录;v1/v2 报文止于第 8 字节。"}}},
-  isis: {fam:"net",
-    tail:{label:{en:"PDU Body (TLV)", zh:"PDU 体 (TLV)"}, note:{en:"Hello parameters, LSP entries or SNP records: PDU-type dependent TLV chains.", zh:"Hello 参数、LSP 条目或 SNP 记录:取决于 PDU 类型的 TLV 链。"}}},
-  ldp: {fam:"net",
-    tail:{label:{en:"LDP Messages", zh:"LDP 报文"}, note:{en:"Message id plus typed TLVs (hello, initialisation, keepalive, label mappings); variable length.", zh:"报文 ID + 类型化 TLV(Hello、初始化、Keepalive、标签映射):变长。"}}},
-  geneve: {fam:"tunnel", tunnel:true,
-    pin:"(udp[8:1] & 0x3f) == 0", pinYield:["option_length"],
-    successors:{protocol:{2048:"ipv4", 34525:"ipv6", 25944:"ethernet"}},
-    tail:{label:{en:"Options + Inner Frame", zh:"选项 + 内层帧"}, note:{en:"Variable options (option length × 4 bytes) precede the inner frame; the drill pin guards option length 0.", zh:"内层帧之前为变长选项(选项长度 × 4 字节);钻取守卫将选项长度钉为 0。"}}},
-  gtp: {fam:"tunnel", tunnel:true,
-    pin:"(udp[8:1] & 0x7) == 0", pinYield:["e_flag", "s_flag", "pn_flag"],
-    tail:{label:{en:"Conditional Fields + T-PDU", zh:"条件字段 + T-PDU"}, note:{en:"Sequence/N-PDU/next-extension bytes appear only when E/S/PN are set; the drill pin guards all three clear.", zh:"仅 E/S/PN 置位时出现序列号/N-PDU/下一扩展头;钻取守卫将三标志钉为 0。"}}},
-  sctp: {fam:"trans",
-    tail:{label:{en:"Chunks", zh:"数据块"}, note:{en:"DATA / INIT / HEARTBEAT chunks: variable type-length-value structures.", zh:"DATA/INIT/HEARTBEAT 等数据块:变长 TLV 结构。"}}},
-};
-
-/* Synthetic bricks the registry does not describe: the 802.1Q tag layout
-   (registry VLAN is a primitive-only entry) and the custom byte range. */
-const SYN = {
-  vlan:   {label:"VLAN (802.1Q)", len:4, anchor:"ether", base:14, fam:"link",
-           fields:[
-             {id:"pcp", label:"PCP", off:0, win:2, mask:0xe000, shift:13, kind:"number"},
-             {id:"dei", label:"DEI", off:0, win:2, mask:0x1000, shift:12, kind:"number"},
-             {id:"vid", label:"VID", off:0, win:2, mask:0x0fff, kind:"number",
-              excl:{reason:{en:"VLAN primitive; must lead the expression", zh:"VLAN 原语,须置于表达式首位"}, primitive:"vlan"}},
-             {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
-              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
-              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
-  custom: {label:{en:"Custom", zh:"自定义层"}, len:12, anchor:null, fam:"custom", custom:true, fields:[]},
-};
+/* FAM (palette families), UI (per-protocol overlay) and SYN (synthetic
+   bricks) live in overlay.js: they are data carrying inline {en, zh}
+   objects, while this file stays markup + logic only. The bricks are
+   derived from registry/*.json at runtime — there is no hand-maintained
+   field mirror to drift. */
 
 const hexInt = v => typeof v==="string" ? parseInt(v, 16) : v;
 
@@ -416,7 +219,7 @@ function regToEntry(reg){
   if(reg.locator && reg.locator.length) e.locator = reg.locator;
   if(ui.tail) e.tail = ui.tail;
   if(ui.tunnel) e.tunnel = true;
-  if(ui.pin){ e.pin = ui.pin; e.pinYield = ui.pinYield || []; }
+  if(ui.pin){ e.pin = ui.pin; e.pinYield = ui.pinYield || []; if(ui.pinWarn) e.pinWarn = ui.pinWarn; }
   return e;
 }
 
@@ -637,6 +440,17 @@ function addCustom(){
   const n = +prompt(T("customPrompt"),"12"); if(!n||n<1) return;
   stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; refreshFams(); renderAll();
 }
+/* Single-bit toggle mnemonic, in priority order: the label's "(X)"
+   convention (GRE "Checksum Present (C)" -> C), a short field id which
+   reads like the RFC name (dns qr -> QR, gtp pn_flag -> PN), else the
+   label initial (Bottom of Stack -> B). No silent "?" fallback. */
+function togLetter(f){
+  const m = String(f.label).match(/\(([A-Za-z])\)/);
+  if(m) return m[1];
+  const id = String(f.id).replace(/_(flag|bit)$/,"");
+  if(id.length<=2) return id.toUpperCase();
+  return String(f.label).trim()[0].toUpperCase();
+}
 function cellHTML(layer, li, f, it, grid){
   const on = sels.some(s=>s.uid===layer.uid && s.fid===f.id);
   const width = it.width;
@@ -649,10 +463,10 @@ function cellHTML(layer, li, f, it, grid){
   const sel = sels.find(s=>s.uid===layer.uid && s.fid===f.id);
   const tog = f.emitKind==="number" && f.mask && (f.mask & (f.mask-1))===0 && f.max<=1
               && !f.excl;   // single-bit masked number (GRE C/K/S): letter toggle
-  const tip = `${f.label} · 偏移 ${f.off}B · ${width}bit · ${f.kind}`
+  const tip = T("tipMeta")(f.label, f.off, width, f.kind)
     + (f.excl && f.excl.primitive ? `; ${T("prim1")}${f.excl.primitive}${T("prim2")}` : "")
     + (f.kind==="enum" ? T("clickDd") : (f.kind==="bitset"||tog) ? T("letTgl") : T("dblIn"));
-  const pb = (f.excl && f.excl.primitive) ? `<span class="pb">原语</span>` : "";
+  const pb = (f.excl && f.excl.primitive) ? `<span class="pb">${T("primBadge")}</span>` : "";
 
   if(isEd && (f.kind==="number"||f.kind==="ipv4"||f.kind==="ipv6"||f.kind==="mac")){
     const ph = f.kind==="ipv4"?"192.0.2.1":f.kind==="ipv6"?"2001:db8::1":f.kind==="mac"?"aa:bb:cc:dd:ee:ff":T("value");
@@ -672,7 +486,7 @@ function cellHTML(layer, li, f, it, grid){
   const mini = f.kind==="bitset" ? `<span class="mini">${f.bits.map(b=>
       `<i title="${b.l}" class="${sel&&sel.bitMask&b.m?"on":""}"
         onclick="event.stopPropagation(); toggleBit(${layer.uid},'${f.id}',${b.m})">${b.l[0]}</i>`).join("")}</span>` : "";
-  const tletter = (f.label.match(/\(([A-Za-z])\)/)||[null,"?"])[1];
+  const tletter = togLetter(f);
   const tmini = tog ? `<span class="mini"><i title="${f.label}" class="${sel&&sel.val===1?"on":""}"
       onclick="event.stopPropagation(); toggleOne(${layer.uid},'${f.id}')">${tletter}</i></span>` : "";
   // value stays visible in the cell: the cell IS the "what am I filtering on" display
@@ -694,7 +508,7 @@ function gridHTML(layer, li, e){
   let gut = "", body = "";
   rows.forEach((r,i)=>{
     const ruler = i===firstAlign
-      ? `<div class="pruler"><div class="p32"><span class="ah">◄</span>32 位<span class="ah">►</span></div>
+      ? `<div class="pruler"><div class="p32"><span class="ah">◄</span>${T("w32")}<span class="ah">►</span></div>
          <div class="pticks"><span>8</span><span>8</span><span>8</span><span>8</span></div></div>`
       : "";
     gut += `<span${ruler?` style="height:${38+32}px"`:""}>${r.byte ?? ""}</span>`;
@@ -703,7 +517,7 @@ function gridHTML(layer, li, e){
       return;
     }
     if(r.tailRow){
-      body += `<div class="pfullrow"><div class="pc tail" title="${L(e.tail.note)}">🔒 ${L(e.tail.label) || "Options + Padding"}（${T("varLen")}）</div></div>`;
+      body += `<div class="pfullrow"><div class="pc tail" title="${L(e.tail.note)}">🔒 ${T("tailVar")(L(e.tail.label) || "Options + Padding")}</div></div>`;
       return;
     }
     const cells = r.items.map(it=>cellHTML(layer, li, it.f, it, r.grid)).join("");
@@ -768,7 +582,7 @@ function structWarnings(){
   const tun0 = ti0>=0 ? ENTRIES[stack[ti0].eid] : null;
   if(tun0 && tun0.pin && stack.length>ti0+1
      && sels.some(s=>s.uid===stack[ti0].uid && tun0.pinYield.includes(s.fid)))
-    out.push({warn:true, m:"GRE presence bits set: optional Checksum/Key/Seq fields shift the inner packet — offsets below assume the 4-byte base header"});
+    out.push({warn:true, m: L(tun0.pinWarn) || T("pinWarnGeneric")});
   for(const s of sels){
     const li = stack.findIndex(x=>x.uid===s.uid); if(li<0) continue;
     const e = ENTRIES[stack[li].eid];
@@ -797,7 +611,7 @@ function toggleBit(uid, fid, m){    // letter boxes toggle directly: click = sel
 function toggleOne(uid, fid){        // single-bit masked number (GRE C/K/S): click toggles the bit
   const layer = stack.find(s=>s.uid===uid);
   const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
-  const letter = (f.label.match(/\(([A-Za-z])\)/)||[null,"?"])[1];
+  const letter = togLetter(f);
   let sel = sels.find(s=>s.uid===uid && s.fid===fid);
   if(sel) sels = sels.filter(s=>s!==sel);
   else sels.push({uid, fid, val:1, dispVal:letter});
@@ -858,7 +672,7 @@ function finish(html){
   document.getElementById("total").textContent = stack.length? T("total")(prefix(stack.length)) : "";
 }
 function renderChips(){
-  const w = structWarnings().map(x=>`<span class="chip ${x.warn?"warn":"hint"}" title="${x.warn?"结构不符:按此封装,该条件永不匹配":"结构提示"}">${x.warn?"⚠":"💡"} ${x.m}</span>`);
+  const w = structWarnings().map(x=>`<span class="chip ${x.warn?"warn":"hint"}" title="${x.warn?T("warnTitle"):T("hintTitle")}">${x.warn?"⚠":"💡"} ${x.m}</span>`);
   const g = guards().map(x=>`<span class="chip guard">🛡 ${x.t}: <code>${x.e}</code></span>`);
   const c = sels.map((s,i)=>{
     const layer = stack.find(x=>x.uid===s.uid); if(!layer) return "";
@@ -879,6 +693,9 @@ function renderExpr(){
     ? T("noteDrill")
     : T("noteNative")) : "";
 }
+/* Localize chrome before the registry arrives: title, section headers,
+   language button and the empty-state expression text paint immediately. */
+renderChrome(); renderExpr();
 loadEntries().then(()=>renderAll()).catch(()=>{
   // fetch needs HTTP (file:// refuses): tell the user how to serve the repo
   document.getElementById("stack").innerHTML =

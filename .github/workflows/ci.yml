@@ -41,3 +41,5 @@ jobs:
         run: python tools/make_manifest.py --check
       - name: Check golden vectors
         run: python tools/make_vectors.py --check
+      - name: Check prototype i18n integrity
+        run: python tools/check_i18n.py

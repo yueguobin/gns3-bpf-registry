@@ -29,6 +29,7 @@ python3 -m venv .venv
 .venv/bin/python tools/make_fixtures.py --check
 .venv/bin/python tools/make_manifest.py --check
 .venv/bin/python tools/make_vectors.py --check
+python3 tools/check_i18n.py
 ```
 
 Regenerate after editing a registry entry: `make_fixtures.py`, `make_manifest.py`, `make_vectors.py`.
@@ -55,6 +56,7 @@ Seed a new protocol from scapy metadata (see the seed-protocol skill):
 - Per-protocol knowledge lives in `recipes/<id>.json` (packet stack, anchor, probe sentinels, crosscheck sentinels, fixture values, golden vector specs). `pktspec.py` is the shared interpreter: the tools contain no per-protocol code. `$PIN` marks probe-pinned checksums; fixture builds drop them so pcaps keep real checksums. `fieldMap` targets may be layer-qualified (`UDP.chksum`) when two layers share a kwarg name. The probed layer must be last in the stack, so the layer window is `len(packet) - headerLength`.
 - `verify.py` validates the schema, structural invariants, `tcpdump -d` syntax, golden vectors and fixture replay. Replay counts packets with scapy: positive fixtures must match exactly one packet and negative fixtures zero. Do not rely on tcpdump's exit code.
 - All generators support `--check`; CI fails if a generated artifact is stale.
+- The prototype is bilingual: UI chrome lives in `prototype/i18n.js` (STR.en/STR.zh, identical key sets); per-protocol data strings ride inline `{en, zh}` objects in the registry and `prototype/overlay.js`. `check_i18n.py` fails on any CJK codepoint in `prototype/index.html`, on key-set drift, or on a localized object missing a language — new user-visible strings go through `T()`/`L()`, never hardcoded in the page.
 
 ## Working conventions
 
