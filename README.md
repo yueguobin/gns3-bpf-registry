@@ -41,7 +41,7 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-42 entries, 259 fields.
+44 entries, 283 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
@@ -51,7 +51,8 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | bgp | RFC 4271/2918 | 2 | ldp | RFC 5036 | 4 |
 | cdp | Cisco CDP Spec 2.02 | 3 | lldp | IEEE 802.1AB | 2 |
 | dhcp | RFC 2131/2132 | 12 | mpls | RFC 3032/5462 | 4 |
-| dhcpv6 | RFC 8415 | 2 | ospf | RFC 2328 | 7 |
+| dhcpv6 | RFC 8415 | 2 | ntp | RFC 5905 | 9 |
+| dns | RFC 1035/4035/9619 | 15 | ospf | RFC 2328 | 7 |
 | eapol | IEEE 802.1X | 3 | ospfv3 | RFC 5340 | 8 |
 | eigrp | RFC 7868 | 8 | pim | RFC 7761 | 4 |
 | esp | RFC 4303 | 2 | pppoe | RFC 2516 | 5 |
