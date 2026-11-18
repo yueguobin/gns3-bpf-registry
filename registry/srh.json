@@ -1,0 +1,159 @@
+{
+  "id": "srh",
+  "label": "SRv6 Segment Routing Header",
+  "rfc": ["8754", "8200"],
+  "notes": "SRv6 Segment Routing Header (SRH), Routing Type 4 of the IPv6 Routing extension header (next header 43), the data plane of Segment Routing over IPv6 (RFC 8754). Only the fixed 8-byte header is modelled: everything after byte 8 is the Segment List, a variable count of 128-bit IPv6 addresses (four times the 4-byte BPF load window), followed by optional variable-length TLVs (RFC 8754 section 2.1), so no byte past the header sits at a trustworthy fixed offset. The locator pins Routing Type 4, the ikev2 pattern, so deprecated Type 0 and RPL routing headers do not match. The Flags byte carries no defined bits in RFC 8754 (section 8.1 only creates the IANA registry); the Protected/OAM/Alert/HMAC bits of the earlier spring-srh drafts did not survive to the final RFC. The active segment travels in the IPv6 destination address and the list is stored last-segment-first: Segment List[0] is the final segment of the policy.",
+  "anchor": {
+    "header": "ip6",
+    "base": 40
+  },
+  "locator": ["ip6 proto 43 and ip6[42:1] = 4"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "next_header",
+      "label": "Next Header",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8200 §4.4",
+      "values": [
+        {
+          "value": 0,
+          "label": "Hop-by-Hop Options"
+        },
+        {
+          "value": 4,
+          "label": "IPv4"
+        },
+        {
+          "value": 6,
+          "label": "TCP"
+        },
+        {
+          "value": 17,
+          "label": "UDP"
+        },
+        {
+          "value": 41,
+          "label": "IPv6"
+        },
+        {
+          "value": 43,
+          "label": "Routing"
+        },
+        {
+          "value": 44,
+          "label": "Fragment"
+        },
+        {
+          "value": 47,
+          "label": "GRE"
+        },
+        {
+          "value": 50,
+          "label": "ESP"
+        },
+        {
+          "value": 51,
+          "label": "AH"
+        },
+        {
+          "value": 58,
+          "label": "ICMPv6"
+        },
+        {
+          "value": 59,
+          "label": "No Next Header"
+        },
+        {
+          "value": 60,
+          "label": "Destination Options"
+        }
+      ],
+      "description": "Type of the header immediately following the SRH."
+    },
+    {
+      "id": "hdr_ext_len",
+      "label": "Hdr Ext Len",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8200 §4.4",
+      "min": 0,
+      "max": 255,
+      "description": "SRH length in 8-octet units, not counting the first 8 octets; a 3-segment SRH without TLVs carries 6."
+    },
+    {
+      "id": "routing_type",
+      "label": "Routing Type",
+      "offset": 2,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8754 §2",
+      "values": [
+        {
+          "value": 0,
+          "label": "Type 0 (deprecated)"
+        },
+        {
+          "value": 2,
+          "label": "RPL Source Route"
+        },
+        {
+          "value": 4,
+          "label": "Segment Routing Header"
+        },
+        {
+          "value": 253,
+          "label": "Experimentation and Test"
+        }
+      ],
+      "description": "Routing header type from the IANA Routing Types registry; 4 identifies the SRH."
+    },
+    {
+      "id": "segments_left",
+      "label": "Segments Left",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8200 §4.4",
+      "min": 0,
+      "max": 255,
+      "description": "Number of route segments remaining; the index into the Segment List of the active segment, decremented at each SR segment endpoint node."
+    },
+    {
+      "id": "last_entry",
+      "label": "Last Entry",
+      "offset": 4,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8754 §2",
+      "min": 0,
+      "max": 255,
+      "description": "Zero-based index of the last element of the Segment List; with a reduced SRH (RFC 8754 section 4.1.1) the first segment is omitted."
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 5,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8754 §2",
+      "min": 0,
+      "max": 255,
+      "description": "Eight flag bits, none defined by RFC 8754 (the registry of section 8.1 is empty); MUST be 0 on transmission and ignored on receipt."
+    },
+    {
+      "id": "tag",
+      "label": "Tag",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 8754 §2",
+      "min": 0,
+      "max": 65535,
+      "description": "Tags a packet as part of a class or group of packets, e.g. packets sharing the same set of properties; zero when unused."
+    }
+  ]
+}
