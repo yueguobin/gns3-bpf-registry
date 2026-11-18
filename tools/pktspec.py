@@ -104,6 +104,7 @@ from scapy.layers.inet6 import (
 )
 from scapy.layers.ipsec import AH
 from scapy.layers.ppp import PPPoED
+from scapy.layers.radius import Radius
 from scapy.layers.rip import RIP
 from scapy.layers.sctp import SCTP
 from scapy.layers.vxlan import VXLAN
@@ -585,6 +586,7 @@ LAYERS = {
         OSPFv3_Hdr,
         PIMv2Hdr,
         PPPoED,
+        Radius,
         RIP,
         RIPng,
         RSVP,

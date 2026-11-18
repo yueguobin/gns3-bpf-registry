@@ -4094,6 +4094,61 @@
       "expect": "(ether proto 34915 or ether proto 34916) and (ether[14:1] & 0xf) == 0x1"
     },
     {
+      "name": "radius-code-access-request",
+      "entry": "radius",
+      "select": [
+        {
+          "field": "code",
+          "value": 1
+        }
+      ],
+      "expect": "(udp port 1812 or udp port 1813) and udp[8:1] == 0x1"
+    },
+    {
+      "name": "radius-code-accounting-request",
+      "entry": "radius",
+      "select": [
+        {
+          "field": "code",
+          "value": 4
+        }
+      ],
+      "expect": "(udp port 1812 or udp port 1813) and udp[8:1] == 0x4"
+    },
+    {
+      "name": "radius-code-access-challenge",
+      "entry": "radius",
+      "select": [
+        {
+          "field": "code",
+          "value": 11
+        }
+      ],
+      "expect": "(udp port 1812 or udp port 1813) and udp[8:1] == 0xb"
+    },
+    {
+      "name": "radius-identifier",
+      "entry": "radius",
+      "select": [
+        {
+          "field": "id",
+          "value": 7
+        }
+      ],
+      "expect": "(udp port 1812 or udp port 1813) and udp[9:1] == 7"
+    },
+    {
+      "name": "radius-length-bare-header",
+      "entry": "radius",
+      "select": [
+        {
+          "field": "length",
+          "value": 20
+        }
+      ],
+      "expect": "(udp port 1812 or udp port 1813) and udp[10:2] == 20"
+    },
+    {
       "name": "rip-command-response",
       "entry": "rip",
       "select": [
