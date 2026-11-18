@@ -1,0 +1,280 @@
+{
+  "id": "nhrp",
+  "label": "NHRP",
+  "rfc": [
+    "2332"
+  ],
+  "notes": "NHRP control-plane header per RFC 2332, carried directly over IP protocol 54 (the number IANA lists for NARP; it is also how Wireshark registers its NHRP dissector) and, in DMVPN deployments, inside GRE -- the window only matches NHRP-relative offsets, so both encapsulations filter identically once the packet reaches the NHRP header. The 20-byte fixed header (RFC 2332 section 5.1) and the 8-byte mandatory common header (section 5.2.0.1) sit at fixed offsets for every packet type and are fully modelled: 14 field views plus one reasoned exclusion. Everything from byte 28 on is variable-length and outside fixed-offset filtering: the source NBMA address and subaddress bounded by shtl/sstl, the source and destination protocol addresses bounded by src_proto_len/dst_proto_len, the CIE list and the extension TLVs. The 5-byte ar$pro.snap is excluded because over IP the short Ethertype form of ar$pro.type is mandatory (section 5.1), so those bytes are always zero, and a 5-byte field exceeds the 4-byte BPF load window anyway. The Flags word is labelled with Resolution Request/Reply semantics; Registration messages use only the top bit (as the Uniqueness bit, section 5.2.3) and Purge messages only the top bit (as the N bit, section 5.2.5), and in Error and Traffic Indications bytes 22-27 are repurposed as unused/error code/error offset -- the offsets themselves are unchanged, so request_id still matches those messages as a raw word. Op type 8 (Traffic Indication) and the NAT flag bit are Cisco DMVPN extensions (I-D draft-detienne-dmvpn-01) documented by Wireshark's dissector, not RFC 2332.",
+  "anchor": {
+    "header": "ip",
+    "base": 20
+  },
+  "locator": [
+    "ip proto 54"
+  ],
+  "headerLength": 28,
+  "fields": [
+    {
+      "id": "address_family",
+      "label": "Address Family Number",
+      "offset": 0,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 2332 §5.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "IP (IPv4)"
+        },
+        {
+          "value": 2,
+          "label": "IPv6"
+        },
+        {
+          "value": 3,
+          "label": "NSAP"
+        },
+        {
+          "value": 8,
+          "label": "E.164"
+        },
+        {
+          "value": 15,
+          "label": "ATM (NSAP with subaddress)"
+        },
+        {
+          "value": 21,
+          "label": "E.164 with ATM subaddress"
+        }
+      ],
+      "description": "Family of the NBMA addresses carried in the mandatory part (the RFC 1700 address family numbers). An mGRE/DMVPN cloud uses 1 with shtl 4: the NBMA address is the tunnel endpoint's public IPv4 address."
+    },
+    {
+      "id": "protocol_type",
+      "label": "Protocol Type",
+      "offset": 2,
+      "size": 2,
+      "kind": "enum",
+      "ref": "RFC 2332 §5.1",
+      "values": [
+        {
+          "value": 128,
+          "label": "SNAP Long Form"
+        },
+        {
+          "value": 204,
+          "label": "NLPID: IP"
+        },
+        {
+          "value": 2048,
+          "label": "Ethertype: IPv4"
+        }
+      ],
+      "description": "Coding of the internetwork layer protocol: NLPIDs below 0x0100, Ethertypes from 0x0600, or 0x0080 to move the protocol ID into the 5-byte SNAP field. NHRP-for-IP always transmits the Ethertype coding 0x0800, which is what makes ar$pro.snap zero."
+    },
+    {
+      "id": "hop_count",
+      "label": "Hop Count",
+      "offset": 9,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Maximum number of NHSs the packet may traverse, used like an IP TTL; each transit NHS decrements it and exceeding it triggers an Error Indication (code 15)."
+    },
+    {
+      "id": "packet_size",
+      "label": "Packet Size",
+      "offset": 10,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Total length of the NHRP packet in octets including the fixed header, excluding the link-layer encapsulation; 20 is the minimum legal value."
+    },
+    {
+      "id": "checksum",
+      "label": "Checksum",
+      "offset": 12,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Standard IP checksum over the entire NHRP packet starting at the fixed header, computed as if a zero byte were appended to odd-length packets."
+    },
+    {
+      "id": "extension_offset",
+      "label": "Extension Offset",
+      "offset": 14,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Offset from the start of the NHRP packet of the first extension TLV; 0 means the packet carries no extensions. Error Indications never carry extensions."
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 16,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2332 §5.1",
+      "values": [
+        {
+          "value": 0,
+          "label": "MARS (RFC 2022)"
+        },
+        {
+          "value": 1,
+          "label": "NHRP"
+        }
+      ],
+      "description": "Version of the generic address mapping and management protocol: 1 is NHRP as defined by RFC 2332, 0 is the multicast address resolution server protocol."
+    },
+    {
+      "id": "op_type",
+      "label": "NHRP Packet Type",
+      "offset": 17,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 2332 §5.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "Resolution Request"
+        },
+        {
+          "value": 2,
+          "label": "Resolution Reply"
+        },
+        {
+          "value": 3,
+          "label": "Registration Request"
+        },
+        {
+          "value": 4,
+          "label": "Registration Reply"
+        },
+        {
+          "value": 5,
+          "label": "Purge Request"
+        },
+        {
+          "value": 6,
+          "label": "Purge Reply"
+        },
+        {
+          "value": 7,
+          "label": "Error Indication"
+        },
+        {
+          "value": 8,
+          "label": "Traffic Indication (Cisco)"
+        }
+      ],
+      "description": "NHRP packet type when version is 1. Types 1-6 are the DMVPN workhorses: spoken nodes send Registration Requests to their NHS and Resolution Requests for distant tunnel endpoints; 7 reports errors; 8 (not in RFC 2332, a Cisco DMVPN extension) redirects traffic onto a shortcut."
+    },
+    {
+      "id": "shtl",
+      "label": "Source NBMA Address Type/Length",
+      "offset": 18,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Type and length of the source NBMA address in one byte: bit 0x40 selects native E.164 format (0 means NSAP or the technology's native form), the low 6 bits give the length in octets (4 for the IPv4 NBMA address of an mGRE tunnel endpoint), and the top bit is reserved and sent as zero."
+    },
+    {
+      "id": "sstl",
+      "label": "Source NBMA Subaddress Type/Length",
+      "offset": 19,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2332 §5.1",
+      "min": 0,
+      "max": 255,
+      "description": "Same type/length encoding for the source NBMA subaddress; always 0 over IP-based NBMA networks, which have no subaddress concept, so no storage follows it in the mandatory part."
+    },
+    {
+      "id": "src_proto_len",
+      "label": "Source Protocol Address Length",
+      "offset": 20,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2332 §5.2.0.1",
+      "min": 0,
+      "max": 255,
+      "description": "Length in octets of the source protocol address that follows the common header; 4 for IPv4, 16 for IPv6."
+    },
+    {
+      "id": "dst_proto_len",
+      "label": "Destination Protocol Address Length",
+      "offset": 21,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 2332 §5.2.0.1",
+      "min": 0,
+      "max": 255,
+      "description": "Length in octets of the destination protocol address; the address an NHC registers with or asks to resolve."
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 22,
+      "size": 2,
+      "kind": "bitset",
+      "ref": "RFC 2332 §5.2.0.1",
+      "bits": [
+        {
+          "mask": 32768,
+          "label": "Q"
+        },
+        {
+          "mask": 16384,
+          "label": "A"
+        },
+        {
+          "mask": 8192,
+          "label": "D"
+        },
+        {
+          "mask": 4096,
+          "label": "U"
+        },
+        {
+          "mask": 2048,
+          "label": "S"
+        },
+        {
+          "mask": 2,
+          "label": "NAT"
+        }
+      ],
+      "description": "Message-type-specific flags occupying the word at offset 22. Labels follow Resolution Request/Reply semantics (RFC 2332 sections 5.2.1-5.2.2): Q requester is a router, A only authoritative answers wanted/reply is authoritative, D destination binding stable for the holding time, U unique binding, S source binding stable. Registration messages define only the top bit (as Uniqueness, section 5.2.3) and Purge messages only the top bit (as no-Purge-Reply-expected, section 5.2.5); NAT (0x0002) is the Cisco DMVPN extension bit, not RFC 2332. Error and Traffic Indications leave the word unused."
+    },
+    {
+      "id": "request_id",
+      "label": "Request ID",
+      "offset": 24,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 2332 §5.2.0.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Counter value that, with the source protocol address, matches replies to their requests; copied verbatim from a request into its reply. In Error Indications bytes 24-25 carry the error code and 26-27 the error offset instead (section 5.2.7), and in Traffic Indications bytes 24-25 carry the traffic code."
+    }
+  ],
+  "excluded": [
+    {
+      "id": "pro_snap",
+      "offset": 4,
+      "length": 5,
+      "reason": "ar$pro.snap, the 5-byte SNAP long-form protocol ID (RFC 2332 §5.1): it exceeds the 4-byte BPF load window, and over IP protocol 54 it is always zero because section 5.1 mandates the short Ethertype form of ar$pro.type whenever one exists"
+    }
+  ]
+}
