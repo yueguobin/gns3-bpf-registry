@@ -236,6 +236,29 @@ class HSRPHeader(Packet):
     ]
 
 
+class GLBPHeader(Packet):
+    """GLBP fixed header (Cisco proprietary; no public specification).
+
+    scapy ships no GLBP layer. The layout follows Wireshark's
+    reverse-engineered packet-glbp.c, verified against live captures:
+    version, an undocumented control byte (0 on Hello datagrams, 1 and
+    2 on forwarder request/response exchanges), the 16-bit group
+    number, two undocumented zero bytes and the sending router's
+    interface MAC ("owner ID"). Everything past byte 12 is a TLV chain
+    (Hello timers and virtual address, forwarder request/response,
+    authentication) at variable offsets and stays outside the filter
+    window.
+    """
+
+    fields_desc = [
+        ByteField("version", 1),
+        ByteField("unknown1", 0),
+        ShortField("group", 1),
+        ShortField("unknown2", 0),
+        MACField("owner", "02:00:00:00:00:0a"),
+    ]
+
+
 class MPLSHeader(Packet):
     """MPLS label stack entry per RFC 3032 section 2.1.
 
@@ -563,6 +586,7 @@ LAYERS = {
         GENEVE,
         GRE,
         GTPHeader,
+        GLBPHeader,
         HSRPHeader,
         ICMP,
         ICMPv6EchoRequest,

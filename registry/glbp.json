@@ -1,0 +1,69 @@
+{
+  "id": "glbp",
+  "label": "GLBP",
+  "rfc": [],
+  "notes": "Cisco Gateway Load Balancing Protocol over UDP port 3222, sent to 224.0.0.102 from the router's own interface address (both UDP ports 3222, TTL 255). Cisco never published a packet specification; the layout follows Wireshark's reverse-engineered packet-glbp.c dissector, confirmed byte for byte against live captures. The 12-byte fixed header is modelled in full: the owner MAC is the sending router's interface MAC (\"Owner ID\" in show glbp output), payload-embedded and therefore a first-class mac field. Everything after byte 12 is a TLV chain (Hello with gateway state, priority, millisecond timers and the virtual address; forwarder request/response with the virtual MAC; MD5 or clear-text authentication) whose offsets shift with each TLV, so no TLV field sits at a fixed offset. This completes the first-hop redundancy trio with hsrp and vrrp; unlike them GLBP load-shares across up to four virtual forwarders per group.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 3222"
+  ],
+  "headerLength": 12,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "number",
+      "ref": "GLBP header layout (Cisco proprietary, unpublished; Wireshark packet-glbp.c)",
+      "min": 0,
+      "max": 255,
+      "description": "GLBP version; 1 in every observed deployment."
+    },
+    {
+      "id": "unknown1",
+      "label": "Undocumented Control Byte",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "GLBP header layout (Cisco proprietary, unpublished; Wireshark packet-glbp.c)",
+      "min": 0,
+      "max": 255,
+      "description": "Semantics undocumented; 0 on Hello datagrams, 1 and 2 observed on virtual-forwarder request/response exchanges (Wireshark's \"Unknown1\", bounded to at most 4 by its heuristic)."
+    },
+    {
+      "id": "group",
+      "label": "Group",
+      "offset": 2,
+      "size": 2,
+      "kind": "number",
+      "ref": "GLBP header layout (Cisco proprietary, unpublished; Wireshark packet-glbp.c)",
+      "min": 0,
+      "max": 65535,
+      "description": "GLBP group number (0-1023 on Cisco); the virtual gateway and its up-to-four virtual forwarders share it."
+    },
+    {
+      "id": "unknown2",
+      "label": "Undocumented Word",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "GLBP header layout (Cisco proprietary, unpublished; Wireshark packet-glbp.c)",
+      "min": 0,
+      "max": 65535,
+      "description": "Semantics undocumented; zero in every observed packet (Wireshark's \"Unknown2\")."
+    },
+    {
+      "id": "owner_id",
+      "label": "Owner ID",
+      "offset": 6,
+      "size": 6,
+      "kind": "mac",
+      "ref": "GLBP header layout (Cisco proprietary, unpublished; Wireshark packet-glbp.c)",
+      "description": "The sending router's interface MAC address (\"Owner ID\" in show glbp output); the election identifies routers by it. Payload-embedded, so it is a first-class mac field rather than a host primitive."
+    }
+  ]
+}

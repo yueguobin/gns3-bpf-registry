@@ -1,0 +1,52 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "01:00:5e:00:00:66"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "224.0.0.102", "ttl": 255, "tos": "0xc0", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 3222, "chksum": "$PIN"}},
+    {"layer": "GLBPHeader", "fields": {
+      "version": 1,
+      "unknown1": 0,
+      "group": 1,
+      "unknown2": 0,
+      "owner": "02:00:00:00:00:0a"
+    }}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 12,
+  "fieldMap": {
+    "owner_id": "owner"
+  },
+  "probe": {
+    "version": ["0xf", "0xf0"],
+    "unknown1": ["0xf", "0xf0"],
+    "group": ["0xf0f", "0xf0f0"],
+    "unknown2": ["0xf0f", "0xf0f0"]
+  },
+  "manual": {
+    "owner_id": "MACField serializes string sentinels, so the differential probe sees no int-driven byte change; the crosscheck sentinel verifies the wire bytes"
+  },
+  "crosscheck": {
+    "version": "0x5a",
+    "unknown1": "0x5a",
+    "group": "0x5a5a",
+    "unknown2": "0x5a5a",
+    "owner_id": "02:00:00:00:00:5a"
+  },
+  "fixtures": {
+    "version": [1, 2],
+    "unknown1": [0, 1],
+    "group": [1, 1023],
+    "unknown2": [0, 1],
+    "owner_id": ["02:00:00:00:00:0a", "02:00:00:00:00:0b"]
+  },
+  "vectors": [
+    {"name": "glbp-version-1", "select": [{"field": "version", "value": 1}]},
+    {"name": "glbp-group-1", "select": [{"field": "group", "value": 1}]},
+    {"name": "glbp-group-1023", "select": [{"field": "group", "value": 1023}]},
+    {"name": "glbp-unknown1-0", "select": [{"field": "unknown1", "value": 0}]},
+    {"name": "glbp-unknown1-1", "select": [{"field": "unknown1", "value": 1}]},
+    {"name": "glbp-unknown2-0", "select": [{"field": "unknown2", "value": 0}]},
+    {"name": "glbp-owner", "select": [{"field": "owner_id", "value": "02:00:00:00:00:0a"}]},
+    {"name": "glbp-group-1-owner", "select": [{"field": "group", "value": 1}, {"field": "owner_id", "value": "02:00:00:00:00:0a"}]}
+  ]
+}
