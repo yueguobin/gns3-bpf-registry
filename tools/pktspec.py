@@ -80,6 +80,7 @@ from scapy.fields import (
     FlagsField,
     IPField,
     IntField,
+    LongField,
     MACField,
     PacketListField,
     ShortField,
@@ -341,6 +342,118 @@ class SRH(IPv6ExtHdrSegmentRouting):
     ]
 
 
+class NTPHeader(Packet):
+    """NTP fixed header per RFC 5905 section 7.3.
+
+    scapy's layers.ntp.NTPHeader switches the Reference ID between an
+    IPField and a raw field on stratum and models Root Delay/Root
+    Dispersion as 16.16 fixed-point seconds that reject integer
+    sentinels; this class keeps the raw 4-byte words (the filter layer
+    matches wire bits, and clock IDs and kiss codes are just bit
+    patterns) so every field builds from plain integers. The four
+    64-bit timestamps exceed the 4-byte BPF load window and stay
+    outside the field tables.
+    """
+
+    fields_desc = [
+        BitEnumField(
+            "leap",
+            0,
+            2,
+            {
+                0: "no warning",
+                1: "last minute has 61 seconds",
+                2: "last minute has 59 seconds",
+                3: "alarm (unsynchronized)",
+            },
+        ),
+        BitField("version", 4, 3),
+        BitEnumField(
+            "mode",
+            3,
+            3,
+            {
+                0: "reserved",
+                1: "symmetric active",
+                2: "symmetric passive",
+                3: "client",
+                4: "server",
+                5: "broadcast",
+                6: "NTP control message",
+                7: "private use",
+            },
+        ),
+        ByteField("stratum", 2),
+        ByteField("poll", 10),
+        ByteField("precision", 0xFA),
+        IntField("root_delay", 0),
+        IntField("root_dispersion", 0),
+        IntField("ref_id", 0),
+        # The four 64-bit timestamps fill bytes 16-47 so the layer
+        # serializes the full fixed header; they exceed the 4-byte BPF
+        # load window and stay out of the registry (excluded with a
+        # reason, never filtered).
+        LongField("ref_ts", 0),
+        LongField("orig_ts", 0),
+        LongField("recv_ts", 0),
+        LongField("trans_ts", 0),
+    ]
+
+
+class DNSHeader(Packet):
+    """DNS fixed header per RFC 1035 section 4.1.1.
+
+    scapy's layers.dns.DNS always serializes question/answer sections
+    (its qd default grows the layer past the 12-byte fixed header) and
+    derives the section counts from those lists; this class models only
+    the fixed header with plain explicit shorts, so the layer window is
+    exactly 12 bytes and every field builds from plain integers. The
+    2-byte TCP length prefix is framing, not part of the UDP header,
+    and the variable sections are outside the filter window.
+    """
+
+    fields_desc = [
+        XShortField("id", 0),
+        BitField("qr", 0, 1),
+        BitEnumField(
+            "opcode",
+            0,
+            4,
+            {0: "query", 1: "iquery", 2: "status", 4: "notify", 5: "update"},
+        ),
+        BitField("aa", 0, 1),
+        BitField("tc", 0, 1),
+        BitField("rd", 1, 1),
+        BitField("ra", 0, 1),
+        BitField("z", 0, 1),
+        BitField("ad", 0, 1),
+        BitField("cd", 0, 1),
+        BitEnumField(
+            "rcode",
+            0,
+            4,
+            {
+                0: "no error",
+                1: "format error",
+                2: "server failure",
+                3: "name error (NXDOMAIN)",
+                4: "not implemented",
+                5: "refused",
+                6: "domain name exists",
+                7: "rrset exists",
+                8: "rrset does not exist",
+                9: "not authoritative",
+                10: "name not in zone",
+                11: "DSO-TYPENI",
+            },
+        ),
+        ShortField("qdcount", 0),
+        ShortField("ancount", 0),
+        ShortField("nscount", 0),
+        ShortField("arcount", 0),
+    ]
+
+
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
@@ -358,6 +471,7 @@ LAYERS = {
         BOOTP,
         CDPv2_HDR,
         DHCP6,
+        DNSHeader,
         Dot1Q,
         EAPOL,
         EIGRPHeader,
@@ -383,6 +497,7 @@ LAYERS = {
         LLDPDUPortID,
         LLDPDUTimeToLive,
         MPLSHeader,
+        NTPHeader,
         OSPF_Hdr,
         OSPFv3_Hdr,
         PIMv2Hdr,
