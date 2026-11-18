@@ -41,7 +41,7 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 
 ## Protocols
 
-44 entries, 283 fields.
+45 entries, 289 fields.
 
 | Entry | Standard | Fields | Entry | Standard | Fields |
 |---|---|---|---|---|---|
@@ -62,11 +62,12 @@ The prototype is a single `prototype/index.html` with no build step; it loads `r
 | gre | RFC 2784/2890 | 5 | sctp | RFC 9260 | 4 |
 | gtp | 3GPP TS 29.060 | 9 | srh | RFC 8754 | 7 |
 | hsrp | RFC 2281 | 11 | stp | IEEE 802.1D | 14 |
-| icmp | RFC 792 | 5 | tcp | RFC 9293 | 8 |
-| icmp6 | RFC 4443/4861 | 5 | udp | RFC 768 | 2 |
-| igmp | RFC 1112/2236/3376 | 4 | vlan | IEEE 802.1Q | 1 (primitive) |
-| ikev2 | RFC 7296/3948 | 6 | vrrp | RFC 3768 | 8 |
-| ipv4 | RFC 791 | 10 | vxlan | RFC 7348 | 3 |
+| icmp | RFC 792 | 5 | tacacsplus | RFC 8907 | 6 |
+| icmp6 | RFC 4443/4861 | 5 | tcp | RFC 9293 | 8 |
+| igmp | RFC 1112/2236/3376 | 4 | udp | RFC 768 | 2 |
+| ikev2 | RFC 7296/3948 | 6 | vlan | IEEE 802.1Q | 1 (primitive) |
+| ipv4 | RFC 791 | 10 | vrrp | RFC 3768 | 8 |
+| | | | vxlan | RFC 7348 | 3 |
 
 Every fixed-offset field of the header diagram is modelled; addresses and ports are left to `host`/`port` primitives and fields without a fixed layout (conditional, variable-length, encrypted) are excluded with a reason in `notes`. New protocols are seeded from scapy metadata and probe-verified by `tools/seed_draft.py` — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
