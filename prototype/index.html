@@ -119,6 +119,15 @@
   .mode.drill{background:#fee2e2; color:#991b1b}
   .langbtn{font-size:11px; padding:2px 10px; border-radius:99px; margin-left:8px; vertical-align:middle; background:#fff}
   .note{font-size:11px; color:var(--muted); margin-top:8px}
+  /* ---- boot loading: spinner + progress while the registry streams in ---- */
+  .loading{display:flex; flex-direction:column; align-items:center; gap:10px; padding:44px 20px;
+    color:var(--muted); font-size:13px}
+  .spinner{width:26px; height:26px; border-radius:50%; border:3px solid var(--line);
+    border-top-color:#0f172a; animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loadbar{width:220px; height:4px; border-radius:99px; background:var(--line); overflow:hidden}
+  .loadbar i{display:block; height:100%; width:0%; background:#0f172a; border-radius:99px;
+    transition:width .2s ease}
 </style>
 </head>
 <body>
@@ -129,7 +138,7 @@
   <div class="main">
     <div class="card">
       <h2 id="tSec1"></h2>
-      <div id="stack"></div>
+      <div id="stack"><div class="loading"><div class="spinner"></div><div id="loadText"></div><div class="loadbar"><i id="loadFill"></i></div></div></div>
       <div class="total" id="total"></div>
     </div>
 
@@ -160,7 +169,10 @@
    (FAM, UI, SYN — with their inline {en, zh} objects) in overlay.js.
    This file holds markup and logic only: tools/check_i18n.py fails on
    any CJK codepoint here, so a hover or label cannot ship untranslated. */
-function toggleLang(){ LANG = LANG==="en" ? "zh" : "en"; try{ localStorage.setItem("bpfcalc-lang", LANG); }catch(e){} renderChrome(); renderAll(); }
+function toggleLang(){ LANG = LANG==="en" ? "zh" : "en"; try{ localStorage.setItem("bpfcalc-lang", LANG); }catch(e){}
+  renderChrome();
+  if(ready) renderAll();
+  else{ const t = document.getElementById("loadText"); if(t) t.textContent = T("loading"); } }  // still booting: keep the spinner label fresh
 function renderChrome(){
   document.title = T("title");
   document.getElementById("tTitle").textContent = T("title");
@@ -223,12 +235,34 @@ function regToEntry(reg){
   return e;
 }
 
-let ENTRIES = {};
+let ENTRIES = {}, ready = false;
 async function loadEntries(){
-  const manifest = await (await fetch("registry/manifest.json")).json();
+  const text = document.getElementById("loadText"), fill = document.getElementById("loadFill");
+  // registry/ sits BESIDE the page in the flat Pages bundle (pages.yml copies
+  // index.html and registry/ into one directory) but one level UP when the
+  // repo root is served (page at /prototype/, registry at /registry/) — probe
+  // both instead of guessing the layout; "" first so the deployed path stays
+  // probe-free and only local serving eats the extra 404.
+  const getJSON = async url => { const r = await fetch(url); if(!r.ok) throw new Error(url); return r.json(); };
+  let manifest = null, base = null;
+  for(const b of ["", "../"]){
+    try{ manifest = await getJSON(b + "registry/manifest.json"); base = b; break; }catch(e){}
+  }
+  if(!manifest) throw new Error("registry/ not reachable beside or above the page");
   const ids = Object.keys(manifest.files).sort();
-  for(const file of ids){
-    const reg = await (await fetch("registry/" + file)).json();
+  let done = 0;
+  // Parallel fetch: entry files are independent, so one round-trip serves
+  // all of them instead of one RTT per file; progress text counts resolved
+  // responses so the user sees the registry streaming in.
+  const regs = await Promise.all(ids.map(file =>
+    getJSON(base + "registry/" + file).then(reg=>{
+      done++;
+      if(text) text.textContent = T("loadingProg")(done, ids.length);
+      if(fill) fill.style.width = Math.round(done*100/ids.length) + "%";
+      return reg;
+    })
+  ));
+  for(const reg of regs){
     if(reg.id === "vlan") continue;             // primitive-only entry; the synthetic brick renders the tag
     ENTRIES[reg.id] = regToEntry(reg);
   }
@@ -694,9 +728,11 @@ function renderExpr(){
     : T("noteNative")) : "";
 }
 /* Localize chrome before the registry arrives: title, section headers,
-   language button and the empty-state expression text paint immediately. */
+   language button and the empty-state expression text paint immediately;
+   the stack card holds a spinner + progress bar until the registry is in. */
 renderChrome(); renderExpr();
-loadEntries().then(()=>renderAll()).catch(()=>{
+document.getElementById("loadText").textContent = T("loading");
+loadEntries().then(()=>{ ready = true; renderAll(); }).catch(()=>{
   // fetch needs HTTP (file:// refuses): tell the user how to serve the repo
   document.getElementById("stack").innerHTML =
     `<div style="padding:20px;color:#b91c1c;font-size:13px;white-space:pre-line">${T("loadFail")}</div>`;
