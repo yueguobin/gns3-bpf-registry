@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.24",
+  "registryVersion": "2026.11.25",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
@@ -13,6 +13,7 @@
     "eigrp.json": "sha256:aeac37a1dbb8d140782a6f9ce09051b600eeab1f91b0ad35eb9f1f6d0794ab8d",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
     "ethernet.json": "sha256:335501e617e26a8e5b5f964c2a3573ad4bdd6240b36d9802176cf2c3c46f6ec6",
+    "frag6.json": "sha256:4b9fdeb32b4f7b0e20122213a78297f7670e3844e20e4d06f55def80e7568462",
     "geneve.json": "sha256:0e992929c126a1f4847ceffb78561bf9a1593fa091b3d755fa3cf1d9219a65d7",
     "gre.json": "sha256:324d661a5907138670e75bd520ec4819933a0de2ef4e9d3954101fa907ddc7e9",
     "gtp.json": "sha256:8319ae5d70623e76f7040cf6199658f4b46cca3eb440a67eb7b4348052b5839d",

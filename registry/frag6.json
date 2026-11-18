@@ -1,0 +1,138 @@
+{
+  "id": "frag6",
+  "label": "IPv6 Fragment Header",
+  "rfc": ["8200"],
+  "notes": "IPv6 Fragment extension header (next header 44) per RFC 8200 section 4.5: the fixed 8-byte header only. The anchor assumes the fragment header directly follows the 40-byte IPv6 header, the common single-extension layout; extension headers chained in front of it shift every offset, and the ip6 proto locator matches anywhere in the chain. Bytes 2-3 are one bit-packed word carrying three masked views: the 13-bit Fragment Offset, the 2-bit Res and the 1-bit M flag, each compiled as its own clause. The fragmentable part follows byte 8: the first fragment repeats the rest of the original packet's header chain there while later fragments carry pure payload, so nothing past the header sits at a trustworthy fixed offset. Offset 0 with M=0 marks an unfragmented packet that still carries the header, the atomic fragment of RFC 6946; first fragments are offset 0 with M=1. All 8 header bytes are covered by field views; the entry has no excluded bytes.",
+  "anchor": {
+    "header": "ip6",
+    "base": 40
+  },
+  "locator": ["ip6 proto 44"],
+  "headerLength": 8,
+  "fields": [
+    {
+      "id": "next_header",
+      "label": "Next Header",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8200 §4.5",
+      "values": [
+        {
+          "value": 0,
+          "label": "Hop-by-Hop Options"
+        },
+        {
+          "value": 4,
+          "label": "IPv4"
+        },
+        {
+          "value": 6,
+          "label": "TCP"
+        },
+        {
+          "value": 17,
+          "label": "UDP"
+        },
+        {
+          "value": 41,
+          "label": "IPv6"
+        },
+        {
+          "value": 43,
+          "label": "Routing"
+        },
+        {
+          "value": 44,
+          "label": "Fragment"
+        },
+        {
+          "value": 47,
+          "label": "GRE"
+        },
+        {
+          "value": 50,
+          "label": "ESP"
+        },
+        {
+          "value": 51,
+          "label": "AH"
+        },
+        {
+          "value": 58,
+          "label": "ICMPv6"
+        },
+        {
+          "value": 59,
+          "label": "No Next Header"
+        },
+        {
+          "value": 60,
+          "label": "Destination Options"
+        }
+      ],
+      "description": "Type of the header immediately following the Fragment Header in the original packet."
+    },
+    {
+      "id": "reserved",
+      "label": "Reserved",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8200 §4.5",
+      "min": 0,
+      "max": 255,
+      "description": "Reserved byte; transmitted as zero and ignored on reception."
+    },
+    {
+      "id": "fragment_offset",
+      "label": "Fragment Offset",
+      "offset": 2,
+      "size": 2,
+      "mask": "0xfff8",
+      "shift": 3,
+      "kind": "number",
+      "ref": "RFC 8200 §4.5",
+      "min": 0,
+      "max": 8191,
+      "description": "Offset in 8-octet units from the start of the fragmentable part of the original packet to the first octet of this fragment; 154 means byte 1232, one 1280-MTU hop."
+    },
+    {
+      "id": "res",
+      "label": "Res",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x6",
+      "shift": 1,
+      "kind": "number",
+      "ref": "RFC 8200 §4.5",
+      "min": 0,
+      "max": 3,
+      "description": "Two reserved bits between the Fragment Offset and the M flag; transmitted as zero."
+    },
+    {
+      "id": "more_fragments",
+      "label": "More Fragments",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x1",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 8200 §4.5",
+      "min": 0,
+      "max": 1,
+      "description": "1 when more fragments follow; 0 marks the last fragment. Offset 0 with M=0 is the unfragmented atomic-fragment idiom of RFC 6946."
+    },
+    {
+      "id": "identification",
+      "label": "Identification",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 8200 §4.5",
+      "min": 0,
+      "max": 4294967295,
+      "description": "32-bit value shared by every fragment of the same original packet, set by the sender."
+    }
+  ]
+}

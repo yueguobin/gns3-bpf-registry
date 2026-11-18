@@ -1038,6 +1038,124 @@
       "expect": "ether[12:2] == 0x806"
     },
     {
+      "name": "frag6-offset-154",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "fragment_offset",
+          "value": 154
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[42:2] & 0xfff8) == 0x4d0"
+    },
+    {
+      "name": "frag6-offset-0",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "fragment_offset",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[42:2] & 0xfff8) == 0x0"
+    },
+    {
+      "name": "frag6-more-fragments-1",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "more_fragments",
+          "value": 1
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[43:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "frag6-more-fragments-0",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "more_fragments",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[43:1] & 0x1) == 0x0"
+    },
+    {
+      "name": "frag6-identification-305419896",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "identification",
+          "value": 305419896
+        }
+      ],
+      "expect": "ip6 proto 44 and ip6[44:4] == 305419896"
+    },
+    {
+      "name": "frag6-next-header-icmpv6",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "next_header",
+          "value": 58
+        }
+      ],
+      "expect": "ip6 proto 44 and ip6[40:1] == 0x3a"
+    },
+    {
+      "name": "frag6-reserved-0",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "reserved",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 44 and ip6[41:1] == 0"
+    },
+    {
+      "name": "frag6-res-0",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "res",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[43:1] & 0x6) == 0x0"
+    },
+    {
+      "name": "frag6-first-fragment",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "fragment_offset",
+          "value": 0
+        },
+        {
+          "field": "more_fragments",
+          "value": 1
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[42:2] & 0xfff8) == 0x0 and (ip6[43:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "frag6-last-fragment",
+      "entry": "frag6",
+      "select": [
+        {
+          "field": "fragment_offset",
+          "value": 154
+        },
+        {
+          "field": "more_fragments",
+          "value": 0
+        }
+      ],
+      "expect": "ip6 proto 44 and (ip6[42:2] & 0xfff8) == 0x4d0 and (ip6[43:1] & 0x1) == 0x0"
+    },
+    {
       "name": "geneve-vni-100",
       "entry": "geneve",
       "select": [
