@@ -3233,6 +3233,39 @@
       "expect": "ether proto 35020 and (ether[14:2] & 0x1ff) == 0x7 and ether[16:1] == 0x4"
     },
     {
+      "name": "mld-general-query",
+      "entry": "mld",
+      "select": [
+        {
+          "field": "group_address",
+          "value": "::"
+        }
+      ],
+      "expect": "ip6 proto 58 and (icmp6[8:4] == 0x0 and icmp6[12:4] == 0x0 and icmp6[16:4] == 0x0 and icmp6[20:4] == 0x0)"
+    },
+    {
+      "name": "mld-query-mdns-group",
+      "entry": "mld",
+      "select": [
+        {
+          "field": "group_address",
+          "value": "ff02::fb"
+        }
+      ],
+      "expect": "ip6 proto 58 and (icmp6[8:4] == 0xff020000 and icmp6[12:4] == 0x0 and icmp6[16:4] == 0x0 and icmp6[20:4] == 0xfb)"
+    },
+    {
+      "name": "mld-report-vrrp-group",
+      "entry": "mld",
+      "select": [
+        {
+          "field": "group_address",
+          "value": "ff02::12"
+        }
+      ],
+      "expect": "ip6 proto 58 and (icmp6[8:4] == 0xff020000 and icmp6[12:4] == 0x0 and icmp6[16:4] == 0x0 and icmp6[20:4] == 0x12)"
+    },
+    {
       "name": "mpls-label-16",
       "entry": "mpls",
       "select": [

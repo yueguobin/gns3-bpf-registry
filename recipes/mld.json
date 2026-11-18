@@ -1,0 +1,27 @@
+{
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "33:33:00:00:00:01"}},
+    {"layer": "IPv6", "fields": {"src": "fe80::1", "dst": "ff02::1", "hlim": 1, "nh": 58}},
+    {"layer": "MLDv1Header", "fields": {"type": 130, "code": 0, "cksum": "$PIN", "mrd": 10000, "reserved": 0}},
+    {"layer": "MLDGroup", "fields": {"mladdr": "::"}}
+  ],
+  "anchor": {"header": "icmp6", "base": 8},
+  "headerLength": 16,
+  "fieldMap": {
+    "group_address": "mladdr"
+  },
+  "manual": {
+    "group_address": "IP6Field rejects int sentinels (inet_pton) and the 16-byte footprint exceeds the 4-byte probe window; the crosscheck sentinel verifies the wire bytes"
+  },
+  "crosscheck": {
+    "group_address": "ff02::16"
+  },
+  "fixtures": {
+    "group_address": ["ff02::fb", "ff02::12"]
+  },
+  "vectors": [
+    {"name": "mld-general-query", "select": [{"field": "group_address", "value": "::"}]},
+    {"name": "mld-query-mdns-group", "select": [{"field": "group_address", "value": "ff02::fb"}]},
+    {"name": "mld-report-vrrp-group", "select": [{"field": "group_address", "value": "ff02::12"}]}
+  ]
+}
