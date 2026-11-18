@@ -1,0 +1,34 @@
+{
+  "id": "radius",
+  "stack": [
+    {"layer": "Ether", "fields": {"src": "$ETH_SRC", "dst": "$ETH_DST"}},
+    {"layer": "IP", "fields": {"src": "$IP_SRC", "dst": "$IP_DST", "chksum": "$PIN"}},
+    {"layer": "UDP", "fields": {"sport": 12345, "dport": 1812, "chksum": "$PIN"}},
+    {"layer": "Radius", "fields": {"code": 1, "id": 7, "len": 20, "authenticator": "", "attributes": []}}
+  ],
+  "anchor": {"header": "udp", "base": 8},
+  "headerLength": 20,
+  "fieldMap": {"length": "len"},
+  "probe": {
+    "code": ["0xf", "0xf0"],
+    "id": ["0xf", "0xf0"],
+    "length": ["0xf0f", "0xf0f0"]
+  },
+  "crosscheck": {
+    "code": "0x5a",
+    "id": "0x5a",
+    "length": "0x5a5a"
+  },
+  "fixtures": {
+    "code": [1, 2],
+    "id": [7, 8],
+    "length": [20, 4096]
+  },
+  "vectors": [
+    {"name": "radius-code-access-request", "select": [{"field": "code", "value": 1}]},
+    {"name": "radius-code-accounting-request", "select": [{"field": "code", "value": 4}]},
+    {"name": "radius-code-access-challenge", "select": [{"field": "code", "value": 11}]},
+    {"name": "radius-identifier", "select": [{"field": "id", "value": 7}]},
+    {"name": "radius-length-bare-header", "select": [{"field": "length", "value": 20}]}
+  ]
+}
