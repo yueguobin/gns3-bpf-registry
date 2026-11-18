@@ -32,12 +32,17 @@
   .palfilter{width:100%; padding:5px 8px; border:1px solid var(--line); border-radius:6px;
     font:inherit; font-size:12px; margin-bottom:8px; outline:none}
   .palfilter:focus{border-color:#94a3b8}
-  .pgroup{margin-bottom:8px}
-  .pgrouplab{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--line); padding-bottom:2px; cursor:pointer;
-    display:flex; align-items:center; gap:4px; user-select:none}
-  .pgrouplab .arr{font-size:8px; width:8px; flex:none}
-  .pgrouplab .cnt{margin-left:auto; color:var(--muted); font-size:9px}
+  /* Family header mirrors the brick geometry — same height, same left hue
+     strip and hover — so collapsed groups and the bricks under them read as
+     one component family instead of a thin label row vs chunky buttons. */
+  .pgroup{margin-bottom:10px}
+  .pgrouplab{display:flex; align-items:center; gap:8px; padding:10px;
+    border:1px solid var(--line); border-left:4px solid var(--fc); border-radius:8px;
+    background:color-mix(in srgb, var(--fc) 6%, #fff); cursor:pointer; user-select:none;
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em}
+  .pgrouplab:hover{border-color:#94a3b8; background:color-mix(in srgb, var(--fc) 14%, #fff)}
+  .pgrouplab .arr{font-size:9px; width:10px; flex:none}
+  .pgrouplab .cnt{margin-left:auto; color:var(--muted); font-size:10px; font-weight:600}
   .pgroup .pbtns{display:flex; flex-direction:column; gap:6px; padding-top:6px}
   .pgroup:not(.open) .pbtns{display:none}
   .palette button{border-left:4px solid var(--pc); text-align:left; padding:8px 10px;
@@ -47,12 +52,39 @@
     .palette{flex-direction:row; flex-wrap:wrap}
     .pgroup{flex-direction:row; flex-wrap:wrap}
   }
+  /* ---- boolean columns: each column is one operand of the final
+         expression; operator chips sit between adjacent columns ---- */
+  .cols{display:flex; gap:10px; overflow-x:auto; align-items:stretch; padding-bottom:6px}
+  .col{flex:1 0 830px; display:flex; flex-direction:column; border-radius:10px;
+    outline:2px solid transparent; outline-offset:2px}
+  .col.on{outline-color:#cbd5e1}
+  .col.empty{flex:0 0 320px}
+  .colhead{display:flex; align-items:center; gap:6px; padding:0 2px 4px;
+    font-size:10px; color:var(--muted); font-family:ui-monospace,monospace}
+  .colhead .x{margin-left:auto; cursor:pointer; font-size:13px; color:var(--muted); padding:0 4px}
+  .colhead .x:hover{color:#0f172a}
+  .colempty{flex:1; border:2px dashed var(--line); border-radius:10px; padding:18px 12px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    color:var(--muted); font-size:12px}
+  .col.droptarget .colempty{border-color:#0f172a; color:var(--ink)}
+  .opchip{flex:none; align-self:center; display:flex; flex-direction:column; align-items:center;
+    padding:12px 8px; border-radius:10px; border:1px solid var(--line); background:#fff;
+    cursor:pointer; user-select:none; font:700 13px/1 ui-monospace,monospace; min-width:52px}
+  .opchip:hover{border-color:#94a3b8}
+  .opchip.and{color:#166534; background:#f0fdf4; border-color:#bbf7d0}
+  .opchip.or{color:#1d4ed8; background:#eff6ff; border-color:#bfdbfe}
+  .opchip.not{color:#991b1b; background:#fef2f2; border-color:#fecaca}
+  .addcol{flex:none; align-self:stretch; width:60px; padding:0; border:2px dashed var(--line);
+    border-radius:10px; background:none; color:var(--muted); font-size:22px; line-height:1; cursor:pointer}
+  .addcol:hover{border-color:#94a3b8; color:var(--ink)}
+  .lrow.dropb{box-shadow:0 -4px 0 #0f172a}
+  .lrow.dropa{box-shadow:0 4px 0 #0f172a}
   /* ---- vertical stack: each protocol is one rectangular brick ---- */
   .lrow{border:2px solid var(--lc); border-radius:10px; margin-bottom:8px;
     background:color-mix(in srgb, var(--lc) 5%, #fff)}
   .lrow.sel{outline:2px solid #0f172a; outline-offset:-2px}
   .lhead{display:flex; align-items:center; gap:10px; padding:6px 10px;
-    background:var(--lc); color:#fff; border-radius:7px 7px 0 0}
+    background:var(--lc); color:#fff; border-radius:7px 7px 0 0; cursor:grab}
   .lhead b{color:#fff}
   .lhead .meta{color:rgba(255,255,255,.85); font-size:11px; font-family:ui-monospace,monospace}
   .lhead .del{margin-left:auto; color:rgba(255,255,255,.85); cursor:pointer}
@@ -138,8 +170,7 @@
   <div class="main">
     <div class="card">
       <h2 id="tSec1"></h2>
-      <div id="stack"><div class="loading"><div class="spinner"></div><div id="loadText"></div><div class="loadbar"><i id="loadFill"></i></div></div></div>
-      <div class="total" id="total"></div>
+      <div id="stack" class="cols"><div class="loading"><div class="spinner"></div><div id="loadText"></div><div class="loadbar"><i id="loadFill"></i></div></div></div>
     </div>
 
     <div class="card">
@@ -271,24 +302,116 @@ async function loadEntries(){
 }
 /* One hue per brick: cells inherit the layer color (--lc, set on .lrow);
    field KIND no longer participates in coloring. */
-let stack = [], sels = [], editing = null;   // editing: {uid, fid}
-let selLayer = null, uidSeq = 0;
-let famOpen = new Set(["link","custom"]), palFilter = "";   // palette: open families + search
+let groups = [{uid:1, op:null, layers:[]}], sels = [], editing = null;   // editing: {uid, fid}
+let selLayer = null, selGroup = 1, uidSeq = 0, gseq = 1;
+let famMan = new Map(), palFilter = "";   // palette: per-family manual open/close + search
+let drag = null, dropAt = null;           // brick run being dragged + remembered insert point
+
+/* ---------- column / stack helpers ----------
+   The construction is a list of COLUMNS (groups): each column is one operand
+   of the final boolean expression, g.op is the operator joining the column
+   to its LEFT neighbour ("and" | "or" | "not"; null on the first column).
+   Layers and selections stay uid-keyed, so bricks carry their field values
+   when dragged across columns. */
+const activeGroup = () => groups.find(g=>g.uid===selGroup) || groups[0];
+function groupOf(uid){ return groups.find(g=>g.layers.some(l=>l.uid===uid)); }
+function stackOf(uid){ const g = groupOf(uid); return g ? g.layers : []; }
+function layerById(uid){ for(const g of groups){ const l = g.layers.find(x=>x.uid===uid); if(l) return l; } return null; }
+function tunnelIdx(st){ return st.findIndex(s=>ENTRIES[s.eid].tunnel); }
+function prefix(st, i){ let n=0; for(let k=0;k<i;k++) n+=st[k].len; return n; }
 
 /* ---------- stack ops ---------- */
 function addLayer(eid){
-  stack.push({uid:++uidSeq, eid, len:ENTRIES[eid].len});
-  selLayer = stack[stack.length-1].uid; refreshFams(); renderAll();
+  const g = activeGroup();
+  g.layers.push({uid:++uidSeq, eid, len:ENTRIES[eid].len});
+  selLayer = g.layers[g.layers.length-1].uid; selGroup = g.uid; renderAll();
 }
 function delLayer(uid){
-  stack.splice(stack.findIndex(s=>s.uid===uid),1);
+  for(const g of groups) g.layers = g.layers.filter(s=>s.uid!==uid);
   sels = sels.filter(s=>s.uid!==uid);
   if(selLayer===uid) selLayer=null;
   if(editing && editing.uid===uid) editing=null;
-  refreshFams(); renderAll();
+  renderAll();
 }
-function tunnelIdx(){ return stack.findIndex(s=>ENTRIES[s.eid].tunnel); }
-function prefix(i){ let n=0; for(let k=0;k<i;k++) n+=stack[k].len; return n; }
+function addColumn(){ groups.push({uid:++gseq, op:"and", layers:[]}); selGroup = gseq; renderAll(); }
+function delColumn(gid){
+  const i = groups.findIndex(g=>g.uid===gid); if(i<0) return;
+  const killed = groups[i].layers.map(l=>l.uid);
+  groups.splice(i,1);
+  if(!groups.length) groups.push({uid:++gseq, op:null, layers:[]});
+  sels = sels.filter(s=>!killed.includes(s.uid));
+  if(killed.includes(selLayer)) selLayer=null;
+  if(editing && killed.includes(editing.uid)) editing=null;
+  if(selGroup===gid) selGroup = groups[Math.max(0, i-1)].uid;
+  renderAll();
+}
+function cycleOp(gid){
+  const g = groups.find(x=>x.uid===gid); if(!g || !g.op) return;
+  g.op = g.op==="and" ? "or" : g.op==="or" ? "not" : "and";
+  renderAll();
+}
+function colClick(gid){
+  selGroup = gid;
+  document.querySelectorAll(".col").forEach(c=>c.classList.toggle("on", +c.dataset.gid===gid));
+}
+/* ---------- brick drag & drop: the label strip arms the drag; rows take
+   precise insertions, column bodies take appends ---------- */
+function armDrag(ev, row){
+  // Only the label strip starts a drag — cells must keep click/dblclick.
+  row.draggable = !!ev.target.closest(".lhead");
+}
+function dragStart(ev, uid){
+  const st = stackOf(uid), ti = tunnelIdx(st), li = st.findIndex(s=>s.uid===uid);
+  // A tunnel envelope carries its whole inner-packet run with it.
+  drag = {uids: ti>=0 && li===ti ? st.slice(ti).map(s=>s.uid) : [uid]};
+  ev.dataTransfer.effectAllowed = "move";
+  try{ ev.dataTransfer.setData("text/plain", drag.uids.join(",")); }catch(e){}
+}
+function dragEnd(){ drag=null; dropAt=null; clearDrops(); }
+function clearDrops(){
+  document.querySelectorAll(".dropb,.dropa").forEach(el=>el.classList.remove("dropb","dropa"));
+  document.querySelectorAll(".col.droptarget").forEach(el=>el.classList.remove("droptarget"));
+}
+function rowDragOver(ev, uid){
+  if(!drag || drag.uids.includes(uid)) return;
+  ev.preventDefault(); ev.stopPropagation(); ev.dataTransfer.dropEffect="move";
+  const r = ev.currentTarget.getBoundingClientRect();
+  const before = ev.clientY < r.top + r.height/2;
+  clearDrops(); ev.currentTarget.classList.add(before?"dropb":"dropa");
+  dropAt = {uid, before};
+}
+function rowDrop(ev){ ev.preventDefault(); ev.stopPropagation(); if(dropAt) dropMove(dropAt.uid, dropAt.before); }
+function colDragOver(ev){
+  if(!drag) return;
+  ev.preventDefault(); ev.dataTransfer.dropEffect="move";
+  clearDrops(); dropAt=null;
+  ev.currentTarget.classList.add("droptarget");
+}
+function colDrop(ev){
+  ev.preventDefault();
+  if(drag) dropAppend(+ev.currentTarget.dataset.gid);
+}
+function pullLayers(uids){
+  const out = [];
+  for(const g of groups)
+    g.layers = g.layers.filter(l=>{ if(uids.includes(l.uid)){ out.push(l); return false; } return true; });
+  return out.sort((a,b)=>uids.indexOf(a.uid)-uids.indexOf(b.uid));
+}
+function dropMove(targetUid, before){
+  if(!drag || drag.uids.includes(targetUid)) return;
+  const moved = pullLayers(drag.uids);
+  const st = stackOf(targetUid), ti = st.findIndex(s=>s.uid===targetUid);
+  if(ti>=0) st.splice(before?ti:ti+1, 0, ...moved);
+  selGroup = groupOf(targetUid).uid; drag=null; dropAt=null; renderAll();
+}
+function dropAppend(gid){
+  const g = groups.find(x=>x.uid===gid); if(!g || !drag) return;
+  // pullLayers() reassigns g.layers (filter) — resolve the moved run FIRST,
+  // or push() would land on the stale pre-filter array.
+  const moved = pullLayers(drag.uids);
+  g.layers.push(...moved);
+  selGroup = gid; drag=null; dropAt=null; renderAll();
+}
 
 /* ---------- expression compile (verified against bpf_compile.py) ---------- */
 function hex(v){return "0x"+v.toString(16)}
@@ -313,10 +436,10 @@ function ipv6words(s){
   return [0,1,2,3].map(i=>((parseInt(g[i*2],16)<<16)|parseInt(g[i*2+1],16))>>>0);
 }
 function ipv4val(raw){ return raw.split(".").length===4 ? ip2int(raw) : parseInt(raw,0); }
-function fieldClause(sel){
-  const li = stack.findIndex(s=>s.uid===sel.uid); if(li<0) return null;
-  const layer = stack[li], e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===sel.fid);
-  const drill = tunnelIdx()>=0 && li>tunnelIdx();
+function fieldClause(st, sel){
+  const li = st.findIndex(s=>s.uid===sel.uid); if(li<0) return null;
+  const layer = st[li], e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===sel.fid);
+  const ti = tunnelIdx(st), drill = ti>=0 && li>ti;
   if(!drill && f.excl && f.excl.primitive)
     return f.excl.primitive+" "+sel.dispVal;
   const win = f.win||f.len;
@@ -326,71 +449,89 @@ function fieldClause(sel){
   else if(f.kind==="mac"){
     const m = mac2int(sel.dispVal);
     const hi = Math.floor(m / 0x10000), lo = m % 0x10000;
-    const o = drill? prefix(li)+f.off : e.base+f.off;
+    const o = drill? prefix(st,li)+f.off : e.base+f.off;
     const a = drill? "ether" : e.anchor;
     return `(${a}[${o}:4] == ${hex(hi)} and ${a}[${o+4}:2] == ${hex(lo)})`;
   }
   else if(f.kind==="ipv6"){
     const w = ipv6words(sel.dispVal); if(!w) return null;
-    const o = drill? prefix(li)+f.off : e.base+f.off;
+    const o = drill? prefix(st,li)+f.off : e.base+f.off;
     const a = drill? "ether" : e.anchor;
     return "("+w.map((x,i)=>`${a}[${o+i*4}:4] == ${hex(x)}`).join(" and ")+")";
   }
   else val = +sel.val;
   const kw = drill? "ether" : e.anchor;
-  const o  = drill? prefix(li)+f.off : e.base+f.off;
+  const o  = drill? prefix(st,li)+f.off : e.base+f.off;
   if(f.mask){ const sh=f.shift||0; return `(${kw}[${o}:${win}] & ${hex(f.mask)}) == ${hex(val*Math.pow(2,sh))}`; }
   if(f.kind==="bitset"){ const m=sel.bitMask; return `(${kw}[${o}:${win}] & ${hex(m)}) == ${hex(m)}`; }
   return `${kw}[${o}:${win}] == ${(f.emitKind||f.kind)==="number"?val:hex(val)}`;
 }
-function guards(){
-  const ti = tunnelIdx(); if(ti<0 || stack.length<=ti+1) return [];   // guards protect inner layers only
+function guards(st){
+  const ti = tunnelIdx(st); if(ti<0 || st.length<=ti+1) return [];   // guards protect inner layers only
   const g = [];
-  const tun = ENTRIES[stack[ti].eid];
+  const tun = ENTRIES[st[ti].eid];
   if(tun.locator) g.push({t:T("guard"), e:Array.isArray(tun.locator) ? (tun.locator.length===1 ? tun.locator[0] : "("+tun.locator.join(" or ")+")") : tun.locator});
-  if(tun.pin && !sels.some(s=>stack.findIndex(x=>x.uid===s.uid)===ti && tun.pinYield.includes(s.fid)))
+  if(tun.pin && !sels.some(s=>st.findIndex(x=>x.uid===s.uid)===ti && tun.pinYield.includes(s.fid)))
     g.push({t:tun.pinLabel || T("optPin"), e:tun.pin});
-  for(let i=ti+1;i<stack.length;i++)
-    if(ENTRIES[stack[i].eid].anchor==="ip")
-      g.push({t:T("ihlPin"), e:`(ether[${prefix(i)}] & 0x0f) == 5`});
+  for(let i=ti+1;i<st.length;i++)
+    if(ENTRIES[st[i].eid].anchor==="ip")
+      g.push({t:T("ihlPin"), e:`(ether[${prefix(st,i)}] & 0x0f) == 5`});
   return g;
 }
-function compile(){
-  const ti = tunnelIdx();
-  const clauses = guards().map(g=>g.e);
+function compileGroup(st){
+  const ti = tunnelIdx(st);
+  const clauses = guards(st).map(g=>g.e);
   // VLAN slot: a VLAN layer declared before the tunnel (or with no tunnel)
   // always leads the expression — the `vlan` keyword shifts every following
   // protocol keyword (ip/tcp/port, including the tunnel locator) past the
   // 4-byte tag, while raw ether[] reads stay absolute. VLAN layers inside
   // the tunnel payload are plain drill layers (raw reads only).
-  const vli = stack.findIndex(s=>s.eid==="vlan" && (ti<0 || stack.indexOf(s)<ti));
-  const vsel = vli>=0 ? sels.find(s=>s.uid===stack[vli].uid && s.fid==="vid") : null;
+  const vli = st.findIndex(s=>s.eid==="vlan" && (ti<0 || st.indexOf(s)<ti));
+  const vsel = vli>=0 ? sels.find(s=>s.uid===st[vli].uid && s.fid==="vid") : null;
   // Locators: payload-anchored entries (ospf/dhcp/esp/gre/stp/lldp/vxlan)
   // must carry their locator clause, or udp[N]/ip[N] would match ANY udp/ip
   // packet. Mirrors bpf_compile: single locator bare, several as (a or b).
   const locs = [];
-  const guarded = ti>=0 && stack.length>ti+1;       // inner layers: guards() carry the tunnel locator
+  const guarded = ti>=0 && st.length>ti+1;          // inner layers: guards() carry the tunnel locator
   for(const s of sels){
-    const li = stack.findIndex(x=>x.uid===s.uid);
+    const li = st.findIndex(x=>x.uid===s.uid);
     if(li<0 || (ti>=0 && li>ti) || (guarded && li===ti)) continue;
-    const e = ENTRIES[stack[li].eid];
+    const e = ENTRIES[st[li].eid];
     if(!e.locator) continue;
     const c = Array.isArray(e.locator)
       ? (e.locator.length===1 ? e.locator[0] : "("+e.locator.join(" or ")+")")
       : e.locator;
     if(!locs.includes(c)) locs.push(c);
   }
-  for(const sl of stack){                           // bpf_compile order: stack layers,
+  for(const sl of st){                              // bpf_compile order: column layers,
     for(const f of ENTRIES[sl.eid].fields){         // registry declaration order within
       const s = sels.find(x=>x.uid===sl.uid && x.fid===f.id);
       if(!s || s===vsel) continue;                  // vsel is emitted below, in the VLAN slot
-      const c = fieldClause(s); if(c) clauses.push(c);
+      const c = fieldClause(st, s); if(c) clauses.push(c);
     }
   }
   if(locs.length) clauses.unshift(...locs);
   if(vli>=0 && (clauses.length || vsel))
     clauses.unshift(vsel ? `vlan ${vsel.val}` : "vlan");
   return clauses.length? clauses.join(" and ") : null;
+}
+function compile(){
+  // One operand per column; empty columns sit out. "not" negates the column
+  // to its right (X not Y = X and not Y); grouping follows not > and > or
+  // with explicit parentheses, mirroring libpcap precedence.
+  const live = groups.map(g=>({op:g.op, x:compileGroup(g.layers)})).filter(o=>o.x);
+  if(live.length<=1) return live.length ? live[0].x : null;
+  const wrap = s => s.includes(" ") ? "("+s+")" : s;
+  const orSegs = [[]];
+  live.forEach(o=>{
+    if(o.op==="or" && orSegs[orSegs.length-1].length) orSegs.push([]);
+    orSegs[orSegs.length-1].push(o);
+  });
+  return orSegs.map(seg=>{
+    const parts = seg.map((o,i)=> i && o.op==="not" ? "(not "+wrap(o.x)+")" : wrap(o.x));
+    if(orSegs.length===1) return parts.join(" and ");   // no lone outer parens
+    return parts.length>1 ? "("+parts.join(" and ")+")" : parts[0];
+  }).join(" or ");
 }
 
 /* ---------- layout: fields never split ----------
@@ -430,41 +571,52 @@ function focusCell(){
 }
 function renderPalette(){
   // Collapsible family groups + search: with dozens of protocols the rail
-  // stays short; groups auto-open for the families that can legally follow
-  // the current stack top (candidateFams), and search filters by name.
+  // stays short; candidateFams() auto-opens the families that can legally
+  // follow the ACTIVE column's top. Manual toggles are remembered and win
+  // over the auto hint — picking a brick never collapses the group it came
+  // from (famMan: absent = follow the hint).
+  const auto = candidateFams();
+  const isOpen = fam => famMan.has(fam) ? famMan.get(fam) : auto.has(fam);
   const q = palFilter.trim().toLowerCase();
-  const groups = Object.keys(FAM).map(fam=>{
+  const rail = Object.keys(FAM).map(fam=>{
+    const open = q ? true : isOpen(fam);
+    const arrow = `<span class="arr">${open?"▾":"▸"}</span>`;
     if(fam==="custom"){
       if(q) return "";
-      return `<div class="pgroup open"><div class="pgrouplab" style="color:${FAM.custom.color}" onclick="toggleFam('custom')"><span class="arr">▾</span>${L(FAM.custom.label)}</div>
+      return `<div class="pgroup ${open?"open":""}"><div class="pgrouplab" style="--fc:${FAM.custom.color}; color:${FAM.custom.color}" onclick="toggleFam('custom')">${arrow}<span>${L(FAM.custom.label)}</span></div>
         <div class="pbtns"><button style="--pc:${FAM.custom.color}" onclick="addCustom()">${T("customBtn")}</button></div></div>`;
     }
     const list = Object.entries(ENTRIES).filter(([,e])=>e.fam===fam && !e.custom);
     const shown = list.filter(([,e])=>!q || String(e.label).toLowerCase().includes(q));
     if(!shown.length) return "";
-    const open = q ? true : famOpen.has(fam);
     const btns = shown.map(([id,e])=>`<button style="--pc:${FAM[fam].color}" onclick="addLayer('${id}')">${L(e.label)}</button>`).join("");
     return `<div class="pgroup ${open?"open":""}">
-      <div class="pgrouplab" style="color:${FAM[fam].color}" onclick="toggleFam('${fam}')"><span class="arr">${open?"▾":"▸"}</span>${L(FAM[fam].label)}<span class="cnt">${list.length}</span></div>
+      <div class="pgrouplab" style="--fc:${FAM[fam].color}; color:${FAM[fam].color}" onclick="toggleFam('${fam}')">${arrow}<span>${L(FAM[fam].label)}</span><span class="cnt">${list.length}</span></div>
       <div class="pbtns">${btns}</div></div>`;
   }).join("");
   document.getElementById("palette").innerHTML =
-    `<input id="palfilter" class="palfilter" placeholder="${T("searchPh")}" value="${palFilter}" oninput="filterPal(this.value)">` + groups;
+    `<input id="palfilter" class="palfilter" placeholder="${T("searchPh")}" value="${palFilter}" oninput="filterPal(this.value)">` + rail;
 }
 function candidateFams(){
-  // Which families can legally follow the stack top: the families of every
-  // successor target of the top layer's fields (+ link inside a tunnel).
+  // Which families can legally follow the ACTIVE column's top: the families
+  // of every successor target of the top layer's fields (+ link inside a
+  // tunnel). A column may still start with any protocol — every family is
+  // always listed; this only picks which auto-open as a hint.
   const fams = new Set(["custom"]);
-  if(!stack.length){ fams.add("link"); return fams; }
-  const last = ENTRIES[stack[stack.length-1].eid];
+  const st = activeGroup().layers;
+  if(!st.length){ fams.add("link"); return fams; }
+  const last = ENTRIES[st[st.length-1].eid];
   if(last.tunnel) fams.add("link");
   for(const f of last.fields||[])
     for(const t of Object.values(f.successor||{}))
       if(ENTRIES[t]) fams.add(ENTRIES[t].fam);
   return fams;
 }
-function refreshFams(){ famOpen = new Set(candidateFams()); }
-function toggleFam(fam){ famOpen.has(fam) ? famOpen.delete(fam) : famOpen.add(fam); renderPalette(); }
+function toggleFam(fam){
+  const auto = candidateFams();
+  famMan.set(fam, !(famMan.has(fam) ? famMan.get(fam) : auto.has(fam)));
+  renderPalette();
+}
 function filterPal(v){
   palFilter = v; renderPalette();
   const inp = document.getElementById("palfilter");
@@ -472,7 +624,8 @@ function filterPal(v){
 }
 function addCustom(){
   const n = +prompt(T("customPrompt"),"12"); if(!n||n<1) return;
-  stack.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=stack[stack.length-1].uid; refreshFams(); renderAll();
+  const g = activeGroup();
+  g.layers.push({uid:++uidSeq, eid:"custom", len:n}); selLayer=g.layers[g.layers.length-1].uid; selGroup=g.uid; renderAll();
 }
 /* Single-bit toggle mnemonic, in priority order: the label's "(X)"
    convention (GRE "Checksum Present (C)" -> C), a short field id which
@@ -562,7 +715,7 @@ function gridHTML(layer, li, e){
 /* ---------- in-cell editing: dblclick inputs values, click opens dropdowns, letters toggle bits ---------- */
 function pickField(uid, fid){       // enum: single click opens in-place dropdown
   event.stopPropagation(); selLayer=uid;
-  const layer = stack.find(s=>s.uid===uid);
+  const layer = layerById(uid); if(!layer) return;
   const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
   if(f.kind==="enum") editing={uid,fid};
   renderAll();
@@ -572,7 +725,7 @@ function pickValue(uid, fid){       // number / ipv4 / ipv6 / mac: double click 
 }
 function commitValue(uid, fid, raw){
   raw = raw==null ? "" : (""+raw).trim();
-  const layer = stack.find(s=>s.uid===uid);
+  const layer = layerById(uid);
   if(!raw || !layer){ editing=null; renderAll(); return; }
   const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
   const sel = {uid, fid, val:null, dispVal:null};
@@ -595,11 +748,12 @@ function autoLink(uid, f){
   if(!sel) return;
   const target = succ[sel.val];
   if(!target || !ENTRIES[target]) return;
-  const li = stack.findIndex(s=>s.uid===uid);
-  const next = stack[li+1];
-  if(!next){                                         // nothing follows: grow the block
+  const st = stackOf(uid);
+  const li = st.findIndex(s=>s.uid===uid);
+  const next = st[li+1];
+  if(!next){                                         // nothing follows: grow the column
     const layer = {uid:++uidSeq, eid:target, len:ENTRIES[target].len};
-    stack.push(layer); selLayer = layer.uid; refreshFams();
+    st.push(layer); selLayer = layer.uid;
     return;
   }
   if(next.eid===target) return;
@@ -608,30 +762,32 @@ function autoLink(uid, f){
   next.eid = target; next.len = ENTRIES[target].len;
   sels = sels.filter(s=>s.uid!==next.uid);           // old header's fields do not exist in the new one
   if(editing && editing.uid===next.uid) editing=null;
-  refreshFams();
 }
 function structWarnings(){
   const out=[];
-  const ti0 = tunnelIdx();
-  const tun0 = ti0>=0 ? ENTRIES[stack[ti0].eid] : null;
-  if(tun0 && tun0.pin && stack.length>ti0+1
-     && sels.some(s=>s.uid===stack[ti0].uid && tun0.pinYield.includes(s.fid)))
-    out.push({warn:true, m: L(tun0.pinWarn) || T("pinWarnGeneric")});
-  for(const s of sels){
-    const li = stack.findIndex(x=>x.uid===s.uid); if(li<0) continue;
-    const e = ENTRIES[stack[li].eid];
-    const f = e.fields.find(x=>x.id===s.fid);
-    if(!f || !f.successor) continue;
-    const target = f.successor[s.val];
-    if(!target || !ENTRIES[target]) continue;
-    const next = stack[li+1];
-    if(next && next.eid!==target)
-      out.push({warn:true, m:T("warnMis")(L(e.label), f.label, s.dispVal) + " → " + L(ENTRIES[target].label) + T("warnTail") + L(ENTRIES[next.eid].label)});
-  }
+  groups.forEach((g,gi)=>{
+    const st = g.layers, tag = groups.length>1 ? T("colTag")(gi+1) : "";
+    const ti0 = tunnelIdx(st);
+    const tun0 = ti0>=0 ? ENTRIES[st[ti0].eid] : null;
+    if(tun0 && tun0.pin && st.length>ti0+1
+       && sels.some(s=>s.uid===st[ti0].uid && tun0.pinYield.includes(s.fid)))
+      out.push({warn:true, m: (L(tun0.pinWarn) || T("pinWarnGeneric"))+tag});
+    for(const s of sels){
+      const li = st.findIndex(x=>x.uid===s.uid); if(li<0) continue;
+      const e = ENTRIES[st[li].eid];
+      const f = e.fields.find(x=>x.id===s.fid);
+      if(!f || !f.successor) continue;
+      const target = f.successor[s.val];
+      if(!target || !ENTRIES[target]) continue;
+      const next = st[li+1];
+      if(next && next.eid!==target)
+        out.push({warn:true, m:T("warnMis")(L(e.label), f.label, s.dispVal) + " → " + L(ENTRIES[target].label) + T("warnTail") + L(ENTRIES[next.eid].label) + tag});
+    }
+  });
   return out;
 }
 function toggleBit(uid, fid, m){    // letter boxes toggle directly: click = select, click again = clear
-  const layer = stack.find(s=>s.uid===uid);
+  const layer = layerById(uid); if(!layer) return;
   const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
   let sel = sels.find(s=>s.uid===uid && s.fid===fid);
   if(!sel){ sels.push({uid, fid, val:m, bitMask:m, dispVal:f.bits.find(b=>b.m===m).l}); }
@@ -643,7 +799,7 @@ function toggleBit(uid, fid, m){    // letter boxes toggle directly: click = sel
   renderAll();
 }
 function toggleOne(uid, fid){        // single-bit masked number (GRE C/K/S): click toggles the bit
-  const layer = stack.find(s=>s.uid===uid);
+  const layer = layerById(uid); if(!layer) return;
   const f = ENTRIES[layer.eid].fields.find(x=>x.id===fid);
   const letter = togLetter(f);
   let sel = sels.find(s=>s.uid===uid && s.fid===fid);
@@ -661,14 +817,16 @@ function cellDone(){
   if(c && (""+c.value).trim()) commitValue(editing.uid, editing.fid, c.value);
   else { editing=null; renderAll(); }
 }
-function layerHTML(s, i, ti, extra){
+function layerHTML(st, s, i, ti, extra){
   const e = ENTRIES[s.eid], drill = ti>=0 && i>ti;
   const body = e.fields.length
     ? gridHTML(s, i, e)
     : `<div style="color:var(--muted); font-size:12px; padding:4px 8px 10px">${T("noFields")}</div>`;
-  return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${FAM[e.fam].color}" onclick="layerClick(${s.uid})">
-    <div class="lhead"><b>${L(e.label)}</b>
-      <span class="meta">${s.len}B · ${T("offset")} ${prefix(i)}${drill?T("drillL"):""}${e.tunnel?T("tunnelL"):""}</span>
+  return `<div class="lrow ${selLayer===s.uid?"sel":""}" data-uid="${s.uid}" style="--lc:${FAM[e.fam].color}" onclick="layerClick(${s.uid})"
+    onmousedown="armDrag(event,this)" ondragstart="dragStart(event,${s.uid})" ondragend="dragEnd()"
+    ondragover="rowDragOver(event,${s.uid})" ondrop="rowDrop(event)">
+    <div class="lhead" title="${T("dragTt")}"><b>${L(e.label)}</b>
+      <span class="meta">${s.len}B · ${T("offset")} ${prefix(st,i)}${drill?T("drillL"):""}${e.tunnel?T("tunnelL"):""}</span>
       <span class="del" onclick="event.stopPropagation(); delLayer(${s.uid})">×</span>
     </div>
     ${body}${extra||""}
@@ -683,47 +841,67 @@ function layerClick(uid){
   document.querySelectorAll(".lrow").forEach(r=>r.classList.toggle("sel", r.dataset.uid==uid));
 }
 function renderStack(){
-  const ti = tunnelIdx();
   let html = "";
-  for(let i=0;i<stack.length;i++){
-    const e = ENTRIES[stack[i].eid];
+  groups.forEach((g,gi)=>{
+    if(gi>0){
+      const tt = g.op==="or" ? T("opTtOr") : g.op==="not" ? T("opTtNot") : T("opTtAnd");
+      html += `<div class="opchip ${g.op}" title="${tt}" onclick="cycleOp(${g.uid})">${g.op}</div>`;
+    }
+    html += colHTML(g, gi);
+  });
+  html += `<button class="addcol" title="${T("addColTt")}" onclick="addColumn()">+</button>`;
+  document.getElementById("stack").innerHTML = html;
+}
+function colHTML(g, gi){
+  const st = g.layers, ti = tunnelIdx(st);
+  let body = "";
+  for(let i=0;i<st.length;i++){
+    const e = ENTRIES[st[i].eid];
     if(e.tunnel){
       // The inner packet is the tunnel's PAYLOAD: nest it inside the tunnel's
       // own frame, like the textbook VXLAN figure (inner frame inside the envelope).
-      const inner = stack.slice(ti+1).map((s,j)=>layerHTML(s, ti+1+j, ti)).join("")
+      const inner = st.slice(ti+1).map((s,j)=>layerHTML(st, s, ti+1+j, ti)).join("")
         || `<div style="padding:10px; color:var(--muted); font-size:12px">${T("innerEmpty")}</div>`;
       const wrap = `<div class="innerbox" style="--tc:${FAM[e.fam].color}">
         <div class="innerlab">${T("inner").replace("${label}", L(e.label))}</div>${inner}</div>`;
-      html += layerHTML(stack[i], i, ti, wrap);
-      return finish(html);
+      body += layerHTML(st, st[i], i, ti, wrap);
+      break;                      // everything past the envelope is nested above
     }
-    html += layerHTML(stack[i], i, ti);
+    body += layerHTML(st, st[i], i, ti);
   }
-  return finish(html);
-}
-function finish(html){
-  document.getElementById("stack").innerHTML = html || `<div style="padding:20px;color:var(--muted)">${T("emptyStack")}</div>`;
-  document.getElementById("total").textContent = stack.length? T("total")(prefix(stack.length)) : "";
+  if(!st.length) body = `<div class="colempty">${T("colEmpty")}</div>`;
+  const tot = st.length ? `<div class="total">${T("total")(prefix(st, st.length))}</div>` : "";
+  return `<div class="col ${st.length?"":"empty"} ${g.uid===selGroup?"on":""}" data-gid="${g.uid}"
+    onclick="colClick(${g.uid})" ondragover="colDragOver(event)" ondrop="colDrop(event)">
+    <div class="colhead"><span>#${gi+1}</span><span class="x" title="${T("colDelTt")}" onclick="event.stopPropagation(); delColumn(${g.uid})">×</span></div>
+    ${body}${tot}</div>`;
 }
 function renderChips(){
   const w = structWarnings().map(x=>`<span class="chip ${x.warn?"warn":"hint"}" title="${x.warn?T("warnTitle"):T("hintTitle")}">${x.warn?"⚠":"💡"} ${x.m}</span>`);
-  const g = guards().map(x=>`<span class="chip guard">🛡 ${x.t}: <code>${x.e}</code></span>`);
+  let g = "";
+  groups.forEach((gr,gi)=>{
+    const tag = groups.length>1 ? T("colTag")(gi+1) : "";
+    for(const x of guards(gr.layers))
+      g += `<span class="chip guard">🛡 ${x.t}${tag}: <code>${x.e}</code></span>`;
+  });
   const c = sels.map((s,i)=>{
-    const layer = stack.find(x=>x.uid===s.uid); if(!layer) return "";
+    const layer = layerById(s.uid); if(!layer) return "";
     const e = ENTRIES[layer.eid], f = e.fields.find(x=>x.id===s.fid);
     return `<span class="chip field">${L(e.label)}.${f.label} = ${s.dispVal} <span class="x" onclick="sels.splice(${i},1);renderAll()">×</span></span>`;
   }).join("");
-  document.getElementById("chips").innerHTML = (w.join("")+g.join("")+c) || `<span style="color:var(--muted);font-size:12px">${T("noneYet")}</span>`;
+  document.getElementById("chips").innerHTML = (w.join("")+g+c) || `<span style="color:var(--muted);font-size:12px">${T("noneYet")}</span>`;
 }
 function renderExpr(){
   const ex = compile();
   document.getElementById("expr").textContent = ex ?? T("noneYet");
-  const ti = tunnelIdx();
-  const drill = sels.some(s=>{const i=stack.findIndex(x=>x.uid===s.uid); return ti>=0 && i>ti;});
+  const drill = groups.some(gr=>{
+    const ti = tunnelIdx(gr.layers);
+    return ti>=0 && gr.layers.some((l,i)=>i>ti && sels.some(s=>s.uid===l.uid));
+  });
   const badge = document.getElementById("modeBadge");
   badge.className = "mode "+(drill?"drill":"native");
   badge.textContent = drill?T("modeDrill"):T("modeNative");
-  document.getElementById("exprNote").textContent = ex ? (ti>=0
+  document.getElementById("exprNote").textContent = ex ? (groups.some(gr=>tunnelIdx(gr.layers)>=0)
     ? T("noteDrill")
     : T("noteNative")) : "";
 }

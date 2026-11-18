@@ -23,6 +23,20 @@ size with bit-width labels (48 / 16 / 24 ...).
 
 - The user adds layers bottom-up (Ether → IP → UDP → VXLAN → inner
   Ether → ...). Each layer renders one colored block in the stack.
+- The construction area is a row of **columns** (horizontally scrolled;
+  a "+" control adds one, an "×" per column deletes it). Each column
+  is an independent stack as described here and one operand of the
+  final boolean expression — see section 2. A column may start at any
+  protocol: a bare OSPF brick is already anchored by its `locator`
+  (`ip proto 89`), no Ethernet/IP preamble required.
+- Bricks drag by their label strip: reorder within a column or move
+  across columns (field selections ride along, they are keyed by layer
+  id). A tunnel header drags its whole inner-packet run with it.
+- The brick rail groups protocols by family behind collapsible headers
+  that mirror the brick geometry. Manual open/close is remembered and
+  wins over the auto-open hint (the families that can legally follow
+  the active column's top); picking a brick never collapses the group
+  it came from.
 - A byte ruler shows the cumulative offset at every layer boundary —
   the prefix sum of the declared header lengths.
 - Clicking a layer expands its **field blocks** from the registry
@@ -80,6 +94,21 @@ inner TCP dport 443 →
 (The locator clause is the entry's `locator` list joined with `or` —
 single locators emit bare; the VXLAN entry carries both the standard
 port 4789 and 8472.)
+
+**Boolean combination** — every column compiles independently (its own
+locators, VLAN slot, guards and drill state); the per-column
+expressions are then joined by the operators sitting between the
+columns: `and` / `or`, and `not`, which negates the column to its
+right (`X not Y` ≡ `X and not (Y)`). Grouping follows libpcap
+precedence `not > and > or` and always emits explicit parentheses:
+
+```
+columns [A] or [B] not [C]         → A or (B and (not C))
+columns [A] and [B] or [C] not [D] → (A and B) or (C and (not D))
+```
+
+Empty columns sit out of the combination; a single live column emits
+its clauses bare, exactly like the single-stack model above.
 
 ## 3. Tested pitfalls the generator must respect
 
