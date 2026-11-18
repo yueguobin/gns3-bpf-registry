@@ -94,6 +94,7 @@ from scapy.layers.igmp import IGMP
 from scapy.layers.inet6 import (
     ICMPv6EchoRequest,
     IP6ListField,
+    IPv6ExtHdrFragment,
     IPv6ExtHdrSegmentRouting,
     IPv6ExtHdrSegmentRoutingTLV,
     ipv6nh,
@@ -372,6 +373,7 @@ LAYERS = {
         IKEv2,
         IP,
         IPv6,
+        IPv6ExtHdrFragment,
         ISISHeader,
         LACPHeader,
         LDP,
