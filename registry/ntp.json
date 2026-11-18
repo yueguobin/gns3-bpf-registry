@@ -1,0 +1,205 @@
+{
+  "id": "ntp",
+  "label": "NTP",
+  "rfc": [
+    "5905"
+  ],
+  "notes": "NTPv4 control message header per RFC 5905 section 7.3 (Figure 8) on UDP port 123. Byte 0 is one bit-packed word carrying three masked views (leap indicator, version, mode); every field of the 48-byte fixed header is either a view or a reasoned exclusion. The four 64-bit timestamps are twice the 4-byte BPF load window and cannot be matched with an equality clause, so server-selection fields are not filterable. Mode 6 (control, the ntpq protocol) and mode 7 (private) messages share the port and the first 48 bytes; NTP extension fields (RFC 7822) follow the header in symmetric/client/server modes with variable length and stay outside the filter window. The Reference ID is modelled as one raw 32-bit word: a four-character clock code for stratum 1 (e.g. 0x47505320 \"GPS \"), the sync source's IPv4 address for strata 2-15 and a kiss code for stratum 0. SNTP (RFC 4330) uses the same layout.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 123"
+  ],
+  "headerLength": 48,
+  "fields": [
+    {
+      "id": "leap_indicator",
+      "label": "Leap Indicator",
+      "offset": 0,
+      "size": 1,
+      "mask": "0xc0",
+      "shift": 6,
+      "kind": "enum",
+      "ref": "RFC 5905 §7.3",
+      "values": [
+        {
+          "value": 0,
+          "label": "No Warning"
+        },
+        {
+          "value": 1,
+          "label": "Last Minute Has 61 Seconds"
+        },
+        {
+          "value": 2,
+          "label": "Last Minute Has 59 Seconds"
+        },
+        {
+          "value": 3,
+          "label": "Alarm Condition (Unsynchronized)"
+        }
+      ],
+      "description": "Top two bits of byte 0; 3 means the server clock is unsynchronized and its time must not be used."
+    },
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x38",
+      "shift": 3,
+      "kind": "enum",
+      "ref": "RFC 5905 §7.3",
+      "values": [
+        {
+          "value": 3,
+          "label": "NTPv3"
+        },
+        {
+          "value": 4,
+          "label": "NTPv4"
+        }
+      ],
+      "description": "Middle three bits of byte 0; NTPv4 per RFC 5905, NTPv3 per RFC 1305."
+    },
+    {
+      "id": "mode",
+      "label": "Mode",
+      "offset": 0,
+      "size": 1,
+      "mask": "0x7",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "RFC 5905 §7.3",
+      "values": [
+        {
+          "value": 0,
+          "label": "Reserved"
+        },
+        {
+          "value": 1,
+          "label": "Symmetric Active"
+        },
+        {
+          "value": 2,
+          "label": "Symmetric Passive"
+        },
+        {
+          "value": 3,
+          "label": "Client"
+        },
+        {
+          "value": 4,
+          "label": "Server"
+        },
+        {
+          "value": 5,
+          "label": "Broadcast"
+        },
+        {
+          "value": 6,
+          "label": "NTP Control Message"
+        },
+        {
+          "value": 7,
+          "label": "Private Use"
+        }
+      ],
+      "description": "Low three bits of byte 0; the client/server pair (3/4) carries ordinary time queries, 1/2 peer synchronization and 5 broadcast."
+    },
+    {
+      "id": "stratum",
+      "label": "Stratum",
+      "offset": 1,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 255,
+      "description": "0 unspecified (kiss code in the Reference ID), 1 primary reference, 2-15 secondary via NTP hops, 16 unsynchronized, 17-255 reserved."
+    },
+    {
+      "id": "poll",
+      "label": "Poll Interval",
+      "offset": 2,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 255,
+      "description": "Signed base-2 logarithm of the polling interval in seconds (typically 4 to 17, e.g. 10 = 1024 s); negative values read as their two's-complement byte (e.g. -6 = 250)."
+    },
+    {
+      "id": "precision",
+      "label": "Precision",
+      "offset": 3,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 255,
+      "description": "Signed base-2 logarithm of the system clock precision in seconds (e.g. 0xfa = -6, about 15.6 microseconds); stored as the two's-complement byte."
+    },
+    {
+      "id": "root_delay",
+      "label": "Root Delay",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Total round-trip delay to the reference clock as a 16.16 fixed-point seconds word (0x00018000 = 1.5 s); matched as the raw wire word."
+    },
+    {
+      "id": "root_dispersion",
+      "label": "Root Dispersion",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Maximum error relative to the reference clock as a 16.16 fixed-point seconds word; matched as the raw wire word."
+    },
+    {
+      "id": "ref_id",
+      "label": "Reference ID",
+      "offset": 12,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 5905 §7.3",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Stratum 1: a four-character clock source code (0x47505320 = \"GPS \", 0x474e5353 = \"GNSS\"); strata 2-15: the sync source's IPv4 address as a 32-bit word; stratum 0: a kiss code (e.g. 0x52415445 = \"RATE\")."
+    }
+  ],
+  "excluded": [
+    {
+      "id": "reference_ts",
+      "offset": 16,
+      "length": 8,
+      "reason": "64-bit Reference Timestamp (seconds + fraction per RFC 5905 §7.3); twice the 4-byte BPF load window, so no exact equality clause exists"
+    },
+    {
+      "id": "originate_ts",
+      "offset": 24,
+      "length": 8,
+      "reason": "64-bit Originate Timestamp (packet time at the client); twice the 4-byte BPF load window"
+    },
+    {
+      "id": "receive_ts",
+      "offset": 32,
+      "length": 8,
+      "reason": "64-bit Receive Timestamp (packet time at the server); twice the 4-byte BPF load window"
+    },
+    {
+      "id": "transmit_ts",
+      "offset": 40,
+      "length": 8,
+      "reason": "64-bit Transmit Timestamp (packet departure time); twice the 4-byte BPF load window"
+    }
+  ]
+}

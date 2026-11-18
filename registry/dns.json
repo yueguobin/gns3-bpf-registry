@@ -1,0 +1,273 @@
+{
+  "id": "dns",
+  "label": "DNS",
+  "rfc": [
+    "1035",
+    "4035",
+    "9619"
+  ],
+  "notes": "DNS message header per RFC 1035 section 4.1.1 on UDP port 53. All 12 fixed bytes are covered by field views: bytes 2-3 are two bit-packed words, one masked view per flag plus the 4-bit opcode and rcode (the entry has no excluded bytes). AD and CD are the DNSSEC bits of RFC 4035 sections 6.1/6.2; the Z bit is reserved and must be zero per RFC 9619. Response codes above 15 belong to EDNS0 (RFC 6891): the upper bits ride in the OPT pseudo-record's TTL in the additional section, outside this header. The question, answer, authority and additional sections follow byte 12 with variable length (QNAME labels and pointer compression per RFC 1035 section 4.1.4), so nothing past the header is at a fixed offset. DNS over TCP port 53 prepends a 2-byte length word (out of scope for the udp anchor); mDNS on UDP port 5353 uses the same header format but the locator pins 53.",
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "locator": [
+    "udp port 53"
+  ],
+  "headerLength": 12,
+  "fields": [
+    {
+      "id": "transaction_id",
+      "label": "Transaction ID",
+      "offset": 0,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "16-bit identifier copied from the query into the response; matching it isolates one request/response exchange (e.g. while investigating cache poisoning)."
+    },
+    {
+      "id": "qr",
+      "label": "Query Response",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x80",
+      "shift": 7,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 1,
+      "description": "Top bit of byte 2: 0 query, 1 response."
+    },
+    {
+      "id": "opcode",
+      "label": "Opcode",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x78",
+      "shift": 3,
+      "kind": "enum",
+      "ref": "RFC 1035 §4.1.1",
+      "values": [
+        {
+          "value": 0,
+          "label": "Standard Query"
+        },
+        {
+          "value": 1,
+          "label": "Inverse Query"
+        },
+        {
+          "value": 2,
+          "label": "Server Status Request"
+        },
+        {
+          "value": 4,
+          "label": "Notify"
+        },
+        {
+          "value": 5,
+          "label": "Update"
+        }
+      ],
+      "description": "Four bits of byte 2; Notify is RFC 1996 zone-change notification and Update is RFC 2136 dynamic update (3 unassigned, 6-15 reserved for future use)."
+    },
+    {
+      "id": "aa",
+      "label": "Authoritative Answer",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x4",
+      "shift": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 1,
+      "description": "1 when the responding server is authoritative for the zone."
+    },
+    {
+      "id": "tc",
+      "label": "Truncation",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x2",
+      "shift": 1,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 1,
+      "description": "1 when the message was truncated; on UDP the client retries over TCP, which shifts the framing off this anchor."
+    },
+    {
+      "id": "rd",
+      "label": "Recursion Desired",
+      "offset": 2,
+      "size": 1,
+      "mask": "0x1",
+      "shift": 0,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 1,
+      "description": "Set in queries to request recursive resolution; copied into the response."
+    },
+    {
+      "id": "ra",
+      "label": "Recursion Available",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x80",
+      "shift": 7,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 1,
+      "description": "Top bit of byte 3, set in responses when the server supports recursive queries."
+    },
+    {
+      "id": "z",
+      "label": "Reserved (Z)",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x40",
+      "shift": 6,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1; RFC 9619",
+      "min": 0,
+      "max": 1,
+      "description": "Must be zero in every message; a set bit marks a malformed or experimental packet (RFC 9619 retired the old Z bit)."
+    },
+    {
+      "id": "ad",
+      "label": "Authentic Data",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x20",
+      "shift": 5,
+      "kind": "number",
+      "ref": "RFC 4035 §6.1",
+      "min": 0,
+      "max": 1,
+      "description": "Set in responses when the validator considered the data DNSSEC-authentic."
+    },
+    {
+      "id": "cd",
+      "label": "Checking Disabled",
+      "offset": 3,
+      "size": 1,
+      "mask": "0x10",
+      "shift": 4,
+      "kind": "number",
+      "ref": "RFC 4035 §6.2",
+      "min": 0,
+      "max": 1,
+      "description": "Set in queries to ask the resolver to skip DNSSEC validation."
+    },
+    {
+      "id": "rcode",
+      "label": "Response Code",
+      "offset": 3,
+      "size": 1,
+      "mask": "0xf",
+      "shift": 0,
+      "kind": "enum",
+      "ref": "RFC 1035 §4.1.1",
+      "values": [
+        {
+          "value": 0,
+          "label": "NOERROR"
+        },
+        {
+          "value": 1,
+          "label": "FORMERR"
+        },
+        {
+          "value": 2,
+          "label": "SERVFAIL"
+        },
+        {
+          "value": 3,
+          "label": "NXDOMAIN"
+        },
+        {
+          "value": 4,
+          "label": "NOTIMP"
+        },
+        {
+          "value": 5,
+          "label": "REFUSED"
+        },
+        {
+          "value": 6,
+          "label": "YXDOMAIN"
+        },
+        {
+          "value": 7,
+          "label": "YXRRSET"
+        },
+        {
+          "value": 8,
+          "label": "NXRRSET"
+        },
+        {
+          "value": 9,
+          "label": "NOTAUTH"
+        },
+        {
+          "value": 10,
+          "label": "NOTZONE"
+        },
+        {
+          "value": 11,
+          "label": "DSO-TYPENI"
+        }
+      ],
+      "description": "Low four bits of byte 3 (0-5 per RFC 1035, 6-10 per RFC 2136, 11 per RFC 8490); extended codes 16+ ride in the EDNS0 OPT record's TTL in the additional section."
+    },
+    {
+      "id": "qdcount",
+      "label": "Question Count",
+      "offset": 4,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Number of entries in the question section (1 for ordinary queries)."
+    },
+    {
+      "id": "ancount",
+      "label": "Answer Count",
+      "offset": 6,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Number of resource records in the answer section."
+    },
+    {
+      "id": "nscount",
+      "label": "Authority Count",
+      "offset": 8,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Number of name-server records in the authority section."
+    },
+    {
+      "id": "arcount",
+      "label": "Additional Count",
+      "offset": 10,
+      "size": 2,
+      "kind": "number",
+      "ref": "RFC 1035 §4.1.1",
+      "min": 0,
+      "max": 65535,
+      "description": "Number of records in the additional section; 1 typically means the EDNS0 OPT pseudo-record."
+    }
+  ]
+}

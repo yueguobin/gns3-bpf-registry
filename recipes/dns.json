@@ -1,0 +1,316 @@
+{
+  "stack": [
+    {
+      "layer": "Ether",
+      "fields": {
+        "src": "$ETH_SRC",
+        "dst": "$ETH_DST"
+      }
+    },
+    {
+      "layer": "IP",
+      "fields": {
+        "src": "$IP_SRC",
+        "dst": "$IP_DST",
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "UDP",
+      "fields": {
+        "sport": 12345,
+        "dport": 53,
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "DNSHeader",
+      "fields": {
+        "id": 0,
+        "qr": 0,
+        "opcode": 0,
+        "aa": 0,
+        "tc": 0,
+        "rd": 1,
+        "ra": 0,
+        "z": 0,
+        "ad": 0,
+        "cd": 0,
+        "rcode": 0,
+        "qdcount": 0,
+        "ancount": 0,
+        "nscount": 0,
+        "arcount": 0
+      }
+    }
+  ],
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "headerLength": 12,
+  "fieldMap": {
+    "transaction_id": "id"
+  },
+  "probe": {
+    "transaction_id": ["0x0f0f", "0xf0f0"],
+    "qdcount": ["0x0f0f", "0xf0f0"],
+    "ancount": ["0x0f0f", "0xf0f0"],
+    "nscount": ["0x0f0f", "0xf0f0"],
+    "arcount": ["0x0f0f", "0xf0f0"]
+  },
+  "manual": {
+    "qr": "1 bit shares byte 2 with the opcode and flags; sub-byte field the leading-aligned probe model cannot map, so the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "opcode": "4 bits share byte 2 with the header flags; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "aa": "1 bit shares byte 2 with the opcode and flags; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "tc": "1 bit shares byte 2 with the opcode and flags; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "rd": "1 bit shares byte 2 with the opcode and flags; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "ra": "1 bit shares byte 3 with Z, AD, CD and the rcode; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified",
+    "z": "1 bit shares byte 3 with RA, AD, CD and the rcode; the mask/shift view is hand-declared per RFC 9619 and crosscheck-verified",
+    "ad": "1 bit shares byte 3 with RA, Z, CD and the rcode; the mask/shift view is hand-declared per RFC 4035 §6.1 and crosscheck-verified",
+    "cd": "1 bit shares byte 3 with RA, Z, AD and the rcode; the mask/shift view is hand-declared per RFC 4035 §6.2 and crosscheck-verified",
+    "rcode": "4 bits share byte 3 with the response flags; the mask/shift view is hand-declared per RFC 1035 §4.1.1 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "transaction_id": "0x5a5a",
+    "qr": 1,
+    "opcode": 2,
+    "aa": 1,
+    "tc": 1,
+    "rd": 1,
+    "ra": 1,
+    "z": 1,
+    "ad": 1,
+    "cd": 1,
+    "rcode": 3,
+    "qdcount": "0x5a5a",
+    "ancount": "0x5a5a",
+    "nscount": "0x5a5a",
+    "arcount": "0x5a5a"
+  },
+  "fixtures": {
+    "transaction_id": ["0x1234", "0x1235"],
+    "qr": [1, 0],
+    "opcode": [0, 4],
+    "aa": [0, 1],
+    "tc": [0, 1],
+    "rd": [1, 0],
+    "ra": [0, 1],
+    "z": [0, 1],
+    "ad": [0, 1],
+    "cd": [0, 1],
+    "rcode": [0, 3],
+    "qdcount": [1, 2],
+    "ancount": [1, 2],
+    "nscount": [0, 1],
+    "arcount": [1, 0]
+  },
+  "vectors": [
+    {
+      "name": "dns-id-0x1234",
+      "select": [
+        {
+          "field": "transaction_id",
+          "value": 4660
+        }
+      ]
+    },
+    {
+      "name": "dns-qr-query",
+      "select": [
+        {
+          "field": "qr",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "dns-qr-response",
+      "select": [
+        {
+          "field": "qr",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-opcode-standard-query",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "dns-opcode-notify",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "name": "dns-opcode-update",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "dns-aa-authoritative",
+      "select": [
+        {
+          "field": "aa",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-tc-truncated",
+      "select": [
+        {
+          "field": "tc",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-rd-recursion-desired",
+      "select": [
+        {
+          "field": "rd",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-ra-recursion-available",
+      "select": [
+        {
+          "field": "ra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-z-zero",
+      "select": [
+        {
+          "field": "z",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "dns-ad-authentic-data",
+      "select": [
+        {
+          "field": "ad",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-cd-checking-disabled",
+      "select": [
+        {
+          "field": "cd",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-rcode-noerror",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "dns-rcode-servfail",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "name": "dns-rcode-nxdomain",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "dns-rcode-refused",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "dns-qdcount-1",
+      "select": [
+        {
+          "field": "qdcount",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-ancount-1",
+      "select": [
+        {
+          "field": "ancount",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-nscount-1",
+      "select": [
+        {
+          "field": "nscount",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-arcount-1",
+      "select": [
+        {
+          "field": "arcount",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "dns-rec-query-id",
+      "select": [
+        {
+          "field": "transaction_id",
+          "value": 4660
+        },
+        {
+          "field": "qr",
+          "value": 0
+        },
+        {
+          "field": "rd",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
