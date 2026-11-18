@@ -816,6 +816,256 @@
       "expect": "(udp port 546 or udp port 547) and udp[8:1] == 0x1 and (udp[8:4] & 0xffffff) == 0x123456"
     },
     {
+      "name": "dns-id-0x1234",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "transaction_id",
+          "value": 4660
+        }
+      ],
+      "expect": "udp port 53 and udp[8:2] == 4660"
+    },
+    {
+      "name": "dns-qr-query",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "qr",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x80) == 0x0"
+    },
+    {
+      "name": "dns-qr-response",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "qr",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x80) == 0x80"
+    },
+    {
+      "name": "dns-opcode-standard-query",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x78) == 0x0"
+    },
+    {
+      "name": "dns-opcode-notify",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 4
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x78) == 0x20"
+    },
+    {
+      "name": "dns-opcode-update",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "opcode",
+          "value": 5
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x78) == 0x28"
+    },
+    {
+      "name": "dns-aa-authoritative",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "aa",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x4) == 0x4"
+    },
+    {
+      "name": "dns-tc-truncated",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "tc",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x2) == 0x2"
+    },
+    {
+      "name": "dns-rd-recursion-desired",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "rd",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[10:1] & 0x1) == 0x1"
+    },
+    {
+      "name": "dns-ra-recursion-available",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "ra",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0x80) == 0x80"
+    },
+    {
+      "name": "dns-z-zero",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "z",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0x40) == 0x0"
+    },
+    {
+      "name": "dns-ad-authentic-data",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "ad",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0x20) == 0x20"
+    },
+    {
+      "name": "dns-cd-checking-disabled",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "cd",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0x10) == 0x10"
+    },
+    {
+      "name": "dns-rcode-noerror",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0xf) == 0x0"
+    },
+    {
+      "name": "dns-rcode-servfail",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 2
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0xf) == 0x2"
+    },
+    {
+      "name": "dns-rcode-nxdomain",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 3
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0xf) == 0x3"
+    },
+    {
+      "name": "dns-rcode-refused",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "rcode",
+          "value": 5
+        }
+      ],
+      "expect": "udp port 53 and (udp[11:1] & 0xf) == 0x5"
+    },
+    {
+      "name": "dns-qdcount-1",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "qdcount",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and udp[12:2] == 1"
+    },
+    {
+      "name": "dns-ancount-1",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "ancount",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and udp[14:2] == 1"
+    },
+    {
+      "name": "dns-nscount-1",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "nscount",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and udp[16:2] == 1"
+    },
+    {
+      "name": "dns-arcount-1",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "arcount",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and udp[18:2] == 1"
+    },
+    {
+      "name": "dns-rec-query-id",
+      "entry": "dns",
+      "select": [
+        {
+          "field": "transaction_id",
+          "value": 4660
+        },
+        {
+          "field": "qr",
+          "value": 0
+        },
+        {
+          "field": "rd",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 53 and udp[8:2] == 4660 and (udp[10:1] & 0x80) == 0x0 and (udp[10:1] & 0x1) == 0x1"
+    },
+    {
       "name": "eapol-start",
       "entry": "eapol",
       "select": [
@@ -2981,6 +3231,168 @@
         }
       ],
       "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000 and ether[17:1] == 64"
+    },
+    {
+      "name": "ntp-leap-no-warning",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "leap_indicator",
+          "value": 0
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0xc0) == 0x0"
+    },
+    {
+      "name": "ntp-leap-unsynchronized",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "leap_indicator",
+          "value": 3
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0xc0) == 0xc0"
+    },
+    {
+      "name": "ntp-version-4",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "version",
+          "value": 4
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0x38) == 0x20"
+    },
+    {
+      "name": "ntp-mode-client",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "mode",
+          "value": 3
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0x7) == 0x3"
+    },
+    {
+      "name": "ntp-mode-server",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "mode",
+          "value": 4
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0x7) == 0x4"
+    },
+    {
+      "name": "ntp-mode-broadcast",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "mode",
+          "value": 5
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0x7) == 0x5"
+    },
+    {
+      "name": "ntp-stratum-1",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "stratum",
+          "value": 1
+        }
+      ],
+      "expect": "udp port 123 and udp[9:1] == 1"
+    },
+    {
+      "name": "ntp-stratum-16-unsynchronized",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "stratum",
+          "value": 16
+        }
+      ],
+      "expect": "udp port 123 and udp[9:1] == 16"
+    },
+    {
+      "name": "ntp-poll-10",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "poll",
+          "value": 10
+        }
+      ],
+      "expect": "udp port 123 and udp[10:1] == 10"
+    },
+    {
+      "name": "ntp-precision-0xfa",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "precision",
+          "value": 250
+        }
+      ],
+      "expect": "udp port 123 and udp[11:1] == 250"
+    },
+    {
+      "name": "ntp-root-delay-0x1234",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "root_delay",
+          "value": 4660
+        }
+      ],
+      "expect": "udp port 123 and udp[12:4] == 4660"
+    },
+    {
+      "name": "ntp-root-dispersion-0x2345",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "root_dispersion",
+          "value": 9029
+        }
+      ],
+      "expect": "udp port 123 and udp[16:4] == 9029"
+    },
+    {
+      "name": "ntp-refid-gps",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "ref_id",
+          "value": 1196446496
+        }
+      ],
+      "expect": "udp port 123 and udp[20:4] == 1196446496"
+    },
+    {
+      "name": "ntp-client-v4-request",
+      "entry": "ntp",
+      "select": [
+        {
+          "field": "mode",
+          "value": 3
+        },
+        {
+          "field": "version",
+          "value": 4
+        },
+        {
+          "field": "leap_indicator",
+          "value": 3
+        }
+      ],
+      "expect": "udp port 123 and (udp[8:1] & 0xc0) == 0xc0 and (udp[8:1] & 0x38) == 0x20 and (udp[8:1] & 0x7) == 0x3"
     },
     {
       "name": "ospf-version-2",

@@ -1,0 +1,220 @@
+{
+  "stack": [
+    {
+      "layer": "Ether",
+      "fields": {
+        "src": "$ETH_SRC",
+        "dst": "$ETH_DST"
+      }
+    },
+    {
+      "layer": "IP",
+      "fields": {
+        "src": "$IP_SRC",
+        "dst": "$IP_DST",
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "UDP",
+      "fields": {
+        "sport": 12345,
+        "dport": 123,
+        "chksum": "$PIN"
+      }
+    },
+    {
+      "layer": "NTPHeader",
+      "fields": {
+        "leap": 0,
+        "version": 4,
+        "mode": 3,
+        "stratum": 2,
+        "poll": 10,
+        "precision": "0xfa",
+        "root_delay": 0,
+        "root_dispersion": 0,
+        "ref_id": 0
+      }
+    }
+  ],
+  "anchor": {
+    "header": "udp",
+    "base": 8
+  },
+  "headerLength": 48,
+  "fieldMap": {
+    "leap_indicator": "leap"
+  },
+  "probe": {
+    "stratum": ["0x0f", "0xf0"],
+    "poll": ["0x0f", "0xf0"],
+    "precision": ["0x0f", "0xf0"],
+    "root_delay": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "root_dispersion": ["0x0f0f0f0f", "0xf0f0f0f0"],
+    "ref_id": ["0x0f0f0f0f", "0xf0f0f0f0"]
+  },
+  "manual": {
+    "leap_indicator": "2 bits share byte 0 with version and mode; sub-byte field the leading-aligned probe model cannot map, so the mask/shift view is hand-declared per RFC 5905 §7.3 and crosscheck-verified",
+    "version": "3 bits share byte 0 with the leap indicator and mode; the mask/shift view is hand-declared per RFC 5905 §7.3 and crosscheck-verified",
+    "mode": "3 bits share byte 0 with the leap indicator and version; the mask/shift view is hand-declared per RFC 5905 §7.3 and crosscheck-verified"
+  },
+  "crosscheck": {
+    "leap_indicator": 2,
+    "version": 3,
+    "mode": 4,
+    "stratum": "0x5a",
+    "poll": "0x5a",
+    "precision": "0x5a",
+    "root_delay": "0x5a5a5a5a",
+    "root_dispersion": "0x5a5a5a5a",
+    "ref_id": "0x5a5a5a5a"
+  },
+  "fixtures": {
+    "leap_indicator": [0, 3],
+    "version": [4, 3],
+    "mode": [3, 4],
+    "stratum": [2, 16],
+    "poll": [10, 6],
+    "precision": ["0xfa", "0xfd"],
+    "root_delay": ["0x1234", "0x1235"],
+    "root_dispersion": ["0x2345", "0x2346"],
+    "ref_id": ["0x47505320", "0x474e5353"]
+  },
+  "vectors": [
+    {
+      "name": "ntp-leap-no-warning",
+      "select": [
+        {
+          "field": "leap_indicator",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "ntp-leap-unsynchronized",
+      "select": [
+        {
+          "field": "leap_indicator",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "ntp-version-4",
+      "select": [
+        {
+          "field": "version",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "name": "ntp-mode-client",
+      "select": [
+        {
+          "field": "mode",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "ntp-mode-server",
+      "select": [
+        {
+          "field": "mode",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "name": "ntp-mode-broadcast",
+      "select": [
+        {
+          "field": "mode",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "ntp-stratum-1",
+      "select": [
+        {
+          "field": "stratum",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "ntp-stratum-16-unsynchronized",
+      "select": [
+        {
+          "field": "stratum",
+          "value": 16
+        }
+      ]
+    },
+    {
+      "name": "ntp-poll-10",
+      "select": [
+        {
+          "field": "poll",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "name": "ntp-precision-0xfa",
+      "select": [
+        {
+          "field": "precision",
+          "value": 250
+        }
+      ]
+    },
+    {
+      "name": "ntp-root-delay-0x1234",
+      "select": [
+        {
+          "field": "root_delay",
+          "value": 4660
+        }
+      ]
+    },
+    {
+      "name": "ntp-root-dispersion-0x2345",
+      "select": [
+        {
+          "field": "root_dispersion",
+          "value": 9029
+        }
+      ]
+    },
+    {
+      "name": "ntp-refid-gps",
+      "select": [
+        {
+          "field": "ref_id",
+          "value": 1196446496
+        }
+      ]
+    },
+    {
+      "name": "ntp-client-v4-request",
+      "select": [
+        {
+          "field": "mode",
+          "value": 3
+        },
+        {
+          "field": "version",
+          "value": 4
+        },
+        {
+          "field": "leap_indicator",
+          "value": 3
+        }
+      ]
+    }
+  ]
+}

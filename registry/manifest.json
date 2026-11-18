@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026.11.25",
+  "registryVersion": "2026.11.26",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
     "arp.json": "sha256:460018a5c71d8b749edddbac5c92d0d03d2211bf37ea1cbca8b9f271a4d21456",
@@ -9,6 +9,7 @@
     "cdp.json": "sha256:89542fa820e297fca979cde812a964a2465e0d023889e88a8269903e67ba8579",
     "dhcp.json": "sha256:33de3a53720be7a9d2351e0301017c38544793cd5b19070810f459d792a8decf",
     "dhcpv6.json": "sha256:289579f3e49a78c0035eeefba45eef1a09a7fe4095876a850785698aa6a5aabe",
+    "dns.json": "sha256:992ba2cbd4ddc8ea4776e0ba7a85155d465f36f46ce37039e55bbc217580a576",
     "eapol.json": "sha256:c6e098bec093cfaa1cfcfcdaace1339e217cf3f7a64041c0f1287629c8b54a96",
     "eigrp.json": "sha256:aeac37a1dbb8d140782a6f9ce09051b600eeab1f91b0ad35eb9f1f6d0794ab8d",
     "esp.json": "sha256:adb40cba0908c9572e75f3f4de3ac917a91146ae1389f3d399503bdd18e8eb3f",
@@ -29,6 +30,7 @@
     "ldp.json": "sha256:5679feb40e777561e1bfa8b06847027414ec6bde5abee0fb06ed2165d331a30d",
     "lldp.json": "sha256:7b5be00b25df6b2c41d687793ae45b2db52cf593ea205d0c1154049787cdbf99",
     "mpls.json": "sha256:d57edf8913d8e88e44f8e1a09dfe667bbc37ef8c9c56c7ec76675f430ebf4880",
+    "ntp.json": "sha256:fe79ee71ca76d28c8d6bdc854129a70cbaccd705c248bbf9f7d5eaf1e0cb3da8",
     "ospf.json": "sha256:be49a2399082563861642712ff82b1c54d572679db99b8653db13a32174d434f",
     "ospfv3.json": "sha256:7eb91d6723a532673375abf662e4f3854fd0284e2e4dd889f69f60ca894ac9a2",
     "pim.json": "sha256:37f60a0bf69175e0c125fb9dbefd325a03237868e2b0ee2110379536995ef60f",
