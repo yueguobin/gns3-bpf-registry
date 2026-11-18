@@ -273,7 +273,10 @@ const UI = {
   vxlan: {fam:"tunnel", tunnel:true},
   arp:  {fam:"link"},
   icmp: {fam:"net"},
-  icmp6: {fam:"net"},
+  icmp6: {fam:"net",
+    successors:{type:{130:"mld", 131:"mld", 132:"mld", 143:"mld"}}},
+  mld:  {fam:"net",
+    tail:{label:{en:"MLDv2 Query Tail / Records", zh:"MLDv2 查询尾部 / 组记录"}, note:{en:"The 16-byte multicast address is the whole fixed window. MLDv2 queries continue past it with the S flag/QRV, QQIC and the source count (ICMPv6 bytes 24-27), and MLDv2 reports (type 143) replace it with a variable group-record list; v1 messages end at byte 16. A specific-group query, a v1 report and a done also carry the group in the IPv6 destination address, but the v2 report goes to ff02::16 regardless — the byte view is the only exact group filter.", zh:"16 字节组地址即全部固定窗口。MLDv2 查询在其后还有 S/QRV、QQIC 与源计数(ICMPv6 第 24-27 字节),MLDv2 报告(类型 143)则以变长组记录链取而代之;v1 报文止于第 16 字节。特定组查询、v1 报告与离开报文同时把组地址带入 IPv6 目的地址,而 v2 报告固定发往 ff02::16——字节视图是唯一精确的组过滤器。"}}},
   ah:  {fam:"net",
     tail:{label:{en:"ICV + Protected Payload", zh:"ICV + 受保护载荷"}, note:{en:"The variable-length Integrity Check Value depends on the SA's auth algorithm, then comes the authenticated (not encrypted) payload.", zh:"变长 ICV 取决于 SA 的认证算法,其后为经认证(未加密)的载荷。"}}},
   vrrp:  {fam:"net",
@@ -454,6 +457,24 @@ function prefix(i){ let n=0; for(let k=0;k<i;k++) n+=stack[k].len; return n; }
 function hex(v){return "0x"+v.toString(16)}
 function ip2int(s){return s.split(".").reduce((a,o)=>(a<<8)+ +o,0)>>>0}
 function mac2int(s){return parseInt(s.replace(/:/g,""),16)}
+/* Expand any RFC 4291 group-hex text form (including "::" compression)
+   to the four 32-bit words of the 128-bit address, or null if not an
+   address. Group-hex only: embedded dotted-quad tails are rejected —
+   registry values are always group-hex. Mirrors parse_ipv6 in
+   bpf_compile.py for registry values. */
+function ipv6words(s){
+  if(typeof s!=="string"||!s.includes(":")) return null;
+  let g;
+  const halves=s.split("::");
+  if(halves.length===2){
+    const l=halves[0]?halves[0].split(":"):[], r=halves[1]?halves[1].split(":"):[];
+    if(l.length+r.length>8) return null;
+    g=l.concat(Array(8-l.length-r.length).fill("0")).concat(r);
+  }else if(halves.length===1){ g=s.split(":"); if(g.length!==8) return null; }
+  else return null;
+  if(g.some(x=>!/^[0-9a-fA-F]{1,4}$/.test(x))) return null;
+  return [0,1,2,3].map(i=>((parseInt(g[i*2],16)<<16)|parseInt(g[i*2+1],16))>>>0);
+}
 function ipv4val(raw){ return raw.split(".").length===4 ? ip2int(raw) : parseInt(raw,0); }
 function fieldClause(sel){
   const li = stack.findIndex(s=>s.uid===sel.uid); if(li<0) return null;
@@ -473,11 +494,10 @@ function fieldClause(sel){
     return `(${a}[${o}:4] == ${hex(hi)} and ${a}[${o+4}:2] == ${hex(lo)})`;
   }
   else if(f.kind==="ipv6"){
-    const g = sel.dispVal.split(":").map(x=>parseInt(x||"0",16));
-    if(g.length!==8) return null;
-    const w = [0,1,2,3].map(i=>(((g[i*2]||0)<<16)|(g[i*2+1]||0))>>>0);
-    const o = prefix(li)+f.off;
-    return w.map((x,i)=>`ether[${o+i*4}:4] == ${hex(x)}`).join(" and ");
+    const w = ipv6words(sel.dispVal); if(!w) return null;
+    const o = drill? prefix(li)+f.off : e.base+f.off;
+    const a = drill? "ether" : e.anchor;
+    return "("+w.map((x,i)=>`${a}[${o+i*4}:4] == ${hex(x)}`).join(" and ")+")";
   }
   else val = +sel.val;
   const kw = drill? "ether" : e.anchor;
@@ -712,8 +732,7 @@ function commitValue(uid, fid, raw){
   else if(f.kind==="mac"){ sel.dispVal = raw; sel.val = mac2int(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
   else if(f.kind==="ipv4"){ sel.dispVal = raw; sel.val = ipv4val(raw); if(isNaN(sel.val)){editing=null;renderAll();return;} }
   else if(f.kind==="ipv6"){ sel.dispVal = raw;
-    const g = raw.split(":").map(x=>parseInt(x||"0",16));
-    if(g.length!==8){ editing=null; renderAll(); return; } }
+    if(!ipv6words(raw)){ editing=null; renderAll(); return; } }
   else { sel.dispVal = raw; sel.val = +raw; if(isNaN(sel.val)){editing=null;renderAll();return;} }
   sels = sels.filter(s=>!(s.uid===uid && s.fid===fid)); sels.push(sel);
   autoLink(uid, f);

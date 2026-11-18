@@ -29,6 +29,10 @@ ANCHOR_START = {
     "arp": 14,
     "ether": 0,
     "icmp": 34,
+    # Same assumption libpcap makes for its icmp6[] reads: the fixed
+    # 40-byte IPv6 base header directly after Ethernet (no extension
+    # headers, matching the ip6-anchored entries).
+    "icmp6": 54,
     "ip": 14,
     "ip6": 14,
     "tcp": 34,

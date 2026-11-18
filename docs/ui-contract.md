@@ -33,6 +33,7 @@ size with bit-width labels (48 / 16 / 24 ...).
   - `bitset` — one checkbox per declared bit
   - `ipv4` — dotted-quad input
   - `mac` — MAC-notation input
+  - `ipv6` — IPv6-notation input (any `::`-compressed group-hex form)
 - Encapsulation addresses and ports (listed in each entry's `excluded`
   with a primitive reason) are offered as **primitives** (`src`, `dst`,
   `port`, `ether src/dst`) — never as byte windows.
@@ -105,6 +106,10 @@ requirements:
   compile to the 4+2 two-load conjunction — the same shape libpcap
   emits for `ether host`:
   `(arp[18:4] == 0xaabbccdd and arp[22:2] == 0xeeff)`;
+- `ipv6` values parse in any `::`-compressed group-hex form
+  (`ff02::fb`, `2001:db8::1`, `::`) and compile to the 4x4 four-load
+  conjunction — the same shape libpcap emits for `ip6 host`:
+  `(icmp6[8:4] == 0xff020000 and icmp6[12:4] == 0x0 and icmp6[16:4] == 0x0 and icmp6[20:4] == 0xfb)`;
 - masked enums compile as `(addr & mask) == value << shift`;
 - bitset selections take a labels list (`flags: ["SYN"]`) or a numeric
   mask.

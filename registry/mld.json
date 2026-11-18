@@ -1,0 +1,28 @@
+{
+  "id": "mld",
+  "label": "MLD",
+  "rfc": [
+    "2710",
+    "3810"
+  ],
+  "notes": "MLD message body over ICMPv6 (RFC 2710; MLDv2 in RFC 3810). The icmp6 entry owns the 8-byte common header — in MLD those bytes 4-5 are the Maximum Response Delay, visible through the icmp6 identifier view — so this companion entry starts at the payload. The 16-byte multicast address is embedded in the message body, out of reach of host primitives, so it is a first-class ipv6 field (a 4x4-byte load conjunction, the same shape libpcap emits for `ip6 host`). A query for a specific group, an MLDv1 Report and a Done also carry the group in the IPv6 destination address, so dst primitives can prefilter them; the MLDv2 Report (type 143) is sent to ff02::16 regardless of its records, which is why the byte view is the only exact group filter. The address keeps this offset in MLDv2 queries (RFC 3810 §5.1); the MLDv2 query tail — S flag/QRV, QQIC and the source count at ICMPv6 bytes 24-27 — is query-specific and stays outside this fixed window, like the variable group-record list of MLDv2 Reports.",
+  "anchor": {
+    "header": "icmp6",
+    "base": 8
+  },
+  "locator": [
+    "ip6 proto 58"
+  ],
+  "headerLength": 16,
+  "fields": [
+    {
+      "id": "group_address",
+      "label": "Multicast Address",
+      "offset": 0,
+      "size": 16,
+      "kind": "ipv6",
+      "ref": "RFC 2710 §3; RFC 3810 §5.1",
+      "description": "The unspecified address :: in a general query; the queried, reported or left multicast group otherwise. MLDv2 Reports (type 143) carry group records instead of this field."
+    }
+  ]
+}
