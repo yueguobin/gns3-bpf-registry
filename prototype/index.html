@@ -53,12 +53,12 @@
     .pgroup{flex-direction:row; flex-wrap:wrap}
   }
   /* ---- boolean columns: each column is one operand of the final
-         expression; operator chips sit between adjacent columns ---- */
-  .cols{display:flex; gap:10px; overflow-x:auto; align-items:stretch; padding-bottom:6px}
-  .col{flex:1 0 830px; display:flex; flex-direction:column; border-radius:10px;
+         expression; columns stack vertically full-width and operator
+         bars sit between adjacent columns ---- */
+  .cols{display:flex; flex-direction:column; gap:10px}
+  .col{display:flex; flex-direction:column; border-radius:10px;
     outline:2px solid transparent; outline-offset:2px}
   .col.on{outline-color:#cbd5e1}
-  .col.empty{flex:0 0 320px}
   .colhead{display:flex; align-items:center; gap:6px; padding:0 2px 4px;
     font-size:10px; color:var(--muted); font-family:ui-monospace,monospace}
   .colhead .x{margin-left:auto; cursor:pointer; font-size:13px; color:var(--muted); padding:0 4px}
@@ -67,15 +67,22 @@
     display:flex; align-items:center; justify-content:center; text-align:center;
     color:var(--muted); font-size:12px}
   .col.droptarget .colempty{border-color:#0f172a; color:var(--ink)}
-  .opchip{flex:none; align-self:center; display:flex; flex-direction:column; align-items:center;
-    padding:12px 8px; border-radius:10px; border:1px solid var(--line); background:#fff;
-    cursor:pointer; user-select:none; font:700 13px/1 ui-monospace,monospace; min-width:52px}
-  .opchip:hover{border-color:#94a3b8}
-  .opchip.and{color:#166534; background:#f0fdf4; border-color:#bbf7d0}
-  .opchip.or{color:#1d4ed8; background:#eff6ff; border-color:#bfdbfe}
-  .opchip.not{color:#991b1b; background:#fef2f2; border-color:#fecaca}
-  .addcol{flex:none; align-self:stretch; width:60px; padding:0; border:2px dashed var(--line);
-    border-radius:10px; background:none; color:var(--muted); font-size:22px; line-height:1; cursor:pointer}
+  /* Operator bar: full-width divider between vertically stacked columns —
+     rule lines both sides, the pill in the middle keeps the and/or/not hue. */
+  .opbar{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+    font:700 13px/1 ui-monospace,monospace}
+  .opbar::before,.opbar::after{content:""; flex:1; border-top:2px solid var(--line)}
+  .opbar b{padding:5px 18px; border-radius:99px; border:1px solid var(--line); background:#fff;
+    min-width:52px; text-align:center}
+  .opbar.and::before,.opbar.and::after{border-color:#bbf7d0}
+  .opbar.or::before,.opbar.or::after{border-color:#bfdbfe}
+  .opbar.not::before,.opbar.not::after{border-color:#fecaca}
+  .opbar.and b{color:#166534; background:#f0fdf4; border-color:#bbf7d0}
+  .opbar.or b{color:#1d4ed8; background:#eff6ff; border-color:#bfdbfe}
+  .opbar.not b{color:#991b1b; background:#fef2f2; border-color:#fecaca}
+  .opbar:hover b{border-color:#94a3b8}
+  .addcol{padding:9px 0; border:2px dashed var(--line); border-radius:10px; background:none;
+    color:var(--muted); font-size:20px; line-height:1; cursor:pointer}
   .addcol:hover{border-color:#94a3b8; color:var(--ink)}
   .lrow.dropb{box-shadow:0 -4px 0 #0f172a}
   .lrow.dropa{box-shadow:0 4px 0 #0f172a}
@@ -87,7 +94,9 @@
     background:var(--lc); color:#fff; border-radius:7px 7px 0 0; cursor:grab}
   .lhead b{color:#fff}
   .lhead .meta{color:rgba(255,255,255,.85); font-size:11px; font-family:ui-monospace,monospace}
-  .lhead .del{margin-left:auto; color:rgba(255,255,255,.85); cursor:pointer}
+  /* Padded delete zone: generous hit area that never arms a drag. */
+  .lhead .del{margin-left:auto; margin-right:-8px; padding:6px 10px; border-radius:6px;
+    color:rgba(255,255,255,.85); cursor:pointer}
   .lhead .del:hover{color:#fff}
   /* ---- RFC-style 32-bit word grid ---- */
   .pwrap{display:flex; padding:12px 10px 10px; overflow-x:auto}
@@ -304,7 +313,7 @@ async function loadEntries(){
    field KIND no longer participates in coloring. */
 let groups = [{uid:1, op:null, layers:[]}], sels = [], editing = null;   // editing: {uid, fid}
 let selLayer = null, selGroup = 1, uidSeq = 0, gseq = 1;
-let famMan = new Map(), palFilter = "";   // palette: per-family manual open/close + search
+let famOpen = "link", palFilter = "";     // rail accordion: the ONE expanded family + search
 let drag = null, dropAt = null;           // brick run being dragged + remembered insert point
 
 /* ---------- column / stack helpers ----------
@@ -354,11 +363,13 @@ function colClick(gid){
   selGroup = gid;
   document.querySelectorAll(".col").forEach(c=>c.classList.toggle("on", +c.dataset.gid===gid));
 }
-/* ---------- brick drag & drop: the label strip arms the drag; rows take
-   precise insertions, column bodies take appends ---------- */
+/* ---------- brick drag & drop: the label strip arms the drag (minus the
+   × delete zone); rows take precise insertions, column bodies take appends ---------- */
 function armDrag(ev, row){
-  // Only the label strip starts a drag — cells must keep click/dblclick.
-  row.draggable = !!ev.target.closest(".lhead");
+  // Only the label strip starts a drag — cells must keep click/dblclick,
+  // and the padded × delete zone stays a pure click target: pressing it
+  // deletes the brick instead of dragging it out from under the cursor.
+  row.draggable = !!ev.target.closest(".lhead") && !ev.target.closest(".del");
 }
 function dragStart(ev, uid){
   const st = stackOf(uid), ti = tunnelIdx(st), li = st.findIndex(s=>s.uid===uid);
@@ -570,16 +581,15 @@ function focusCell(){
   if(c){ c.focus(); if(c.select) try{ c.select(); }catch(e){} }
 }
 function renderPalette(){
-  // Collapsible family groups + search: with dozens of protocols the rail
-  // stays short; candidateFams() auto-opens the families that can legally
-  // follow the ACTIVE column's top. Manual toggles are remembered and win
-  // over the auto hint — picking a brick never collapses the group it came
-  // from (famMan: absent = follow the hint).
-  const auto = candidateFams();
-  const isOpen = fam => famMan.has(fam) ? famMan.get(fam) : auto.has(fam);
+  // Accordion rail: exactly ONE family is expanded at a time — opening a
+  // group closes the previous one, and open state changes only by click.
+  // Picking a brick never collapses the group it came from (nothing
+  // re-shapes famOpen behind the user's back). Search is the one
+  // exception: with a term every group holding matches is expanded;
+  // clearing the search restores the accordion state.
   const q = palFilter.trim().toLowerCase();
   const rail = Object.keys(FAM).map(fam=>{
-    const open = q ? true : isOpen(fam);
+    const open = q ? true : famOpen===fam;
     const arrow = `<span class="arr">${open?"▾":"▸"}</span>`;
     if(fam==="custom"){
       if(q) return "";
@@ -597,24 +607,8 @@ function renderPalette(){
   document.getElementById("palette").innerHTML =
     `<input id="palfilter" class="palfilter" placeholder="${T("searchPh")}" value="${palFilter}" oninput="filterPal(this.value)">` + rail;
 }
-function candidateFams(){
-  // Which families can legally follow the ACTIVE column's top: the families
-  // of every successor target of the top layer's fields (+ link inside a
-  // tunnel). A column may still start with any protocol — every family is
-  // always listed; this only picks which auto-open as a hint.
-  const fams = new Set(["custom"]);
-  const st = activeGroup().layers;
-  if(!st.length){ fams.add("link"); return fams; }
-  const last = ENTRIES[st[st.length-1].eid];
-  if(last.tunnel) fams.add("link");
-  for(const f of last.fields||[])
-    for(const t of Object.values(f.successor||{}))
-      if(ENTRIES[t]) fams.add(ENTRIES[t].fam);
-  return fams;
-}
-function toggleFam(fam){
-  const auto = candidateFams();
-  famMan.set(fam, !(famMan.has(fam) ? famMan.get(fam) : auto.has(fam)));
+function toggleFam(fam){        // accordion: opening one family collapses the rest
+  famOpen = famOpen===fam ? null : fam;
   renderPalette();
 }
 function filterPal(v){
@@ -845,7 +839,7 @@ function renderStack(){
   groups.forEach((g,gi)=>{
     if(gi>0){
       const tt = g.op==="or" ? T("opTtOr") : g.op==="not" ? T("opTtNot") : T("opTtAnd");
-      html += `<div class="opchip ${g.op}" title="${tt}" onclick="cycleOp(${g.uid})">${g.op}</div>`;
+      html += `<div class="opbar ${g.op}" title="${tt}" onclick="cycleOp(${g.uid})"><b>${g.op}</b></div>`;
     }
     html += colHTML(g, gi);
   });
