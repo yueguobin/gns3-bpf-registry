@@ -3233,6 +3233,265 @@
       "expect": "ether proto 34887 and (ether[14:4] & 0xfffff000) == 0x10000 and ether[17:1] == 64"
     },
     {
+      "name": "nhrp-address-family-ip",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "address_family",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 54 and ip[20:2] == 0x1"
+    },
+    {
+      "name": "nhrp-protocol-type-ethertype-ipv4",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "protocol_type",
+          "value": 2048
+        }
+      ],
+      "expect": "ip proto 54 and ip[22:2] == 0x800"
+    },
+    {
+      "name": "nhrp-hop-count-64",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "hop_count",
+          "value": 64
+        }
+      ],
+      "expect": "ip proto 54 and ip[29:1] == 64"
+    },
+    {
+      "name": "nhrp-packet-size-28",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "packet_size",
+          "value": 28
+        }
+      ],
+      "expect": "ip proto 54 and ip[30:2] == 28"
+    },
+    {
+      "name": "nhrp-checksum-0x1234",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "checksum",
+          "value": 4660
+        }
+      ],
+      "expect": "ip proto 54 and ip[32:2] == 4660"
+    },
+    {
+      "name": "nhrp-extension-offset-0",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "extension_offset",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 54 and ip[34:2] == 0"
+    },
+    {
+      "name": "nhrp-version-nhrp",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "version",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 54 and ip[36:1] == 0x1"
+    },
+    {
+      "name": "nhrp-op-resolution-request",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x1"
+    },
+    {
+      "name": "nhrp-op-resolution-reply",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 2
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x2"
+    },
+    {
+      "name": "nhrp-op-registration-request",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 3
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x3"
+    },
+    {
+      "name": "nhrp-op-registration-reply",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x4"
+    },
+    {
+      "name": "nhrp-op-purge-request",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 5
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x5"
+    },
+    {
+      "name": "nhrp-op-purge-reply",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 6
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x6"
+    },
+    {
+      "name": "nhrp-op-error-indication",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 7
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x7"
+    },
+    {
+      "name": "nhrp-op-traffic-indication",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "op_type",
+          "value": 8
+        }
+      ],
+      "expect": "ip proto 54 and ip[37:1] == 0x8"
+    },
+    {
+      "name": "nhrp-shtl-4",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "shtl",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 54 and ip[38:1] == 4"
+    },
+    {
+      "name": "nhrp-sstl-0",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "sstl",
+          "value": 0
+        }
+      ],
+      "expect": "ip proto 54 and ip[39:1] == 0"
+    },
+    {
+      "name": "nhrp-src-proto-len-4",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "src_proto_len",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 54 and ip[40:1] == 4"
+    },
+    {
+      "name": "nhrp-dst-proto-len-4",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "dst_proto_len",
+          "value": 4
+        }
+      ],
+      "expect": "ip proto 54 and ip[41:1] == 4"
+    },
+    {
+      "name": "nhrp-flags-router",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "Q"
+          ]
+        }
+      ],
+      "expect": "ip proto 54 and (ip[42:2] & 0x8000) == 0x8000"
+    },
+    {
+      "name": "nhrp-flags-authoritative",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "A"
+          ]
+        }
+      ],
+      "expect": "ip proto 54 and (ip[42:2] & 0x4000) == 0x4000"
+    },
+    {
+      "name": "nhrp-flags-nat",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "flags",
+          "flags": [
+            "NAT"
+          ]
+        }
+      ],
+      "expect": "ip proto 54 and (ip[42:2] & 0x2) == 0x2"
+    },
+    {
+      "name": "nhrp-request-id-1",
+      "entry": "nhrp",
+      "select": [
+        {
+          "field": "request_id",
+          "value": 1
+        }
+      ],
+      "expect": "ip proto 54 and ip[44:4] == 1"
+    },
+    {
       "name": "ntp-leap-no-warning",
       "entry": "ntp",
       "select": [

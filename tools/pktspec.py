@@ -84,6 +84,7 @@ from scapy.fields import (
     LongField,
     MACField,
     PacketListField,
+    ShortEnumField,
     ShortField,
     StrFixedLenField,
     XShortField,
@@ -106,6 +107,7 @@ from scapy.layers.ppp import PPPoED
 from scapy.layers.rip import RIP
 from scapy.layers.sctp import SCTP
 from scapy.layers.vxlan import VXLAN
+from scapy.utils import checksum as ip_checksum
 
 
 class EIGRPHeader(_ScapyEIGRP):
@@ -455,6 +457,85 @@ class DNSHeader(Packet):
     ]
 
 
+class NHRPHeader(Packet):
+    """NHRP fixed header + mandatory common header per RFC 2332 sections 5.1
+    and 5.2.0.1.
+
+    scapy 2.8 ships no NHRP layer. The 20-octet fixed part plus the
+    8-octet mandatory common header (Src/Dst Proto Len, Flags, Request
+    ID) sit at fixed offsets in every packet type, so the layer models
+    exactly those 28 octets; the variable tail (source NBMA
+    address/subaddress bounded by shtl/sstl, the protocol addresses
+    bounded by their length bytes, the CIE list and the extension TLVs)
+    follows and stays outside the filter window. The 5-octet ar$pro.snap
+    long-form protocol ID is one 40-bit word that the registry excludes:
+    it exceeds the 4-byte BPF load window and is only populated when
+    ar$pro.type = 0x0080, which never happens over IP (RFC 2332
+    section 5.1 mandates the short Ethertype form when one exists). The
+    Flags word means Q/A/D/U/S in Resolution messages, only the top bit
+    (Uniqueness) in Registration and only the top bit (N) in Purge;
+    Error and Traffic Indications repurpose bytes 22-27 as unused/error
+    code/error offset. The class keeps the raw words and the registry
+    labels the bits per message type. The checksum is the standard IP
+    checksum over the whole NHRP packet, computed in post_build whenever
+    it is not pinned.
+    """
+
+    fields_desc = [
+        ShortEnumField(
+            "afn",
+            1,
+            {
+                1: "IP",
+                2: "IPv6",
+                3: "NSAP",
+                8: "E.164",
+                15: "ATM (NSAP with subaddress)",
+                21: "E.164 with ATM subaddress",
+            },
+        ),
+        ShortEnumField(
+            "pro_type",
+            0x0800,
+            {0x0080: "SNAP long form", 0x00CC: "NLPID IP", 0x0800: "Ethertype IPv4"},
+        ),
+        BitField("pro_snap", 0, 40),
+        ByteField("hopcnt", 255),
+        ShortField("pktsz", 28),
+        XShortField("chksum", None),
+        ShortField("extoff", 0),
+        ByteEnumField("version", 1, {0: "MARS", 1: "NHRP"}),
+        ByteEnumField(
+            "op_type",
+            3,
+            {
+                1: "Resolution Request",
+                2: "Resolution Reply",
+                3: "Registration Request",
+                4: "Registration Reply",
+                5: "Purge Request",
+                6: "Purge Reply",
+                7: "Error Indication",
+                8: "Traffic Indication",
+            },
+        ),
+        ByteField("shtl", 4),
+        ByteField("sstl", 0),
+        ByteField("srcprotolen", 4),
+        ByteField("dstprotolen", 4),
+        ShortField("flags", 0),
+        IntField("request_id", 0),
+    ]
+
+    def post_build(self, pkt: bytes, pay: bytes) -> bytes:
+        if self.chksum is None:
+            data = pkt + pay
+            if len(data) % 2:
+                data += b"\x00"
+            pkt = pkt[:12] + ip_checksum(data).to_bytes(2, "big") + pkt[14:]
+        return pkt
+
+
 from bpf_compile import ROOT, CompileError, parse_int, parse_ipv4, parse_mac
 
 RECIPES_DIR = ROOT / "recipes"
@@ -498,6 +579,7 @@ LAYERS = {
         LLDPDUPortID,
         LLDPDUTimeToLive,
         MPLSHeader,
+        NHRPHeader,
         NTPHeader,
         OSPF_Hdr,
         OSPFv3_Hdr,
