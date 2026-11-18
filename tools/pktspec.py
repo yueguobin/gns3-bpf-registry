@@ -72,6 +72,7 @@ from scapy.contrib.ospf import OSPF_Hdr, OSPFv3_Hdr
 from scapy.contrib.pim import PIMv2Hdr
 from scapy.contrib.ripng import RIPng
 from scapy.contrib.rsvp import RSVP
+from scapy.contrib.tacacs import TacacsHeader
 from scapy.fields import (
     BitEnumField,
     BitField,
@@ -509,6 +510,7 @@ LAYERS = {
         SCTP,
         SRH,
         STP,
+        TacacsHeader,
         TCP,
         UDP,
         VRRPHeader,

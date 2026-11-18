@@ -1,0 +1,112 @@
+{
+  "id": "tacacsplus",
+  "label": "TACACS+",
+  "rfc": [
+    "RFC 8907"
+  ],
+  "notes": "TACACS+ Device Administration AAA (RFC 8907) over TCP port 49. The 12-byte fixed header of RFC 8907 section 4.1 is modelled; the body that follows (the START/REPLY/CONTINUE and REQUEST/REPLY structures of sections 5-7) is variable-length and, unless the unencrypted flag is set, obfuscated with an MD5 pseudo-pad keyed by session_id, version and seq_no (section 4.5), so it is not modelled. A TCP connection carries one session by default; once single-connection mode is negotiated in the first two packets (section 4.3), sessions are multiplexed on it and told apart by session_id. The anchor base 20 assumes a TCP header without options, the same fixed-header convention as the IP anchor.",
+  "anchor": {
+    "header": "tcp",
+    "base": 20
+  },
+  "locator": [
+    "tcp port 49"
+  ],
+  "headerLength": 12,
+  "fields": [
+    {
+      "id": "version",
+      "label": "Version",
+      "offset": 0,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8907 §4.1",
+      "values": [
+        {
+          "value": 192,
+          "label": "TACACS+ 1.0"
+        },
+        {
+          "value": 193,
+          "label": "TACACS+ 1.1"
+        }
+      ],
+      "description": "Version byte packing the 4-bit major version in the high nibble and the 4-bit minor version in the low nibble; the major version is 0xc, so only 0xc0 and 0xc1 appear on the wire. Minor version 1 is used solely by PAP, CHAP and MS-CHAP login; ASCII authentication, authorization and accounting all run minor version 0 (section 5.4.1)."
+    },
+    {
+      "id": "type",
+      "label": "Packet Type",
+      "offset": 1,
+      "size": 1,
+      "kind": "enum",
+      "ref": "RFC 8907 §4.1",
+      "values": [
+        {
+          "value": 1,
+          "label": "Authentication"
+        },
+        {
+          "value": 2,
+          "label": "Authorization"
+        },
+        {
+          "value": 3,
+          "label": "Accounting"
+        }
+      ],
+      "description": "Which of the three TACACS+ exchanges the packet belongs to; it fixes the layout of the body that follows the header."
+    },
+    {
+      "id": "seq_no",
+      "label": "Sequence Number",
+      "offset": 2,
+      "size": 1,
+      "kind": "number",
+      "ref": "RFC 8907 §4.1",
+      "min": 1,
+      "max": 255,
+      "description": "Per-session counter: the first packet of a session carries 1 and each subsequent packet increments it by one; odd values are client requests and even values server replies. A RESTART status makes the client begin again with a new session_id and seq_no 1 (section 5.4.3)."
+    },
+    {
+      "id": "flags",
+      "label": "Flags",
+      "offset": 3,
+      "size": 1,
+      "kind": "bitset",
+      "ref": "RFC 8907 §4.1",
+      "bits": [
+        {
+          "mask": 1,
+          "label": "Unencrypted"
+        },
+        {
+          "mask": 4,
+          "label": "Single connection"
+        }
+      ],
+      "description": "Unencrypted marks the body as cleartext instead of MD5-obfuscated; it is deprecated and must not be used in production (section 4.5). Single connection is set in the first two packets of a TCP connection to negotiate multiplexing several sessions over it (section 4.3). The remaining bits are unused."
+    },
+    {
+      "id": "session_id",
+      "label": "Session ID",
+      "offset": 4,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 8907 §4.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Identifier randomly chosen by the client for each session; it ties together the packets of one authentication, authorization or accounting exchange and seeds the body obfuscation pad (section 4.5)."
+    },
+    {
+      "id": "length",
+      "label": "Body Length",
+      "offset": 8,
+      "size": 4,
+      "kind": "number",
+      "ref": "RFC 8907 §4.1",
+      "min": 0,
+      "max": 4294967295,
+      "description": "Size of the packet body in octets, excluding the 12-byte header; the bare-header error reply of section 3.6 carries 0."
+    }
+  ]
+}
