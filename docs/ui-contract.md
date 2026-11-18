@@ -127,6 +127,14 @@ requirements:
 
 ## 6. Registry-side notes
 
+- Boot: the UI fetches `registry/manifest.json`, then every listed
+  entry file **in parallel** (they are independent — no ordering), and
+  shows a spinner + per-file progress (STR keys `loading` /
+  `loadingProg`) until the palette can render. Port the same feedback
+  instead of a blank screen: with dozens of entries the fetch phase is
+  the page's only perceptible wait. `registry/` may sit beside the
+  page (flat Pages bundle) or one level up (repo-root serving) — probe
+  `registry/…` then `../registry/…`; do not hardcode one layout.
 - Layer lengths come from `headerLength`; nothing else is needed for
   the stack builder.
 - Optional future enhancement: a layer-category marker

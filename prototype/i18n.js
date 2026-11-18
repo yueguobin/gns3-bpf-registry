@@ -46,6 +46,8 @@ const STR = {
     warnTitle:"Structure mismatch: with this encapsulation the condition never matches",
     hintTitle:"Structure hint",
     pinWarnGeneric:"Tunnel optional fields set: inner-packet offsets below assume the base header",
+    loading:"Loading protocol registry…",
+    loadingProg:(d,n)=>`Loading protocols… ${d} / ${n}`,
     loadFail:"Cannot load registry/*.json next to the page.\nServe the repository over HTTP and open the page from there:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
   },
   zh:{
@@ -77,6 +79,8 @@ const STR = {
     warnTitle:"结构不符:按此封装,该条件永不匹配",
     hintTitle:"结构提示",
     pinWarnGeneric:"隧道可选字段置位:以下内层偏移按基本头计算",
+    loading:"正在加载协议注册表…",
+    loadingProg:(d,n)=>`正在加载协议… ${d} / ${n}`,
     loadFail:"无法加载页面旁的 registry/*.json。\n请通过 HTTP 提供本仓库后再打开页面:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
   },
 };
