@@ -12,17 +12,22 @@
   h1{font-size:18px; margin-bottom:4px}
   .sub{color:var(--muted); font-size:12px; margin-bottom:14px}
   /* ---- two-column layout: construction on the left, sticky brick rail on the right.
-         The rail is a full-viewport sticky column; the palette card is flex-centered
-         INSIDE it — deterministic screen-centering, no transform math, never clipped. ---- */
+         The rail column is a full-viewport sticky column; the palette card inside
+         is itself sticky at top:20vh — the sticky constraint pushes the card down
+         to 20% viewport height both at load (its flow position sits below the
+         header, ~9%) and while scrolling (the column pins at top:0), so the card
+         top edge rests at 20% in every scroll state. max-height covers the
+         remaining 80vh so the card never clips below the fold. ---- */
   .layout{display:flex; gap:14px; align-items:flex-start}
   .main{flex:1; min-width:0}
   .sidebar{flex:none; width:172px; position:sticky; top:0; height:100vh;
-    display:flex; align-items:center; margin-bottom:-100vh}
-  .sidebar .card{width:100%; margin:0; max-height:calc(100vh - 24px); overflow-y:auto}
+    display:flex; align-items:flex-start; margin-bottom:-100vh}
+  .sidebar .card{width:100%; margin:0; position:sticky; top:20vh;
+    max-height:calc(80vh - 24px); overflow-y:auto}
   @media (max-width:920px){
     .layout{flex-direction:column-reverse}
     .sidebar{position:static; height:auto; margin-bottom:0}
-    .sidebar .card{max-height:none; overflow:visible}
+    .sidebar .card{position:static; max-height:none; overflow:visible}
   }
   .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; box-shadow:0 1px 2px rgba(15,23,42,.04)}
   .card h2{font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px}
