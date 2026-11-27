@@ -122,6 +122,14 @@ its clauses bare, exactly like the single-stack model above.
   (`ip6`, `udp port`) but does **not** shift `ether[]` reads: with an
   outer VLAN tag, every absolute `ether[N]` carries the extra 4 bytes
   by hand (compile output verified: `ldb [97]` reads raw offset 97).
+- The VLAN slot is **repeatable** for QinQ (802.1ad double tagging):
+  repeat the primitive once per tag, **outer tag first** (`vlan 100 and
+  vlan 200`). libpcap matches TPIDs 0x8100 / 0x88a8 / 0x9100 at every
+  level and shifts its decoder offsets per keyword, so the chain
+  reaches the inner tag without a dedicated QinQ entry. With two tags,
+  protocol keywords shift by 8 and absolute `ether[]` reads carry 8
+  extra bytes by hand. Golden vectors record the slot as a scalar
+  (single tag) or a list (stacked, outer first).
 - IPv6 extension headers are **declared layers**: built-in layouts for
   the standard headers (mind the length units — most are 8-byte
   multiples, AH is 4-byte), `Next Header` filled from the chain. A
@@ -158,7 +166,10 @@ requirements:
   `(icmp6[8:4] == 0xff020000 and icmp6[12:4] == 0x0 and icmp6[16:4] == 0x0 and icmp6[20:4] == 0xfb)`;
 - masked enums compile as `(addr & mask) == value << shift`;
 - bitset selections take a labels list (`flags: ["SYN"]`) or a numeric
-  mask.
+  mask;
+- the VLAN slot takes one ID or a list (outer tag first) and emits one
+  `vlan <id>` primitive per ID, joined with `and`, leading the
+  expression (`vlan 100 and vlan 200 and ...`).
 
 ## 6. Registry-side notes
 

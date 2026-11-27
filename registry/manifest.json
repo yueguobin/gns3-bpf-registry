@@ -48,7 +48,7 @@
     "tacacsplus.json": "sha256:d70a17045746ed2d82f27565d7fac913e63ab5aff3afe3473aa3f912322bcfbc",
     "tcp.json": "sha256:65404c7e59b96b1dfa54be5ae84e93925bbc64fee4fd6a00515e4e1473f33a49",
     "udp.json": "sha256:aed8fb53877611be703db077ddd83013fc03e49b3dddaab7513274cfce8dc780",
-    "vlan.json": "sha256:7587194677d749b394af3a4b3bf622ef6af3ab0bea74f6a4bf7813d14d0317ae",
+    "vlan.json": "sha256:563d6215fc948163b023ac538abd0e3605f561cd76cfa43c84bd7ccdd1292b2d",
     "vrrp.json": "sha256:63ecc4b60cb07c72fcd8e2370fdfdb8bddeb16576cb5c26a897160a30a840c32",
     "vxlan.json": "sha256:8b9e259391b337a9d24291490b524d17e3f266f7dca37610dda7f00adcc4d0fb"
   }

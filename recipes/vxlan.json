@@ -122,6 +122,16 @@
       ]
     },
     {
+      "name": "vxlan-vni-100-vlan-100-200",
+      "vlan": [100, 200],
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        }
+      ]
+    },
+    {
       "name": "vxlan-reserved-0",
       "select": [
         {

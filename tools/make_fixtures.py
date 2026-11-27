@@ -16,7 +16,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from scapy.all import Dot1Q, Ether, IP, Raw, UDP, wrpcap
+from scapy.all import Dot1AD, Dot1Q, Ether, IP, Raw, UDP, wrpcap
 from scapy.layers.vxlan import VXLAN
 
 from bpf_compile import ROOT, CompileError, load_registry
@@ -117,6 +117,28 @@ def _vlan_ipv4(vlan: int, ttl: int):
     )
 
 
+def _qinq_vxlan(outer: int, inner: int):
+    """Double-tagged frame: 802.1ad (0x88a8) S-tag over an 802.1Q C-tag."""
+    return (
+        _ether()
+        / Dot1AD(vlan=outer)
+        / Dot1Q(vlan=inner)
+        / IP(src=IP_SRC, dst=IP_DST)
+        / UDP(sport=UDP_SPORT, dport=4789)
+        / VXLAN(flags=0x08, vni=VXLAN_VNI)
+    )
+
+
+def _qinq_ipv4(outer: int, inner: int, ttl: int):
+    return (
+        _ether()
+        / Dot1AD(vlan=outer)
+        / Dot1Q(vlan=inner)
+        / IP(src=IP_SRC, dst=IP_DST, ttl=ttl)
+        / Raw(b"")
+    )
+
+
 def _vlan_slot_cases(registry: dict):
     if "vxlan" in registry:
         select = [{"field": "vni", "value": VXLAN_VNI}]
@@ -161,6 +183,60 @@ def _vlan_slot_cases(registry: dict):
             "select": select,
             "vlan": 100,
             "packet": _vlan_ipv4(101, 64),
+            "expect_match": False,
+        }
+
+    if "vxlan" in registry:
+        select = [{"field": "vni", "value": VXLAN_VNI}]
+        yield {
+            "name": "vxlan/vlan_qinq_pos",
+            "entry": registry["vxlan"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _qinq_vxlan(100, 200),
+            "expect_match": True,
+        }
+        yield {
+            "name": "vxlan/vlan_qinq_neg_outer",
+            "entry": registry["vxlan"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _qinq_vxlan(101, 200),
+            "expect_match": False,
+        }
+        yield {
+            "name": "vxlan/vlan_qinq_neg_inner",
+            "entry": registry["vxlan"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _qinq_vxlan(100, 201),
+            "expect_match": False,
+        }
+        yield {
+            "name": "vxlan/vlan_qinq_single_tag_neg",
+            "entry": registry["vxlan"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _vlan_vxlan(100),
+            "expect_match": False,
+        }
+
+    if "ipv4" in registry:
+        select = [{"field": "ttl", "value": 64}]
+        yield {
+            "name": "ipv4/vlan_qinq_pos",
+            "entry": registry["ipv4"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _qinq_ipv4(100, 200, 64),
+            "expect_match": True,
+        }
+        yield {
+            "name": "ipv4/vlan_qinq_neg",
+            "entry": registry["ipv4"],
+            "select": select,
+            "vlan": [100, 200],
+            "packet": _qinq_ipv4(101, 200, 64),
             "expect_match": False,
         }
 
