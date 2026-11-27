@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* prototype/i18n.js — UI-chrome strings and the lookup helpers.
    English is the default language; Chinese is optional and complete.
 
@@ -56,6 +57,7 @@ const STR = {
     loading:"Loading protocol registry…",
     loadingProg:(d,n)=>`Loading protocols… ${d} / ${n}`,
     loadFail:"Cannot load registry/*.json next to the page.\nServe the repository over HTTP and open the page from there:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
+    lic:"Open source under the GPL-3.0-only license",
   },
   zh:{
     title:"BPF 表达式可视化计算器",
@@ -96,6 +98,7 @@ const STR = {
     loading:"正在加载协议注册表…",
     loadingProg:(d,n)=>`正在加载协议… ${d} / ${n}`,
     loadFail:"无法加载页面旁的 registry/*.json。\n请通过 HTTP 提供本仓库后再打开页面:\n\n  python3 -m http.server\n  http://localhost:8000/prototype/",
+    lic:"开源项目,基于 GPL-3.0-only 许可发布",
   },
 };
 

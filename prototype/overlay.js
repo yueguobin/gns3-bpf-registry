@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* prototype/overlay.js — per-protocol UI data (the UI overlay).
    Localized text here is DATA, not chrome: each note travels with its
    protocol as an inline {en, zh} object resolved through L() from

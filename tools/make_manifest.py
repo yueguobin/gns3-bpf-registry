@@ -38,6 +38,7 @@ def build_manifest() -> dict:
 
     return {
         "schemaVersion": 1,
+        "license": "GPL-3.0-only",
         "registryVersion": version,
         "files": files,
     }
