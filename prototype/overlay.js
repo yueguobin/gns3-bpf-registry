@@ -26,8 +26,8 @@ const FAM = {
    registry models VLAN as a primitive — and the custom layer). */
 const UI = {
   ethernet: {fam:"link",
-    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp", 34958:"eapol", 34915:"pppoe", 34916:"pppoe"}},
-    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"},{v:34958, l:"EAPOL"},{v:34915, l:"PPPoE Discovery"},{v:34916, l:"PPPoE Session"}]},
+    successors:{ether_type:{2048:"ipv4", 2054:"arp", 33024:"vlan", 34984:"vlan", 34525:"ipv6", 35020:"lldp", 8192:"cdp", 34887:"mpls", 34825:"lacp", 34958:"eapol", 34915:"pppoe", 34916:"pppoe"}},
+    enumAdds:{ether_type:[{v:35020, l:"LLDP"},{v:8192, l:"CDP"},{v:34887, l:"MPLS"},{v:34825, l:"LACP"},{v:34958, l:"EAPOL"},{v:34915, l:"PPPoE Discovery"},{v:34916, l:"PPPoE Session"},{v:34984, l:"802.1ad"}]},
     primitives:{dst:{p:"ether dst", kind:"mac", label:"Destination MAC"},
                 src:{p:"ether src", kind:"mac", label:"Source MAC"}}},
   ipv4: {fam:"net",
@@ -154,7 +154,9 @@ const SYN = {
              {id:"vid", label:"VID", off:0, win:2, mask:0x0fff, kind:"number",
               excl:{reason:{en:"VLAN primitive; must lead the expression", zh:"VLAN 原语,须置于表达式首位"}, primitive:"vlan"}},
              {id:"type", label:"EtherType", off:2, len:2, kind:"enum",
-              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"}],
-              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp"}}]},
+              values:[{v:2048,l:"IPv4"},{v:34525,l:"IPv6"},{v:2054,l:"ARP"},
+                      {v:33024,l:"802.1Q"},{v:34984,l:"802.1ad"}],
+              successor:{2048:"ipv4", 34525:"ipv6", 2054:"arp",
+                         33024:"vlan", 34984:"vlan"}}]},
   custom: {label:{en:"Custom", zh:"自定义层"}, len:12, anchor:null, fam:"custom", custom:true, fields:[]},
 };
