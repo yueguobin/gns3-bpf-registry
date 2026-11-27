@@ -458,6 +458,11 @@ function fieldClause(st, sel){
   const ti = tunnelIdx(st), drill = ti>=0 && li>ti;
   if(!drill && f.excl && f.excl.primitive)
     return f.excl.primitive+" "+sel.dispVal;
+  // Stacked pre-tunnel VLAN tags shift every absolute ether[] read by 4
+  // bytes apiece: tag k sits at 14 + 4×(preceding tags). Protocol keywords
+  // shift on their own inside libpcap — only raw reads need this by hand.
+  const tagShift = (!drill && layer.eid==="vlan")
+    ? 4 * st.filter((x,i)=>x.eid==="vlan" && i<li && (ti<0 || i<ti)).length : 0;
   const win = f.win||f.len;
   let val;
   if(f.kind==="enum") val = sel.val;
@@ -465,19 +470,19 @@ function fieldClause(st, sel){
   else if(f.kind==="mac"){
     const m = mac2int(sel.dispVal);
     const hi = Math.floor(m / 0x10000), lo = m % 0x10000;
-    const o = drill? prefix(st,li)+f.off : e.base+f.off;
+    const o = drill? prefix(st,li)+f.off : e.base+f.off+tagShift;
     const a = drill? "ether" : e.anchor;
     return `(${a}[${o}:4] == ${hex(hi)} and ${a}[${o+4}:2] == ${hex(lo)})`;
   }
   else if(f.kind==="ipv6"){
     const w = ipv6words(sel.dispVal); if(!w) return null;
-    const o = drill? prefix(st,li)+f.off : e.base+f.off;
+    const o = drill? prefix(st,li)+f.off : e.base+f.off+tagShift;
     const a = drill? "ether" : e.anchor;
     return "("+w.map((x,i)=>`${a}[${o+i*4}:4] == ${hex(x)}`).join(" and ")+")";
   }
   else val = +sel.val;
   const kw = drill? "ether" : e.anchor;
-  const o  = drill? prefix(st,li)+f.off : e.base+f.off;
+  const o  = drill? prefix(st,li)+f.off : e.base+f.off+tagShift;
   if(f.mask){ const sh=f.shift||0; return `(${kw}[${o}:${win}] & ${hex(f.mask)}) == ${hex(val*Math.pow(2,sh))}`; }
   if(f.kind==="bitset"){ const m=sel.bitMask; return `(${kw}[${o}:${win}] & ${hex(m)}) == ${hex(m)}`; }
   return `${kw}[${o}:${win}] == ${(f.emitKind||f.kind)==="number"?val:hex(val)}`;
@@ -497,13 +502,14 @@ function guards(st){
 function compileGroup(st){
   const ti = tunnelIdx(st);
   const clauses = guards(st).map(g=>g.e);
-  // VLAN slot: a VLAN layer declared before the tunnel (or with no tunnel)
-  // always leads the expression — the `vlan` keyword shifts every following
-  // protocol keyword (ip/tcp/port, including the tunnel locator) past the
-  // 4-byte tag, while raw ether[] reads stay absolute. VLAN layers inside
-  // the tunnel payload are plain drill layers (raw reads only).
-  const vli = st.findIndex(s=>s.eid==="vlan" && (ti<0 || st.indexOf(s)<ti));
-  const vsel = vli>=0 ? sels.find(s=>s.uid===st[vli].uid && s.fid==="vid") : null;
+  // VLAN slots: every VLAN layer declared before the tunnel (or with no
+  // tunnel) leads the expression as one chained `vlan` keyword each, stack
+  // order (outer tag first) — that is QinQ. The keywords shift every
+  // following protocol keyword (ip/tcp/port, including the tunnel locator)
+  // past all tags, while raw ether[] reads stay absolute. VLAN layers
+  // inside the tunnel payload are plain drill layers (raw reads only).
+  const vslots = st.map((s,i)=>({l:s,i}))
+    .filter(x=>x.l.eid==="vlan" && (ti<0 || x.i<ti));
   // Locators: payload-anchored entries (ospf/dhcp/esp/gre/stp/lldp/vxlan)
   // must carry their locator clause, or udp[N]/ip[N] would match ANY udp/ip
   // packet. Mirrors bpf_compile: single locator bare, several as (a or b).
@@ -520,15 +526,24 @@ function compileGroup(st){
     if(!locs.includes(c)) locs.push(c);
   }
   for(const sl of st){                              // bpf_compile order: column layers,
+    const sli = st.indexOf(sl);
     for(const f of ENTRIES[sl.eid].fields){         // registry declaration order within
       const s = sels.find(x=>x.uid===sl.uid && x.fid===f.id);
-      if(!s || s===vsel) continue;                  // vsel is emitted below, in the VLAN slot
+      if(!s) continue;
+      if(sl.eid==="vlan" && f.id==="vid" && (ti<0 || sli<ti))
+        continue;                                   // pre-tunnel VID rides in the VLAN slots below
       const c = fieldClause(st, s); if(c) clauses.push(c);
     }
   }
   if(locs.length) clauses.unshift(...locs);
-  if(vli>=0 && (clauses.length || vsel))
-    clauses.unshift(vsel ? `vlan ${vsel.val}` : "vlan");
+  const vkeys = [];
+  for(const {l} of vslots){
+    const v = sels.find(s=>s.uid===l.uid && s.fid==="vid");
+    if(v) vkeys.push(`vlan ${v.val}`);              // a valued tag always emits
+    else if(clauses.length || vkeys.length)
+      vkeys.push("vlan");                           // bare keyword only when it has company
+  }
+  if(vkeys.length) clauses.unshift(...vkeys);
   return clauses.length? clauses.join(" and ") : null;
 }
 function compile(){

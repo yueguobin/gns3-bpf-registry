@@ -36,6 +36,13 @@ size with bit-width labels (48 / 16 / 24 ...).
   within a column or move across columns (field selections ride
   along, they are keyed by layer id). A tunnel header drags its whole
   inner-packet run with it.
+- **VLAN bricks stack** (QinQ): one brick = one tag; repeat the brick
+  once per tag, stack order = tag order (outer first). Each pre-tunnel
+  brick emits one `vlan <id>` keyword (leading the column expression);
+  a tag's EtherType enum offers 0x8100 / 0x88a8 and chains into the
+  next VLAN brick. Tag k's byte views (PCP/DEI/EtherType) are absolute
+  reads at 14 + 4×(preceding tags); protocol keywords shift on their
+  own inside libpcap.
 - The brick rail groups protocols by family behind collapsible headers
   that mirror the brick geometry, accordion-style: exactly one family
   is expanded at a time (including the Custom group) — opening a group
