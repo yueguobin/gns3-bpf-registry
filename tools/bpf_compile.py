@@ -14,7 +14,7 @@ import ipaddress
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_DIR = ROOT / "registry"
@@ -251,13 +251,19 @@ def _field_clause(
 def compile_selection(
     entry: dict[str, Any],
     selection: list[dict[str, Any]],
-    vlan: int | None = None,
+    vlan: int | Sequence[int] | None = None,
 ) -> str:
     """Compile a field selection into a tcpdump expression.
 
     ``selection`` is a list of ``{"field": <id>, ...}`` items. Number, enum
     and primitive fields use ``value``; bitset fields use either ``flags`` (a
     list of labels) or ``value`` (an integer mask).
+
+    ``vlan`` is one VLAN slot or a sequence of them (outer tag first); each
+    slot emits a ``vlan <id>`` primitive in order, so a two-slot list compiles
+    a QinQ clause. libpcap matches TPIDs 0x8100 / 0x88a8 / 0x9100 at every
+    level and shifts its decoder offsets per keyword, which is why the chain
+    reaches the inner tag of any double-tagged frame.
     """
     if not isinstance(selection, list) or not selection:
         raise CompileError("selection must contain at least one field")
@@ -280,9 +286,13 @@ def compile_selection(
     if vlan is not None:
         if entry["id"] == "vlan":
             raise CompileError("the vlan entry is primitive-only; do not pass --vlan")
-        if not VLAN_MIN <= vlan <= VLAN_MAX:
-            raise CompileError(f"vlan must be in {VLAN_MIN}..{VLAN_MAX}")
-        clauses.append(f"vlan {vlan}")
+        slots = [vlan] if isinstance(vlan, int) else list(vlan)
+        if not slots:
+            raise CompileError("vlan slots must not be empty")
+        for slot in slots:
+            if not VLAN_MIN <= slot <= VLAN_MAX:
+                raise CompileError(f"vlan must be in {VLAN_MIN}..{VLAN_MAX}")
+        clauses.extend(f"vlan {slot}" for slot in slots)
 
     locator = entry.get("locator", [])
     if locator:
@@ -344,7 +354,13 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FIELD=VALUE",
         help="field selection; repeat for multiple fields",
     )
-    parser.add_argument("--vlan", type=int, help="prepend a VLAN slot")
+    parser.add_argument(
+        "--vlan",
+        type=int,
+        action="append",
+        metavar="ID",
+        help="prepend a VLAN slot; repeat for QinQ (outer tag first)",
+    )
     parser.add_argument("--registry", type=Path, default=REGISTRY_DIR)
     args = parser.parse_args(argv)
 

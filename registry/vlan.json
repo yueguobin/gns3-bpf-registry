@@ -2,7 +2,7 @@
   "id": "vlan",
   "label": "VLAN",
   "rfc": [],
-  "notes": "IEEE 802.1Q VLAN tag. Emitted as the tcpdump 'vlan' primitive, which must be placed before any inner-header clause because it changes the decoder offsets for the rest of the expression. VLAN matching never uses byte offsets and never appears in another entry's locator.",
+  "notes": "IEEE 802.1Q VLAN tag. Emitted as the tcpdump 'vlan' primitive, which must be placed before any inner-header clause because it changes the decoder offsets for the rest of the expression. VLAN matching never uses byte offsets and never appears in another entry's locator. QinQ (802.1ad double tagging) is built by repeating the primitive once per tag, outer tag first: libpcap matches TPIDs 0x8100/0x88a8/0x9100 at every level and shifts its decoder offsets per keyword, so 'vlan A vlan B' reaches the inner tag without a dedicated entry.",
   "fields": [
     {
       "id": "vlan_id",

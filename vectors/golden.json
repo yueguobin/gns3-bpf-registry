@@ -5261,6 +5261,21 @@
       "expect": "vlan 100 and (udp port 4789 or udp port 8472) and (udp[12:4] & 0xffffff00) == 0x6400"
     },
     {
+      "name": "vxlan-vni-100-vlan-100-200",
+      "entry": "vxlan",
+      "vlan": [
+        100,
+        200
+      ],
+      "select": [
+        {
+          "field": "vni",
+          "value": 100
+        }
+      ],
+      "expect": "vlan 100 and vlan 200 and (udp port 4789 or udp port 8472) and (udp[12:4] & 0xffffff00) == 0x6400"
+    },
+    {
       "name": "vxlan-reserved-0",
       "entry": "vxlan",
       "select": [

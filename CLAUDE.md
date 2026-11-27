@@ -40,6 +40,7 @@ Compile one expression:
 .venv/bin/python tools/bpf_compile.py --entry vxlan --select vni=100
 .venv/bin/python tools/bpf_compile.py --entry tcp --select flags=SYN,ACK
 .venv/bin/python tools/bpf_compile.py --entry vxlan --select vni=100 --vlan 100
+.venv/bin/python tools/bpf_compile.py --entry vxlan --select vni=100 --vlan 100 --vlan 200
 ```
 
 Seed a new protocol from scapy metadata (see the seed-protocol skill):
