@@ -184,4 +184,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for governance and [schema/VERSIONING.md]
 
 ## License
 
-GPL-3.0. See [LICENSE](LICENSE).
+GPL-3.0-only (`SPDX-License-Identifier: GPL-3.0-only`): the tools, the prototype, the registry entries and the generated fixtures/vectors are all released under the same license. See [LICENSE](LICENSE).

@@ -19,7 +19,7 @@ https://raw.githubusercontent.com/yueguobin/gns3-bpf-registry/gns3-bpf-registry-
 5. Validate every `locator` primitive and every `emit` template probe with `tcpdump -d`. The server has no field-selection compiler; compiler consistency is enforced separately by the web UI's golden-vector test suite.
 6. Activate the version.
 
-The manifest contains `schemaVersion`, `registryVersion` and `files` (one SHA-256 per file). Compare `registryVersion` to detect changes; do not depend on HTTP ETag behaviour.
+The manifest contains `schemaVersion`, `license`, `registryVersion` and `files` (one SHA-256 per file). The whole bundle — tools, prototype, registry entries, generated fixtures and vectors — is licensed GPL-3.0-only. Compare `registryVersion` to detect changes; do not depend on HTTP ETag behaviour.
 
 ## Activation
 

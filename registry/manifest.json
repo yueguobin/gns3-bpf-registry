@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "license": "GPL-3.0-only",
   "registryVersion": "2026.11.31",
   "files": {
     "ah.json": "sha256:f6e40d6b91eccb142f0fd22c51d3c8033036940a5f513e25fc67c897e7c99f98",
